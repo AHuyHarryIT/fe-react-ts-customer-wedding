@@ -5,6 +5,7 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  redirect,
   useNavigate,
   useRouterState,
 } from '@tanstack/react-router';
@@ -24,6 +25,81 @@ import { ProfilePage } from './components/ProfilePage';
 import { ContactPage } from './components/ContactPage';
 import { useAuthStore } from '../stores/authStore';
 import { initializeAuth } from '../services/authService';
+
+const POST_LOGIN_REDIRECT_KEY = 'post_login_redirect';
+
+const normalizeRedirectPath = (value?: string | null): string => {
+  if (!value || typeof value !== 'string') {
+    return '/dashboard';
+  }
+
+  if (!value.startsWith('/')) {
+    return '/dashboard';
+  }
+
+  if (value === '/auth') {
+    return '/dashboard';
+  }
+
+  return value;
+};
+
+const buildPathFromLocation = (location?: {
+  href?: string;
+  pathname?: string;
+  searchStr?: string;
+}): string => {
+  if (!location) {
+    return '/dashboard';
+  }
+
+  if (location.href) {
+    try {
+      const url = new URL(location.href, window.location.origin);
+      return normalizeRedirectPath(`${url.pathname}${url.search}${url.hash}`);
+    } catch {
+      return normalizeRedirectPath(location.href);
+    }
+  }
+
+  const pathname = location.pathname || '/dashboard';
+  const search = location.searchStr || '';
+  return normalizeRedirectPath(`${pathname}${search}`);
+};
+
+const savePostLoginRedirect = (path: string) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, normalizeRedirectPath(path));
+};
+
+const consumePostLoginRedirect = (): string => {
+  if (typeof window === 'undefined') {
+    return '/dashboard';
+  }
+
+  const stored = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY);
+  if (stored) {
+    sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+  }
+
+  return normalizeRedirectPath(stored);
+};
+
+const requireAuth = (opts?: {
+  location?: { href?: string; pathname?: string; searchStr?: string };
+}) => {
+  const { isAuthenticated } = useAuthStore.getState();
+  if (isAuthenticated) {
+    return;
+  }
+
+  const redirectPath = buildPathFromLocation(opts?.location);
+  savePostLoginRedirect(redirectPath);
+
+  throw redirect({ to: '/auth' });
+};
 
 type AppPage =
   | 'home'
@@ -84,12 +160,24 @@ function mapPageToPath(page: AppPage): string {
 
 function RootLayout() {
   const navigate = useNavigate();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const location = useRouterState({ select: (s) => s.location });
+  const pathname = location.pathname;
   const { isAuthenticated, user, clearAuth } = useAuthStore();
 
   useEffect(() => {
     initializeAuth();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (pathname !== '/auth') {
+      const fullPath = `${location.pathname}${location.searchStr || ''}${location.hash || ''}`;
+      savePostLoginRedirect(fullPath);
+    }
+  }, [location.hash, location.pathname, location.searchStr, pathname]);
 
   const handleNavigate = (page: string) => {
     const mapped = mapPageToPath((page as AppPage) || 'home');
@@ -164,9 +252,24 @@ const homeRoute = createRoute({
 const authRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth',
+  beforeLoad: () => {
+    const { isAuthenticated } = useAuthStore.getState();
+    if (isAuthenticated) {
+      const redirectPath = consumePostLoginRedirect();
+      throw redirect({ to: redirectPath as '/' });
+    }
+  },
   component: () => {
     const navigate = useNavigate();
-    return <AuthPage onLogin={() => navigate({ to: '/dashboard' })} />;
+
+    return (
+      <AuthPage
+        onLogin={() => {
+          const redirectPath = consumePostLoginRedirect();
+          navigate({ to: redirectPath as '/' });
+        }}
+      />
+    );
   },
 });
 
@@ -229,6 +332,7 @@ const packageDetailRoute = createRoute({
 const bookingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/booking',
+  beforeLoad: ({ location }) => requireAuth({ location }),
   component: () => {
     const navigate = useNavigate();
     return (
@@ -245,6 +349,7 @@ const bookingRoute = createRoute({
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/dashboard',
+  beforeLoad: ({ location }) => requireAuth({ location }),
   component: () => {
     const navigate = useNavigate();
     return (
@@ -260,6 +365,7 @@ const dashboardRoute = createRoute({
 const bookingDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/booking-detail',
+  beforeLoad: ({ location }) => requireAuth({ location }),
   component: () => <BookingDetailPage onBack={() => window.history.back()} />,
 });
 
@@ -281,12 +387,14 @@ const galleryRoute = createRoute({
 const messagesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/messages',
+  beforeLoad: ({ location }) => requireAuth({ location }),
   component: () => <MessagesPage />,
 });
 
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/profile',
+  beforeLoad: ({ location }) => requireAuth({ location }),
   component: () => <ProfilePage />,
 });
 

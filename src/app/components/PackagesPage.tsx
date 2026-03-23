@@ -2,16 +2,19 @@ import { useState } from 'react';
 import { Camera, Video, Image, CheckCircle, SlidersHorizontal } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import { usePackages } from '../../hooks/usePackages';
 
 interface PackagesPageProps {
   onNavigate: (page: string, data?: any) => void;
 }
 
 export function PackagesPage({ onNavigate }: PackagesPageProps) {
+  const { packages: apiPackages, loading } = usePackages();
   const [selectedBudget, setSelectedBudget] = useState('all');
   const [selectedService, setSelectedService] = useState('all');
 
-  const packages = [
+  // Fallback hardcoded packages if API is not available
+  const fallbackPackages = [
     {
       id: 1,
       name: 'Essential',
@@ -111,7 +114,20 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
     }
   ];
 
-  const filteredPackages = packages.filter((pkg) => {
+  // Use API packages if available, else use fallback
+  const displayPackages = apiPackages && apiPackages.length > 0 
+    ? apiPackages.map(pkg => ({
+        id: pkg.id,
+        name: pkg.name,
+        price: pkg.price || 0,
+        category: 'photography', // Default category
+        description: pkg.description || 'Wedding service package',
+        features: ['See details for full features'],
+        image: 'https://images.unsplash.com/photo-1692167900605-e02666cadb6d'
+      }))
+    : fallbackPackages;
+
+  const filteredPackages = displayPackages.filter((pkg) => {
     const budgetMatch =
       selectedBudget === 'all' ||
       (selectedBudget === 'under3000' && pkg.price < 3000) ||
@@ -192,7 +208,20 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
 
         {/* Package Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPackages.map((pkg, index) => (
+          {loading ? (
+            // Loading skeleton
+            Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-lg animate-pulse">
+                <div className="h-56 bg-gray-200" />
+                <div className="p-6 space-y-4">
+                  <div className="h-6 bg-gray-200 rounded w-3/4" />
+                  <div className="h-4 bg-gray-200 rounded w-full" />
+                  <div className="h-8 bg-gray-200 rounded w-1/2" />
+                </div>
+              </div>
+            ))
+          ) : filteredPackages.length > 0 ? (
+            filteredPackages.map((pkg, index) => (
             <motion.div
               key={pkg.id}
               initial={{ opacity: 0, scale: 0.95 }}
@@ -253,14 +282,13 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
                 </button>
               </div>
             </motion.div>
-          ))}
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-500">No packages found matching your criteria.</p>
+            </div>
+          )}
         </div>
-
-        {filteredPackages.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No packages found matching your criteria.</p>
-          </div>
-        )}
       </div>
     </div>
   );

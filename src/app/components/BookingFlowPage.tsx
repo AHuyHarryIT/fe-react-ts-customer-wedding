@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Check, Calendar, MapPin, User, MessageSquare, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Calendar, MapPin, User, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useAuthStore } from '../../stores/authStore';
 
 interface BookingFlowPageProps {
   packageData?: any;
@@ -9,8 +10,11 @@ interface BookingFlowPageProps {
 }
 
 export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlowPageProps) {
+  const { user } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     selectedPackage: packageData?.name || '',
@@ -43,8 +47,6 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
   const handleNext = () => {
     if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
-    } else {
-      setShowSuccess(true);
     }
   };
 
@@ -54,8 +56,45 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
     }
   };
 
-  const handleSubmit = () => {
-    setShowSuccess(true);
+  const handleSubmit = async () => {
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    try {
+      // Validate required fields
+      if (!formData.weddingDate || !formData.email || !formData.phone) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      if (!user?.id) {
+        throw new Error('You must be logged in to create a booking');
+      }
+
+      // Call booking API
+      const { bookingService } = await import('../../services/bookingService');
+      
+      // Since the backend expects specific fields, we'll send what we have
+      const bookingPayload = {
+        customerId: user.id,
+        eventDate: formData.weddingDate,
+        notes: formData.additionalNotes,
+        totalPrice: 0, // Will be calculated by backend based on package
+        status: 'PENDING'
+      };
+
+      const response = await bookingService.api.post('/bookings', bookingPayload);
+      
+      if (response.data?.success || response.status === 201) {
+        setShowSuccess(true);
+      } else {
+        throw new Error('Failed to create booking');
+      }
+    } catch (err: any) {
+      console.error('Booking submission error:', err);
+      setSubmitError(err.message || 'Failed to create booking. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (showSuccess) {
@@ -151,6 +190,16 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
           animate={{ opacity: 1, x: 0 }}
           className="bg-white rounded-2xl shadow-xl p-8"
         >
+          {/* Error Display */}
+          {submitError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle className="size-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-red-900">Booking Error</p>
+                <p className="text-sm text-red-700 mt-1">{submitError}</p>
+              </div>
+            </div>
+          )}
           {/* Step 1: Select Package */}
           {currentStep === 1 && (
             <div className="space-y-6">
@@ -333,7 +382,8 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
             {currentStep > 1 && (
               <button
                 onClick={handlePrevious}
-                className="flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition-all"
+                disabled={isSubmitting}
+                className="flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="size-4" />
                 Previous
@@ -341,10 +391,20 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
             )}
             <button
               onClick={currentStep === 5 ? handleSubmit : handleNext}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium"
+              disabled={isSubmitting}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {currentStep === 5 ? 'Confirm Booking' : 'Next'}
-              {currentStep < 5 && <ChevronRight className="size-4" />}
+              {isSubmitting ? (
+                <>
+                  <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  {currentStep === 5 ? 'Confirm Booking' : 'Next'}
+                  {currentStep < 5 && <ChevronRight className="size-4" />}
+                </>
+              )}
             </button>
           </div>
         </motion.div>

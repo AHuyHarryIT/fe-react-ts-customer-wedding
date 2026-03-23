@@ -62,6 +62,8 @@ interface ApiEnvelope<T> {
   data?: T;
 }
 
+const POST_LOGIN_REDIRECT_KEY = 'post_login_redirect';
+
 const unwrapApiData = <T>(payload: T | ApiEnvelope<T>): T => {
   if (payload && typeof payload === 'object' && 'data' in (payload as object)) {
     const wrapped = payload as ApiEnvelope<T>;
@@ -71,6 +73,27 @@ const unwrapApiData = <T>(payload: T | ApiEnvelope<T>): T => {
   }
 
   return payload as T;
+};
+
+const saveCurrentPathForRelogin = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const fullPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (fullPath && fullPath !== '/auth') {
+    sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, fullPath);
+  }
+};
+
+const forceLogoutAndRedirectToAuth = async () => {
+  const { useAuthStore } = await import('../stores/authStore');
+  useAuthStore.getState().clearAuth();
+  saveCurrentPathForRelogin();
+
+  if (typeof window !== 'undefined' && window.location.pathname !== '/auth') {
+    window.location.href = '/auth';
+  }
 };
 
 // Create axios instance with proper configuration
@@ -103,9 +126,7 @@ api.interceptors.response.use(
     ) {
       const tokenExpired = axiosError.response?.headers?.['x-token-expired'];
       if (tokenExpired === 'true') {
-        const { useAuthStore } = await import('../stores/authStore');
-        useAuthStore.getState().clearAuth();
-        window.location.href = '/auth';
+        await forceLogoutAndRedirectToAuth();
         return Promise.reject(error);
       }
 
@@ -120,9 +141,7 @@ api.interceptors.response.use(
 
           return api(originalRequest);
         } catch (retryError) {
-          const { useAuthStore } = await import('../stores/authStore');
-          useAuthStore.getState().clearAuth();
-          window.location.href = '/auth';
+          await forceLogoutAndRedirectToAuth();
           return Promise.reject(retryError);
         }
       }

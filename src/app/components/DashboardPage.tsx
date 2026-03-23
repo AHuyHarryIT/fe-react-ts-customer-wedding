@@ -1,40 +1,62 @@
 import { Calendar, Camera, CreditCard, Download, MessageSquare, Clock, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
+import { useCustomerBookings } from '../../hooks/useCustomerBookings';
+import { useCustomerOrders } from '../../hooks/useCustomerOrders';
 
 interface DashboardPageProps {
   onNavigate: (page: string, data?: any) => void;
 }
 
 export function DashboardPage({ onNavigate }: DashboardPageProps) {
-  const booking = {
-    id: 'WED-2026-001',
-    package: 'Premium Photography',
-    status: 'confirmed',
-    weddingDate: '2026-06-15',
-    location: 'The Grand Hotel, Los Angeles',
-    totalAmount: 3999,
-    paidAmount: 1999,
-    photographer: 'Michael Chen'
-  };
+  const { bookings, loading: bookingsLoading } = useCustomerBookings();
+  const [order, setOrder] = useState<any>(null);
+  const [orderLoading, setOrderLoading] = useState(false);
 
+  // Get the most recent booking
+  const booking = bookings?.[0];
+
+  // Fetch order for the booking
+  useEffect(() => {
+    if (booking?.id) {
+      const fetchOrder = async () => {
+        setOrderLoading(true);
+        try {
+          const { orderService } = await import('../../services/bookingService');
+          const orderData = await orderService.getOrderByBookingId(booking.id);
+          setOrder(orderData);
+        } finally {
+          setOrderLoading(false);
+        }
+      };
+      fetchOrder();
+    }
+  }, [booking?.id]);
+
+  // Calculate days until wedding
+  const daysUntilWedding = booking?.eventDate
+    ? Math.ceil((new Date(booking.eventDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  // Timeline with milestones (generic for now)
   const timeline = [
-    { event: 'Booking Confirmed', date: '2026-02-03', status: 'completed' },
-    { event: 'Engagement Session', date: '2026-04-10', status: 'upcoming' },
-    { event: 'Final Planning Meeting', date: '2026-06-01', status: 'upcoming' },
-    { event: 'Wedding Day', date: '2026-06-15', status: 'upcoming' },
-    { event: 'Photo Delivery', date: '2026-07-30', status: 'upcoming' }
+    { event: 'Booking Confirmed', date: booking?.createdAt || new Date().toISOString(), status: 'completed' },
+    { event: 'Event Planning', date: booking?.eventDate || new Date().toISOString(), status: 'upcoming' },
+    { event: 'Final Confirmation', date: booking?.eventDate ? new Date(new Date(booking.eventDate).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString() : new Date().toISOString(), status: 'upcoming' },
+    { event: 'Wedding Day', date: booking?.eventDate || new Date().toISOString(), status: 'upcoming' },
+    { event: 'Photo Delivery', date: booking?.eventDate ? new Date(new Date(booking.eventDate).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() : new Date().toISOString(), status: 'upcoming' }
   ];
 
   const recentMessages = [
     {
       from: 'Studio Team',
-      message: 'Looking forward to your engagement session!',
+      message: 'Looking forward to your event!',
       time: '2 days ago',
       unread: true
     },
     {
-      from: 'Michael Chen',
-      message: 'I have some great location ideas for you',
+      from: 'Studio',
+      message: 'We have some great ideas for you',
       time: '5 days ago',
       unread: false
     }
@@ -100,52 +122,74 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
               transition={{ delay: 0.2 }}
               className="bg-white rounded-2xl shadow-lg p-6"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-medium text-gray-800">Booking Overview</h2>
-                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm capitalize">
-                  {booking.status}
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-rose-50 rounded-lg">
-                  <Camera className="size-5 text-rose-500" />
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600">Package</p>
-                    <p className="font-medium text-gray-800">{booking.package}</p>
-                  </div>
+              {bookingsLoading ? (
+                <div className="flex items-center justify-center h-48">
+                  <div className="text-gray-500">Loading booking details...</div>
                 </div>
-
-                <div className="flex items-center gap-3 p-4 bg-rose-50 rounded-lg">
-                  <Calendar className="size-5 text-rose-500" />
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600">Wedding Date</p>
-                    <p className="font-medium text-gray-800">
-                      {new Date(booking.weddingDate).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
+              ) : booking ? (
+                <>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-medium text-gray-800">Booking Overview</h2>
+                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm capitalize">
+                      {booking.status}
+                    </span>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-3 p-4 bg-rose-50 rounded-lg">
-                  <Camera className="size-5 text-rose-500" />
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600">Photographer</p>
-                    <p className="font-medium text-gray-800">{booking.photographer}</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-4 bg-rose-50 rounded-lg">
+                      <Camera className="size-5 text-rose-500" />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600">Package</p>
+                        <p className="font-medium text-gray-800">
+                          {booking.packages?.[0]?.name || 'Wedding Photography Package'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 bg-rose-50 rounded-lg">
+                      <Calendar className="size-5 text-rose-500" />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600">Wedding Date</p>
+                        <p className="font-medium text-gray-800">
+                          {booking.eventDate
+                            ? new Date(booking.eventDate).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })
+                            : 'TBD'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 bg-rose-50 rounded-lg">
+                      <Camera className="size-5 text-rose-500" />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600">Status</p>
+                        <p className="font-medium text-gray-800 capitalize">{booking.status}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <button
-                onClick={() => onNavigate('booking-detail')}
-                className="w-full mt-6 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium"
-              >
-                View Full Details
-              </button>
+                  <button
+                    onClick={() => onNavigate('booking-detail')}
+                    className="w-full mt-6 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium"
+                  >
+                    View Full Details
+                  </button>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No bookings found. Create a booking to get started!</p>
+                  <button
+                    onClick={() => onNavigate('booking')}
+                    className="mt-4 py-2 px-6 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium"
+                  >
+                    Create Booking
+                  </button>
+                </div>
+              )}
             </motion.div>
 
             {/* Payment Status */}
@@ -160,39 +204,55 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                 <h2 className="text-xl font-medium text-gray-800">Payment Status</h2>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Total Amount</span>
-                  <span className="text-xl font-medium text-gray-800">
-                    ${booking.totalAmount.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Amount Paid</span>
-                  <span className="text-lg font-medium text-green-600">
-                    ${booking.paidAmount.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Balance Due</span>
-                  <span className="text-lg font-medium text-rose-500">
-                    ${(booking.totalAmount - booking.paidAmount).toLocaleString()}
-                  </span>
-                </div>
+              {orderLoading ? (
+                <div className="text-gray-500">Loading payment info...</div>
+              ) : order ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Total Amount</span>
+                    <span className="text-xl font-medium text-gray-800">
+                      ${(order.totalAmount || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Amount Paid</span>
+                    <span className="text-lg font-medium text-green-600">
+                      ${(order.paidAmount || order.summary?.totalPaid || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Balance Due</span>
+                    <span className="text-lg font-medium text-rose-500">
+                      ${(order.balanceRemaining || order.summary?.balanceRemaining || 0).toLocaleString()}
+                    </span>
+                  </div>
 
-                <div className="pt-4">
-                  <div className="flex justify-between text-sm text-gray-600 mb-2">
-                    <span>Payment Progress</span>
-                    <span>{Math.round((booking.paidAmount / booking.totalAmount) * 100)}%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-rose-400 to-pink-500 transition-all"
-                      style={{ width: `${(booking.paidAmount / booking.totalAmount) * 100}%` }}
-                    />
+                  <div className="pt-4">
+                    <div className="flex justify-between text-sm text-gray-600 mb-2">
+                      <span>Payment Progress</span>
+                      <span>
+                        {order.totalAmount > 0
+                          ? Math.round(((order.paidAmount || order.summary?.totalPaid || 0) / order.totalAmount) * 100)
+                          : 0}%
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-rose-400 to-pink-500 transition-all"
+                        style={{
+                          width: `${
+                            order.totalAmount > 0
+                              ? Math.round(((order.paidAmount || order.summary?.totalPaid || 0) / order.totalAmount) * 100)
+                              : 0
+                          }%`
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-gray-500">No payment information available yet</div>
+              )}
             </motion.div>
 
             {/* Timeline */}
@@ -292,9 +352,15 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
               transition={{ delay: 0.4 }}
               className="bg-gradient-to-br from-rose-400 to-pink-500 rounded-2xl shadow-lg p-6 text-white"
             >
-              <h3 className="text-lg font-medium mb-4">Days Until Wedding</h3>
-              <p className="text-5xl font-serif mb-2">132</p>
-              <p className="text-rose-100">We can't wait to capture your special day!</p>
+              <h3 className="text-lg font-medium mb-4">Days Until Event</h3>
+              <p className="text-5xl font-serif mb-2">
+                {daysUntilWedding !== null && daysUntilWedding >= 0 ? daysUntilWedding : '—'}
+              </p>
+              <p className="text-rose-100">
+                {booking
+                  ? "We can't wait to capture your special day!"
+                  : 'Create a booking to see countdown'}
+              </p>
             </motion.div>
           </div>
         </div>
