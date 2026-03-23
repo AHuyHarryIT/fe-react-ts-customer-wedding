@@ -1,15 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User, Mail, Phone, Lock, Bell, Save } from 'lucide-react';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
+import {
+  authApi,
+  type UpdateProfileRequest,
+  type ChangePasswordRequest,
+} from '@/services/authService';
+import { useCustomerProfile } from '@/hooks/useCustomerProfile';
 
 export function ProfilePage() {
   const [activeTab, setActiveTab] = useState('personal');
+  const { profile, loading, refetch } = useCustomerProfile();
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    brideName: 'Sarah Johnson',
-    groomName: 'Michael Thompson',
-    email: 'sarah.michael@email.com',
-    phone: '+84 (555) 123-4567',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     weddingDate: '2026-06-15',
     weddingVenue: 'The Grand Hotel',
     currentPassword: '',
@@ -20,8 +28,62 @@ export function ProfilePage() {
     marketingEmails: false
   });
 
-  const handleSave = () => {
-    toast.success('Settings saved successfully!');
+  useEffect(() => {
+    if (!profile) return;
+    setFormData((prev) => ({
+      ...prev,
+      firstName: profile.firstName || '',
+      lastName: profile.lastName || '',
+      email: profile.email || '',
+      phone: profile.phoneNumber || '',
+    }));
+  }, [profile]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      if (activeTab === 'personal') {
+        const payload: UpdateProfileRequest = {
+          firstName: formData.firstName.trim() || undefined,
+          lastName: formData.lastName.trim() || undefined,
+          email: formData.email.trim() || undefined,
+        };
+
+        await authApi.updateProfile(payload);
+        await refetch();
+        toast.success('Profile updated successfully');
+      } else if (activeTab === 'security') {
+        if (!formData.currentPassword || !formData.newPassword) {
+          toast.error('Please fill in current and new password');
+          return;
+        }
+        if (formData.newPassword !== formData.confirmPassword) {
+          toast.error('New password and confirmation do not match');
+          return;
+        }
+
+        const payload: ChangePasswordRequest = {
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+        };
+
+        await authApi.changePassword(payload);
+        setFormData((prev) => ({
+          ...prev,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        }));
+        toast.success('Password changed successfully');
+      } else {
+        toast.success('Settings saved successfully!');
+      }
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to save settings';
+      toast.error(message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const tabs = [
@@ -44,6 +106,9 @@ export function ProfilePage() {
             Account Settings
           </h1>
           <p className="text-gray-600">Manage your profile and preferences</p>
+          {loading && (
+            <p className="text-sm text-rose-500 mt-2">Loading account details...</p>
+          )}
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -89,15 +154,15 @@ export function ProfilePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Bride's Name
+                        First Name
                       </label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                         <input
                           type="text"
-                          value={formData.brideName}
+                          value={formData.firstName}
                           onChange={(e) =>
-                            setFormData({ ...formData, brideName: e.target.value })
+                            setFormData({ ...formData, firstName: e.target.value })
                           }
                           className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                         />
@@ -106,15 +171,15 @@ export function ProfilePage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Groom's Name
+                        Last Name
                       </label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                         <input
                           type="text"
-                          value={formData.groomName}
+                          value={formData.lastName}
                           onChange={(e) =>
-                            setFormData({ ...formData, groomName: e.target.value })
+                            setFormData({ ...formData, lastName: e.target.value })
                           }
                           className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                         />
@@ -321,10 +386,11 @@ export function ProfilePage() {
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <button
                   onClick={handleSave}
+                  disabled={isSaving}
                   className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2"
                 >
                   <Save className="size-5" />
-                  Save Changes
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </motion.div>

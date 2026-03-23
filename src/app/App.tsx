@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Toaster } from 'sonner';
 import { Navigation } from '@/app/components/Navigation';
 import { Footer } from '@/app/components/Footer';
@@ -13,12 +13,20 @@ import { GalleryPage } from '@/app/components/GalleryPage';
 import { MessagesPage } from '@/app/components/MessagesPage';
 import { ProfilePage } from '@/app/components/ProfilePage';
 import { ContactPage } from '@/app/components/ContactPage';
+import { useAuthStore } from '@/stores/authStore';
+import { initializeAuth } from '@/services/authService';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [pageData, setPageData] = useState<any>(null);
   const [previousPage, setPreviousPage] = useState('home');
+  
+  const { user, isAuthenticated } = useAuthStore();
+
+  // Initialize auth on mount
+  useEffect(() => {
+    initializeAuth();
+  }, []);
 
   const handleNavigate = (page: string, data?: any) => {
     setPreviousPage(currentPage);
@@ -32,13 +40,13 @@ export default function App() {
     setPageData(null);
   };
 
-  const handleLogin = (email: string) => {
-    setIsLoggedIn(true);
+  const handleLogin = (phoneNumber: string) => {
     handleNavigate('dashboard');
   };
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    const { clearAuth } = useAuthStore.getState();
+    clearAuth();
     handleNavigate('home');
   };
 
@@ -99,7 +107,7 @@ export default function App() {
       <Navigation
         currentPage={currentPage}
         onNavigate={handleNavigate}
-        isLoggedIn={isLoggedIn}
+        isLoggedIn={isAuthenticated}
         onLogout={handleLogout}
       />
       

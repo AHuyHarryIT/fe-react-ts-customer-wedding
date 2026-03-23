@@ -1,26 +1,32 @@
 import { useState } from 'react';
-import { Heart, Mail, Lock, User, Phone } from 'lucide-react';
+import { Heart, Lock, User, Phone } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useAuthStore } from '../../stores/authStore';
+import { authApi } from '../../services/authService';
 
 interface AuthPageProps {
-  onLogin: (email: string) => void;
+  onLogin: (phoneNumber: string) => void;
 }
 
 export function AuthPage({ onLogin }: AuthPageProps) {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState('');
+  
+  const { setAuth } = useAuthStore();
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!email) {
-      newErrors.email = 'Phone is required';
-    } else if (!/^\+?[\d\s\-\(\)]{10,}$/.test(email)) {
-      newErrors.email = 'Phone is invalid';
+    if (!phoneNumber) {
+      newErrors.phoneNumber = 'Phone is required';
+    } else if (!/^\+?[\d\s\-\(\)]{10,}$/.test(phoneNumber)) {
+      newErrors.phoneNumber = 'Phone is invalid';
     }
 
     if (!password) {
@@ -29,18 +35,37 @@ export function AuthPage({ onLogin }: AuthPageProps) {
       newErrors.password = 'Password must be at least 6 characters';
     }
 
-    if (!isLogin && !name) {
-      newErrors.name = 'Name is required';
+    if (!isLogin && !firstName) {
+      newErrors.firstName = 'First name is required';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onLogin(email);
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    setServerError('');
+
+    try {
+      let data;
+      if (isLogin) {
+        data = await authApi.login({ phoneNumber, password });
+      } else {
+        data = await authApi.register({ phoneNumber, password, firstName, lastName });
+      }
+      
+      // Update Zustand store with user data
+      setAuth(data.user);
+      onLogin(phoneNumber);
+    } catch (error) {
+      const errorMessage = (error as any)?.response?.data?.message || (error as Error).message || 'An error occurred';
+      setServerError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -93,60 +118,63 @@ export function AuthPage({ onLogin }: AuthPageProps) {
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
+                  First Name
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                   <input
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
-                    placeholder="Enter your full name"
+                    placeholder="Enter your first name"
+                    disabled={isLoading}
                   />
                 </div>
-                {errors.name && (
-                  <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                {errors.firstName && (
+                  <p className="text-sm text-red-500 mt-1">{errors.firstName}</p>
                 )}
+              </div>
+            )}
+
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name (Optional)
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
+                    placeholder="Enter your last name"
+                    disabled={isLoading}
+                  />
+                </div>
               </div>
             )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone number
+                Phone Number
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                 <input
                   type="tel"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
-                  placeholder="you@example.com"
+                  placeholder="+84 (555) 123-4567"
+                  disabled={isLoading}
                 />
               </div>
-              {errors.email && (
-                <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+              {errors.phoneNumber && (
+                <p className="text-sm text-red-500 mt-1">{errors.phoneNumber}</p>
               )}
             </div>
-
-            {!isLogin && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number (Optional)
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
-                    placeholder="+84 (555) 123-4567"
-                  />
-                </div>
-              </div>
-            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -160,12 +188,19 @@ export function AuthPage({ onLogin }: AuthPageProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
                   placeholder="Enter your password"
+                  disabled={isLoading}
                 />
               </div>
               {errors.password && (
                 <p className="text-sm text-red-500 mt-1">{errors.password}</p>
               )}
             </div>
+
+            {serverError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{serverError}</p>
+              </div>
+            )}
 
             {isLogin && (
               <div className="flex justify-end">
@@ -180,9 +215,10 @@ export function AuthPage({ onLogin }: AuthPageProps) {
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+              disabled={isLoading}
+              className="w-full py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLogin ? 'Sign In' : 'Create Account'}
+              {isLoading ? 'Loading...' : isLogin ? 'Sign In' : 'Create Account'}
             </button>
           </form>
 
