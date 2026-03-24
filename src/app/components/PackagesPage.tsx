@@ -5,11 +5,10 @@ import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { formatMoneyVND } from '@/utils/money';
 import { usePackages } from '../../hooks/usePackages';
 
-const DEFAULT_PACKAGE_IMAGE =
-  'https://images.unsplash.com/photo-1692167900605-e02666cadb6d';
+const DEFAULT_PACKAGE_IMAGE = 'https://images.unsplash.com/photo-1692167900605-e02666cadb6d';
 
 interface PackagesPageProps {
-  onNavigate: (page: string, data?: any) => void;
+  onNavigate: (page: string, data?: Record<string, unknown>) => void;
 }
 
 export function PackagesPage({ onNavigate }: PackagesPageProps) {
@@ -30,9 +29,10 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
         '400+ Edited Photos',
         'Online Gallery',
         'Digital Downloads',
-        '1 Photographer'
+        '1 Photographer',
       ],
-      image: 'https://images.unsplash.com/photo-1692167900605-e02666cadb6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwYm91cXVldCUyMGZsb3dlcnN8ZW58MXx8fHwxNzcwMDA5MDU0fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
+      image:
+        'https://images.unsplash.com/photo-1692167900605-e02666cadb6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwYm91cXVldCUyMGZsb3dlcnN8ZW58MXx8fHwxNzcwMDA5MDU0fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     },
     {
       id: 2,
@@ -46,10 +46,11 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
         'Engagement Session',
         'Premium Album',
         '2 Photographers',
-        'USB Drive'
+        'USB Drive',
       ],
-      image: 'https://images.unsplash.com/photo-1765615197770-a46baa12db63?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwY2VyZW1vbnklMjByb21hbnRpY3xlbnwxfHx8fDE3NzAxMDkxODJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: true
+      image:
+        'https://images.unsplash.com/photo-1765615197770-a46baa12db63?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwY2VyZW1vbnklMjByb21hbnRpY3xlbnwxfHx8fDE3NzAxMDkxODJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+      popular: true,
     },
     {
       id: 3,
@@ -63,9 +64,10 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
         'Full Ceremony Video',
         'Drone Footage',
         '2 Videographers',
-        '4K Resolution'
+        '4K Resolution',
       ],
-      image: 'https://images.unsplash.com/photo-1720535594328-5e681403350a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwcGhvdG9ncmFwaHklMjBzdHVkaW98ZW58MXx8fHwxNzcwMTA5MTgzfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
+      image:
+        'https://images.unsplash.com/photo-1720535594328-5e681403350a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwcGhvdG9ncmFwaHklMjBzdHVkaW98ZW58MXx8fHwxNzcwMTA5MTgzfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     },
     {
       id: 4,
@@ -80,10 +82,11 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
         'Same Day Edit',
         'Premium Album + USB',
         'Drone Coverage',
-        'Full Team'
+        'Full Team',
       ],
-      image: 'https://images.unsplash.com/photo-1765350226723-a96ab0705403?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwd2VkZGluZyUyMGNvdXBsZSUyMG91dGRvb3J8ZW58MXx8fHwxNzcwMDU1NTMxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: true
+      image:
+        'https://images.unsplash.com/photo-1765350226723-a96ab0705403?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwd2VkZGluZyUyMGNvdXBsZSUyMG91dGRvb3J8ZW58MXx8fHwxNzcwMDU1NTMxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+      popular: true,
     },
     {
       id: 5,
@@ -97,9 +100,10 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
         'Travel Included',
         'Multiple Sessions',
         'Full Edit Suite',
-        'Premium Deliverables'
+        'Premium Deliverables',
       ],
-      image: 'https://images.unsplash.com/photo-1622580627463-b03d48e305d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxicmlkZSUyMGdyb29tJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzcwMTA5MTgyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
+      image:
+        'https://images.unsplash.com/photo-1622580627463-b03d48e305d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxicmlkZSUyMGdyb29tJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzcwMTA5MTgyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     },
     {
       id: 6,
@@ -112,33 +116,35 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
         '100+ Edited Photos',
         'Location of Choice',
         'Online Gallery',
-        '1 Photographer'
+        '1 Photographer',
       ],
-      image: 'https://images.unsplash.com/photo-1677768062274-fdd45caac233?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwcmVjZXB0aW9uJTIwZGV0YWlsc3xlbnwxfHx8fDE3NzAxMDkxODN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-    }
+      image:
+        'https://images.unsplash.com/photo-1677768062274-fdd45caac233?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwcmVjZXB0aW9uJTIwZGV0YWlsc3xlbnwxfHx8fDE3NzAxMDkxODN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    },
   ];
 
   // Use API packages if available, else use fallback
-  const displayPackages = apiPackages && apiPackages.length > 0
-    ? apiPackages.map(pkg => ({
-        id: pkg.id,
-        name: pkg.name,
-        price: pkg.price || 0,
-        category: 'photography',
-        description: pkg.description || 'Wedding service package',
-        features:
-          pkg.services && pkg.services.length > 0
-            ? pkg.services
-                .map((serviceItem) => serviceItem.service?.name)
-                .filter((name): name is string => Boolean(name))
-            : ['See details for full features'],
-        image: pkg.coverImageUrl || pkg.images?.[0]?.imageUrl || DEFAULT_PACKAGE_IMAGE,
-        images: pkg.images,
-        services: pkg.services,
-        isActive: pkg.isActive,
-        popular: false,
-      }))
-    : fallbackPackages;
+  const displayPackages =
+    apiPackages && apiPackages.length > 0
+      ? apiPackages.map((pkg) => ({
+          id: pkg.id,
+          name: pkg.name,
+          price: pkg.price || 0,
+          category: 'photography',
+          description: pkg.description || 'Wedding service package',
+          features:
+            pkg.services && pkg.services.length > 0
+              ? pkg.services
+                  .map((serviceItem) => serviceItem.service?.name)
+                  .filter((name): name is string => Boolean(name))
+              : ['See details for full features'],
+          image: pkg.coverImageUrl || pkg.images?.[0]?.imageUrl || DEFAULT_PACKAGE_IMAGE,
+          images: pkg.images,
+          services: pkg.services,
+          isActive: pkg.isActive,
+          popular: false,
+        }))
+      : fallbackPackages;
 
   const filteredPackages = displayPackages.filter((pkg) => {
     const budgetMatch =
@@ -147,8 +153,7 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
       (selectedBudget === '3000-5000' && pkg.price >= 3000 && pkg.price <= 5000) ||
       (selectedBudget === 'over5000' && pkg.price > 5000);
 
-    const serviceMatch =
-      selectedService === 'all' || pkg.category === selectedService;
+    const serviceMatch = selectedService === 'all' || pkg.category === selectedService;
 
     return budgetMatch && serviceMatch;
   });
@@ -162,9 +167,7 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-serif text-gray-800 mb-4">
-            Packages
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-serif text-gray-800 mb-4">Packages</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Choose the perfect package to capture your special day
           </p>
@@ -185,9 +188,7 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Budget Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Budget Range
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Budget Range</label>
               <select
                 value={selectedBudget}
                 onChange={(e) => setSelectedBudget(e.target.value)}
@@ -202,9 +203,7 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
 
             {/* Service Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Service Type
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
               <select
                 value={selectedService}
                 onChange={(e) => setSelectedService(e.target.value)}
@@ -224,7 +223,10 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
           {loading ? (
             // Loading skeleton
             Array.from({ length: 6 }).map((_, idx) => (
-              <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-lg animate-pulse">
+              <div
+                key={idx}
+                className="bg-white rounded-2xl overflow-hidden shadow-lg animate-pulse"
+              >
                 <div className="h-56 bg-gray-200" />
                 <div className="p-6 space-y-4">
                   <div className="h-6 bg-gray-200 rounded w-3/4" />
@@ -235,66 +237,70 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
             ))
           ) : filteredPackages.length > 0 ? (
             filteredPackages.map((pkg, index) => (
-            <motion.div
-              key={pkg.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className={`bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all cursor-pointer group ${
-                pkg.popular ? 'ring-2 ring-rose-400' : ''
-              }`}
-              onClick={() => onNavigate('package-detail', { package: pkg })}
-            >
-              {pkg.popular && (
-                <div className="bg-gradient-to-r from-rose-400 to-pink-500 text-white text-center py-2 text-sm font-medium">
-                  Most Popular
-                </div>
-              )}
+              <motion.div
+                key={pkg.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className={`bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all cursor-pointer group ${
+                  pkg.popular ? 'ring-2 ring-rose-400' : ''
+                }`}
+                onClick={() => onNavigate('package-detail', { package: pkg })}
+              >
+                {pkg.popular && (
+                  <div className="bg-gradient-to-r from-rose-400 to-pink-500 text-white text-center py-2 text-sm font-medium">
+                    Most Popular
+                  </div>
+                )}
 
-              <div className="relative h-56 overflow-hidden">
-                <ImageWithFallback
-                  src={pkg.image}
-                  alt={pkg.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
-                  <div className="flex items-center gap-1">
-                    {pkg.category === 'photography' && <FiCamera className="size-4 text-rose-500" />}
-                    {pkg.category === 'video' && <FiVideo className="size-4 text-rose-500" />}
-                    {pkg.category === 'full-service' && <FiImage className="size-4 text-rose-500" />}
-                    <span className="text-xs font-medium text-gray-700 capitalize">
-                      {pkg.category === 'full-service' ? 'Photo + Video' : pkg.category}
-                    </span>
+                <div className="relative h-56 overflow-hidden">
+                  <ImageWithFallback
+                    src={pkg.image}
+                    alt={pkg.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
+                    <div className="flex items-center gap-1">
+                      {pkg.category === 'photography' && (
+                        <FiCamera className="size-4 text-rose-500" />
+                      )}
+                      {pkg.category === 'video' && <FiVideo className="size-4 text-rose-500" />}
+                      {pkg.category === 'full-service' && (
+                        <FiImage className="size-4 text-rose-500" />
+                      )}
+                      <span className="text-xs font-medium text-gray-700 capitalize">
+                        {pkg.category === 'full-service' ? 'Photo + Video' : pkg.category}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="p-6">
-                <h3 className="text-2xl font-serif text-gray-800 mb-2">{pkg.name}</h3>
-                <p className="text-sm text-gray-600 mb-4">{pkg.description}</p>
-                <p className="text-3xl font-medium text-rose-500 mb-4">
-                  {formatMoneyVND(pkg.price)}
-                </p>
+                <div className="p-6">
+                  <h3 className="text-2xl font-serif text-gray-800 mb-2">{pkg.name}</h3>
+                  <p className="text-sm text-gray-600 mb-4">{pkg.description}</p>
+                  <p className="text-3xl font-medium text-rose-500 mb-4">
+                    {formatMoneyVND(pkg.price)}
+                  </p>
 
-                <ul className="space-y-2 mb-6">
-                  {pkg.features.slice(0, 4).map((feature, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                      <FiCheckCircle className="size-4 text-rose-400 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                  {pkg.features.length > 4 && (
-                    <li className="text-sm text-rose-500 font-medium">
-                      +{pkg.features.length - 4} more features
-                    </li>
-                  )}
-                </ul>
+                  <ul className="space-y-2 mb-6">
+                    {pkg.features.slice(0, 4).map((feature, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                        <FiCheckCircle className="size-4 text-rose-400 flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                    {pkg.features.length > 4 && (
+                      <li className="text-sm text-rose-500 font-medium">
+                        +{pkg.features.length - 4} more features
+                      </li>
+                    )}
+                  </ul>
 
-                <button className="w-full py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium">
-                  View Details
-                </button>
-              </div>
-            </motion.div>
+                  <button className="w-full py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium">
+                    View Details
+                  </button>
+                </div>
+              </motion.div>
             ))
           ) : (
             <div className="col-span-full text-center py-12">

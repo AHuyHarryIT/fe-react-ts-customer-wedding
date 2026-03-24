@@ -41,10 +41,26 @@ export function Footer() {
           <div>
             <h3 className="font-medium text-gray-800 mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">About Us</a></li>
-              <li><a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">Packages</a></li>
-              <li><a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">Gallery</a></li>
-              <li><a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">FAQs</a></li>
+              <li>
+                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
+                  About Us
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
+                  Packages
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
+                  Gallery
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
+                  FAQs
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -52,16 +68,30 @@ export function Footer() {
           <div>
             <h3 className="font-medium text-gray-800 mb-4">Follow Us</h3>
             <div className="flex gap-3 mb-6">
-              <a href="#" className="size-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-200 transition-colors">
+              <a
+                href="#"
+                className="size-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-200 transition-colors"
+              >
                 <FiInstagram className="size-4" />
               </a>
-              <a href="#" className="size-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-200 transition-colors">
+              <a
+                href="#"
+                className="size-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-200 transition-colors"
+              >
                 <FiFacebook className="size-4" />
               </a>
             </div>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">Terms of Service</a></li>
+              <li>
+                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
+                  Terms of Service
+                </a>
+              </li>
             </ul>
           </div>
         </div>

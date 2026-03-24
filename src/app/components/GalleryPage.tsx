@@ -17,33 +17,33 @@ export function GalleryPage({ onNavigate }: GalleryPageProps) {
     {
       url: 'https://images.unsplash.com/photo-1765350226723-a96ab0705403?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwd2VkZGluZyUyMGNvdXBsZSUyMG91dGRvb3J8ZW58MXx8fHwxNzcwMDU1NTMxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
       category: 'Portraits',
-      status: 'available'
+      status: 'available',
     },
     {
       url: 'https://images.unsplash.com/photo-1765615197770-a46baa12db63?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwY2VyZW1vbnklMjByb21hbnRpY3xlbnwxfHx8fDE3NzAxMDkxODJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
       category: 'Ceremony',
-      status: 'available'
+      status: 'available',
     },
     {
       url: 'https://images.unsplash.com/photo-1692167900605-e02666cadb6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwYm91cXVldCUyMGZsb3dlcnN8ZW58MXx8fHwxNzcwMDA5MDU0fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
       category: 'Details',
-      status: 'available'
+      status: 'available',
     },
     {
       url: 'https://images.unsplash.com/photo-1720535594328-5e681403350a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwcGhvdG9ncmFwaHklMjBzdHVkaW98ZW58MXx8fHwxNzcwMTA5MTgzfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
       category: 'Reception',
-      status: 'available'
+      status: 'available',
     },
     {
       url: 'https://images.unsplash.com/photo-1622580627463-b03d48e305d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxicmlkZSUyMGdyb29tJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzcwMTA5MTgyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
       category: 'Portraits',
-      status: 'available'
+      status: 'available',
     },
     {
       url: 'https://images.unsplash.com/photo-1677768062274-fdd45caac233?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwcmVjZXB0aW9uJTIwZGV0YWlsc3xlbnwxfHx8fDE3NzAxMDkxODN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
       category: 'Details',
-      status: 'available'
-    }
+      status: 'available',
+    },
   ];
 
   const handleImageSelect = (index: number) => {
@@ -76,19 +76,11 @@ export function GalleryPage({ onNavigate }: GalleryPageProps) {
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-serif text-gray-800 mb-2">
-                Your Gallery
-              </h1>
-              <p className="text-gray-600">
-                {images.length} photos available for download
-              </p>
+              <h1 className="text-3xl md:text-4xl font-serif text-gray-800 mb-2">Your Gallery</h1>
+              <p className="text-gray-600">{images.length} photos available for download</p>
             </div>
 
             <div className="flex gap-3">
@@ -177,9 +169,7 @@ export function GalleryPage({ onNavigate }: GalleryPageProps) {
                         : 'bg-white/80 border-white'
                     }`}
                   >
-                    {selectedImages.has(index) && (
-                      <CheckCircle className="size-4 text-white" />
-                    )}
+                    {selectedImages.has(index) && <CheckCircle className="size-4 text-white" />}
                   </div>
                 </div>
               )}
@@ -227,10 +217,7 @@ export function GalleryPage({ onNavigate }: GalleryPageProps) {
                 <ChevronRight className="size-6" />
               </button>
 
-              <div
-                className="max-w-6xl max-h-[90vh] px-12"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="max-w-6xl max-h-[90vh] px-12" onClick={(e) => e.stopPropagation()}>
                 <ImageWithFallback
                   src={images[selectedImage].url}
                   alt={`Gallery ${selectedImage + 1}`}

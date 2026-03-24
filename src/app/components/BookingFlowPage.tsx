@@ -1,11 +1,20 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Check, Calendar, MapPin, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  Calendar,
+  MapPin,
+  MessageSquare,
+  CheckCircle,
+  AlertCircle,
+} from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuthStore } from '../../stores/authStore';
 
 interface BookingFlowPageProps {
-  packageData?: any;
-  onNavigate: (page: string, data?: any) => void;
+  packageData?: Record<string, unknown>;
+  onNavigate: (page: string, data?: Record<string, unknown>) => void;
   onBack: () => void;
 }
 
@@ -15,7 +24,7 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState({
     selectedPackage: packageData?.name || '',
     weddingDate: '',
@@ -25,7 +34,7 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
     email: '',
     phone: '',
     guestCount: '',
-    additionalNotes: ''
+    additionalNotes: '',
   });
 
   const steps = [
@@ -33,7 +42,7 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
     { number: 2, title: 'Wedding Details', icon: '💒' },
     { number: 3, title: 'Your Information', icon: '👥' },
     { number: 4, title: 'Additional Info', icon: '📝' },
-    { number: 5, title: 'Review & Confirm', icon: '✅' }
+    { number: 5, title: 'Review & Confirm', icon: '✅' },
   ];
 
   const packages = [
@@ -41,7 +50,7 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
     'Premium Photography - $3,999',
     'Premium Video - $4,499',
     'Luxury Package - $5,999',
-    'Destination Wedding - $7,999'
+    'Destination Wedding - $7,999',
   ];
 
   const handleNext = () => {
@@ -72,26 +81,30 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
 
       // Call booking API
       const { api } = await import('../../services/bookingService');
-      
+
       // Since the backend expects specific fields, we'll send what we have
       const bookingPayload = {
         customerId: user.id,
         eventDate: formData.weddingDate,
         notes: formData.additionalNotes,
         totalPrice: 0, // Will be calculated by backend based on package
-        status: 'PENDING'
+        status: 'PENDING',
       };
 
       const response = await api.post('/bookings', bookingPayload);
-      
+
       if (response.data?.success || response.status === 201) {
         setShowSuccess(true);
       } else {
         throw new Error('Failed to create booking');
       }
-    } catch (err: any) {
-      console.error('Booking submission error:', err);
-      setSubmitError(err.message || 'Failed to create booking. Please try again.');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error('Booking submission error:', err);
+        setSubmitError(err.message || 'Failed to create booking. Please try again.');
+      } else {
+        setSubmitError('Failed to create booking. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -108,11 +121,10 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
           <div className="inline-flex p-4 bg-green-100 rounded-full mb-6">
             <CheckCircle className="size-12 text-green-500" />
           </div>
-          <h2 className="text-3xl font-serif text-gray-800 mb-4">
-            Booking Confirmed!
-          </h2>
+          <h2 className="text-3xl font-serif text-gray-800 mb-4">Booking Confirmed!</h2>
           <p className="text-gray-600 mb-6">
-            Thank you for your booking! We've received your request and will contact you within 24 hours to confirm your wedding date and finalize the details.
+            Thank you for your booking! We've received your request and will contact you within 24
+            hours to confirm your wedding date and finalize the details.
           </p>
           <p className="text-sm text-gray-500 mb-8">
             A confirmation email has been sent to {formData.email}
@@ -311,9 +323,7 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 <input
                   type="tel"
                   value={formData.phone}

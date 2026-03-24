@@ -155,10 +155,7 @@ api.interceptors.response.use(
 export const authApi = {
   // Login with phone number and password
   login: async (data: LoginRequest): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse | ApiEnvelope<AuthResponse>>(
-      '/auth/login',
-      data
-    );
+    const response = await api.post<AuthResponse | ApiEnvelope<AuthResponse>>('/auth/login', data);
     const authData = unwrapApiData<AuthResponse>(response.data);
 
     if (authData.accessToken) {
@@ -231,9 +228,7 @@ export const authApi = {
   },
 
   // Change password
-  changePassword: async (
-    data: ChangePasswordRequest
-  ): Promise<MessageResponse> => {
+  changePassword: async (data: ChangePasswordRequest): Promise<MessageResponse> => {
     const response = await api.post<MessageResponse>('/auth/change-password', data);
     return response.data;
   },
@@ -269,7 +264,7 @@ class AuthService {
 
   logout(): void {
     // Import dynamically to avoid circular dependencies
-    import('../stores/authStore').then(module => {
+    import('../stores/authStore').then((module) => {
       module.useAuthStore.getState().clearAuth();
     });
   }

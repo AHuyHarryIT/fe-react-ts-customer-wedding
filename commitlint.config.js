@@ -4,18 +4,7 @@ module.exports = {
     'type-enum': [
       2,
       'always',
-      [
-        'feat',
-        'fix',
-        'docs',
-        'style',
-        'refactor',
-        'perf',
-        'test',
-        'chore',
-        'revert',
-        'ci'
-      ]
+      ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'chore', 'revert', 'ci'],
     ],
     'type-case': [2, 'always', 'lower-case'],
     'type-empty': [2, 'never'],
@@ -25,6 +14,6 @@ module.exports = {
     'subject-full-stop': [2, 'never', '.'],
     'header-max-length': [2, 'always', 100],
     'body-leading-blank': [2, 'always'],
-    'footer-leading-blank': [2, 'always']
-  }
+    'footer-leading-blank': [2, 'always'],
+  },
 };

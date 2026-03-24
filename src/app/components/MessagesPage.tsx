@@ -1,15 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  Send,
-  Paperclip,
-  Image as ImageIcon,
-  Smile,
-  Check,
-} from "lucide-react";
-import { motion } from "motion/react";
-import { useChat } from "../../hooks/useChat";
-import type { Chat } from "../../services/chatService";
-import { useAuthStore } from "../../stores/authStore";
+import { useEffect, useRef, useState } from 'react';
+import { Send, Paperclip, Image as ImageIcon, Smile, Check } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useChat } from '../../hooks/useChat';
+import type { Chat } from '../../services/chatService';
+import { useAuthStore } from '../../stores/authStore';
 
 interface MessagesPageProps {
   onNavigate?: (page: string) => void;
@@ -30,8 +24,8 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
     createChat,
   } = useChat();
   const { user: currentUser } = useAuthStore();
-  const [inputMessage, setInputMessage] = useState("");
-  const [initialInputMessage, setInitialInputMessage] = useState("");
+  const [inputMessage, setInputMessage] = useState('');
+  const [initialInputMessage, setInitialInputMessage] = useState('');
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -67,7 +61,7 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
     if (!inputMessage.trim() || !currentChat) return;
 
     const messageText = inputMessage;
-    setInputMessage("");
+    setInputMessage('');
 
     await sendMessage(messageText);
   };
@@ -76,7 +70,7 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
     if (!initialInputMessage.trim()) return;
 
     const messageContent = initialInputMessage;
-    setInitialInputMessage("");
+    setInitialInputMessage('');
     setIsCreatingChat(true);
 
     try {
@@ -93,9 +87,9 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
 
   const getCustomerName = (chat: Chat) => {
     if (chat.customer?.firstName || chat.customer?.lastName) {
-      return `${chat.customer.firstName || ""} ${chat.customer.lastName || ""}`.trim();
+      return `${chat.customer.firstName || ''} ${chat.customer.lastName || ''}`.trim();
     }
-    return currentUser?.firstName || "You";
+    return currentUser?.firstName || 'You';
   };
 
   // Show chat list if no chat selected
@@ -111,9 +105,7 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
             {/* Header */}
             <div className="bg-gradient-to-r from-rose-400 to-pink-500 p-6">
               <h1 className="text-2xl font-serif text-white mb-1">Messages</h1>
-              <p className="text-rose-100 text-sm">
-                Chat with the Studio HaMy team
-              </p>
+              <p className="text-rose-100 text-sm">Chat with the Studio HaMy team</p>
             </div>
 
             {/* Chat List */}
@@ -138,11 +130,9 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">
-                          {getCustomerName(chat)}
-                        </h3>
+                        <h3 className="font-semibold text-gray-900">{getCustomerName(chat)}</h3>
                         <p className="text-sm text-gray-600 truncate">
-                          {chat.lastMessage || "No messages yet"}
+                          {chat.lastMessage || 'No messages yet'}
                         </p>
                       </div>
                       {chat.unreadCount && chat.unreadCount > 0 && (
@@ -166,11 +156,9 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
                       <div className="flex-1 relative">
                         <textarea
                           value={initialInputMessage}
-                          onChange={(e) =>
-                            setInitialInputMessage(e.target.value)
-                          }
+                          onChange={(e) => setInitialInputMessage(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
+                            if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
                               handleSendInitialMessage();
                             }
@@ -183,11 +171,7 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
                       </div>
                       <button
                         onClick={handleSendInitialMessage}
-                        disabled={
-                          !initialInputMessage.trim() ||
-                          isCreatingChat ||
-                          loading
-                        }
+                        disabled={!initialInputMessage.trim() || isCreatingChat || loading}
                         className="size-12 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Send className="size-5" />
@@ -214,21 +198,19 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl shadow-xl overflow-hidden"
-          style={{ height: "calc(100vh - 200px)", minHeight: "500px" }}
+          style={{ height: 'calc(100vh - 200px)', minHeight: '500px' }}
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-rose-400 to-pink-500 p-6 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-serif text-white mb-1">
-                {currentChat.staffName || "Studio Team"}
+                {currentChat.staffName || 'Studio Team'}
               </h1>
               <div className="flex items-center gap-2">
                 <div
-                  className={`size-2 rounded-full ${isConnected ? "bg-green-300" : "bg-gray-300"}`}
+                  className={`size-2 rounded-full ${isConnected ? 'bg-green-300' : 'bg-gray-300'}`}
                 />
-                <p className="text-rose-100 text-sm">
-                  {isConnected ? "Online" : "Offline"}
-                </p>
+                <p className="text-rose-100 text-sm">{isConnected ? 'Online' : 'Offline'}</p>
               </div>
             </div>
           </div>
@@ -242,43 +224,42 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
                   // Prefer chat.customerId for ownership to avoid stale auth-store mismatches.
                   const currentCustomerId = currentChat?.customerId || currentUser?.id;
                   const isUserMessage =
-                    Boolean(currentCustomerId) &&
-                    msg.senderId === currentCustomerId;
-                  
+                    Boolean(currentCustomerId) && msg.senderId === currentCustomerId;
+
                   return (
                     <motion.div
                       key={msg.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className={`flex ${isUserMessage ? "justify-end" : "justify-start"}`}
+                      className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'}`}
                     >
                       <div className={`max-w-[70%]`}>
                         {/* Sender Name & Time */}
                         <div
-                          className={`flex items-center gap-2 mb-2 ${isUserMessage ? "justify-end" : "justify-start"}`}
+                          className={`flex items-center gap-2 mb-2 ${isUserMessage ? 'justify-end' : 'justify-start'}`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className={`text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 ${
-                              isUserMessage
-                                ? "bg-rose-100 text-rose-700"
-                                : "bg-blue-100 text-blue-700"
-                            }`}>
+                            <span
+                              className={`text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 ${
+                                isUserMessage
+                                  ? 'bg-rose-100 text-rose-700'
+                                  : 'bg-blue-100 text-blue-700'
+                              }`}
+                            >
                               {isUserMessage ? (
                                 <>
                                   <Check className="w-3 h-3" />
                                   You (Customer) - Sent
                                 </>
                               ) : (
-                                <>
-                                  Studio Team (Staff) - Received
-                                </>
+                                <>Studio Team (Staff) - Received</>
                               )}
                             </span>
                             <span className="text-xs text-gray-400">
                               {new Date(msg.createdAt).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
+                                hour: '2-digit',
+                                minute: '2-digit',
                               })}
                             </span>
                           </div>
@@ -288,13 +269,11 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
                         <div
                           className={`rounded-2xl px-4 py-3 ${
                             isUserMessage
-                              ? "bg-gradient-to-r from-rose-400 to-pink-500 text-white"
-                              : "bg-gray-100 text-gray-800"
+                              ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white'
+                              : 'bg-gray-100 text-gray-800'
                           }`}
                         >
-                          <p className="text-sm leading-relaxed">
-                            {msg.content}
-                          </p>
+                          <p className="text-sm leading-relaxed">{msg.content}</p>
                         </div>
                       </div>
                     </motion.div>
@@ -316,7 +295,7 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
+                      if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         handleSendMessage();
                       }

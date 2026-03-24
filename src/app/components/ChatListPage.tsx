@@ -43,9 +43,7 @@ export function ChatListPage() {
     <div className="w-full max-w-4xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Messages</h1>
 
-      {error && (
-        <div className="bg-red-100 text-red-700 p-4 rounded mb-4">{error}</div>
-      )}
+      {error && <div className="bg-red-100 text-red-700 p-4 rounded mb-4">{error}</div>}
 
       {chats.length === 0 ? (
         <Card className="p-8 text-center">

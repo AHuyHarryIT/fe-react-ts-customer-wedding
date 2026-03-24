@@ -74,6 +74,6 @@ export function usePackages() {
     packages,
     loading,
     error,
-    refetch: fetchPackages
+    refetch: fetchPackages,
   };
 }

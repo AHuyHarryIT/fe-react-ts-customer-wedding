@@ -18,9 +18,9 @@ import { initializeAuth } from '@/services/authService';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
-  const [pageData, setPageData] = useState<any>(null);
+  const [pageData, setPageData] = useState<Record<string, unknown> | null>(null);
   const [previousPage, setPreviousPage] = useState('home');
-  
+
   const { isAuthenticated } = useAuthStore();
 
   // Initialize auth on mount
@@ -28,7 +28,7 @@ export default function App() {
     initializeAuth();
   }, []);
 
-  const handleNavigate = (page: string, data?: any) => {
+  const handleNavigate = (page: string, data?: Record<string, unknown>) => {
     setPreviousPage(currentPage);
     setCurrentPage(page);
     setPageData(data || null);
@@ -54,13 +54,13 @@ export default function App() {
     switch (currentPage) {
       case 'home':
         return <HomePage onNavigate={handleNavigate} />;
-      
+
       case 'auth':
         return <AuthPage onLogin={handleLogin} />;
-      
+
       case 'packages':
         return <PackagesPage onNavigate={handleNavigate} />;
-      
+
       case 'package-detail':
         return (
           <PackageDetailPage
@@ -69,7 +69,7 @@ export default function App() {
             onBack={handleBack}
           />
         );
-      
+
       case 'booking':
         return (
           <BookingFlowPage
@@ -78,25 +78,25 @@ export default function App() {
             onBack={handleBack}
           />
         );
-      
+
       case 'dashboard':
         return <DashboardPage onNavigate={handleNavigate} />;
-      
+
       case 'booking-detail':
         return <BookingDetailPage onBack={handleBack} />;
-      
+
       case 'gallery':
         return <GalleryPage onNavigate={handleNavigate} />;
-      
+
       case 'messages':
         return <MessagesPage />;
-      
+
       case 'profile':
         return <ProfilePage />;
-      
+
       case 'contact':
         return <ContactPage />;
-      
+
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
@@ -110,13 +110,11 @@ export default function App() {
         isLoggedIn={isAuthenticated}
         onLogout={handleLogout}
       />
-      
-      <main>
-        {renderPage()}
-      </main>
-      
+
+      <main>{renderPage()}</main>
+
       <Footer />
-      
+
       <Toaster
         position="top-right"
         toastOptions={{

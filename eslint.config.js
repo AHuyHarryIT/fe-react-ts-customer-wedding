@@ -9,10 +9,7 @@ export default tseslint.config([
   globalIgnores(['dist', 'node_modules']),
   {
     files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommended,
-    ],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
@@ -23,10 +20,7 @@ export default tseslint.config([
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'no-console': 'off',
     },
   },

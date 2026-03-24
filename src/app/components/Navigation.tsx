@@ -16,11 +16,13 @@ export function Navigation({ currentPage, onNavigate, isLoggedIn, onLogout }: Na
     { id: 'home', label: 'Home' },
     { id: 'packages', label: 'Packages' },
     { id: 'gallery', label: 'Gallery' },
-    ...(isLoggedIn ? [
-      { id: 'dashboard', label: 'My Account' },
-      { id: 'messages', label: 'Messages' }
-    ] : []),
-    { id: 'contact', label: 'Contact' }
+    ...(isLoggedIn
+      ? [
+          { id: 'dashboard', label: 'My Account' },
+          { id: 'messages', label: 'Messages' },
+        ]
+      : []),
+    { id: 'contact', label: 'Contact' },
   ];
 
   return (
@@ -28,10 +30,7 @@ export function Navigation({ currentPage, onNavigate, isLoggedIn, onLogout }: Na
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <button 
-            onClick={() => onNavigate('home')}
-            className="flex items-center gap-2 group"
-          >
+          <button onClick={() => onNavigate('home')} className="flex items-center gap-2 group">
             <div className="bg-gradient-to-br from-rose-400 to-pink-500 p-2 rounded-full">
               <FiHeart className="size-5 text-white" />
             </div>
@@ -119,9 +118,7 @@ export function Navigation({ currentPage, onNavigate, isLoggedIn, onLogout }: Na
                   setMobileMenuOpen(false);
                 }}
                 className={`block w-full text-left px-4 py-3 ${
-                  currentPage === item.id
-                    ? 'text-rose-500 bg-rose-50'
-                    : 'text-gray-600'
+                  currentPage === item.id ? 'text-rose-500 bg-rose-50' : 'text-gray-600'
                 }`}
               >
                 {item.label}

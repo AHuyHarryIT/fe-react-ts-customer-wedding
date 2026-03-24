@@ -9,12 +9,12 @@ export function ContactPage() {
     email: '',
     phone: '',
     subject: '',
-    message: ''
+    message: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Message sent! We\'ll get back to you soon.');
+    toast.success("Message sent! We'll get back to you soon.");
     setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
   };
 
@@ -27,11 +27,10 @@ export function ContactPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-serif text-gray-800 mb-4">
-            Get In Touch
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-serif text-gray-800 mb-4">Get In Touch</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            Have questions? We'd love to hear from you. Send us a message and we'll respond as soon
+            as possible.
           </p>
         </motion.div>
 
@@ -112,7 +111,7 @@ export function ContactPage() {
           >
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <h2 className="text-2xl font-serif text-gray-800 mb-6">Send Us a Message</h2>
-              
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -159,9 +158,7 @@ export function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Subject
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
                     <select
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
@@ -177,9 +174,7 @@ export function ContactPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Message *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Message *</label>
                   <textarea
                     required
                     value={formData.message}
@@ -198,7 +193,8 @@ export function ContactPage() {
                     className="mt-1 size-4 text-rose-500 rounded focus:ring-rose-400"
                   />
                   <label htmlFor="consent" className="text-sm text-gray-600">
-                    I agree to receive communication from Studio HaMy regarding my inquiry. We respect your privacy and will never share your information.
+                    I agree to receive communication from Studio HaMy regarding my inquiry. We
+                    respect your privacy and will never share your information.
                   </label>
                 </div>
 
@@ -219,17 +215,21 @@ export function ContactPage() {
                 <div>
                   <h4 className="font-medium text-gray-800 mb-1">When should I book?</h4>
                   <p className="text-sm text-gray-600">
-                    We recommend booking 9-12 months in advance, especially for peak wedding season (May-October).
+                    We recommend booking 9-12 months in advance, especially for peak wedding season
+                    (May-October).
                   </p>
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-800 mb-1">Do you travel for weddings?</h4>
                   <p className="text-sm text-gray-600">
-                    Yes! We offer destination wedding packages and love to travel. Contact us for details.
+                    Yes! We offer destination wedding packages and love to travel. Contact us for
+                    details.
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-1">How long until I receive my photos?</h4>
+                  <h4 className="font-medium text-gray-800 mb-1">
+                    How long until I receive my photos?
+                  </h4>
                   <p className="text-sm text-gray-600">
                     Your fully edited gallery will be ready within 4-6 weeks after your wedding day.
                   </p>

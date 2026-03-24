@@ -1,15 +1,24 @@
-import { Calendar, Camera, CreditCard, Download, MessageSquare, Clock, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import {
+  Calendar,
+  Camera,
+  CreditCard,
+  Download,
+  MessageSquare,
+  Clock,
+  CheckCircle,
+  Image as ImageIcon,
+} from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { useCustomerBookings } from '../../hooks/useCustomerBookings';
 
 interface DashboardPageProps {
-  onNavigate: (page: string, data?: any) => void;
+  onNavigate: (page: string, data?: Record<string, unknown>) => void;
 }
 
 export function DashboardPage({ onNavigate }: DashboardPageProps) {
   const { bookings, loading: bookingsLoading } = useCustomerBookings();
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<Record<string, unknown> | null>(null);
   const [orderLoading, setOrderLoading] = useState(false);
 
   // Get the most recent booking
@@ -39,11 +48,35 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
   // Timeline with milestones (generic for now)
   const timeline = [
-    { event: 'Booking Confirmed', date: booking?.createdAt || new Date().toISOString(), status: 'completed' },
-    { event: 'Event Planning', date: booking?.eventDate || new Date().toISOString(), status: 'upcoming' },
-    { event: 'Final Confirmation', date: booking?.eventDate ? new Date(new Date(booking.eventDate).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString() : new Date().toISOString(), status: 'upcoming' },
-    { event: 'Wedding Day', date: booking?.eventDate || new Date().toISOString(), status: 'upcoming' },
-    { event: 'Photo Delivery', date: booking?.eventDate ? new Date(new Date(booking.eventDate).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() : new Date().toISOString(), status: 'upcoming' }
+    {
+      event: 'Booking Confirmed',
+      date: booking?.createdAt || new Date().toISOString(),
+      status: 'completed',
+    },
+    {
+      event: 'Event Planning',
+      date: booking?.eventDate || new Date().toISOString(),
+      status: 'upcoming',
+    },
+    {
+      event: 'Final Confirmation',
+      date: booking?.eventDate
+        ? new Date(new Date(booking.eventDate).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        : new Date().toISOString(),
+      status: 'upcoming',
+    },
+    {
+      event: 'Wedding Day',
+      date: booking?.eventDate || new Date().toISOString(),
+      status: 'upcoming',
+    },
+    {
+      event: 'Photo Delivery',
+      date: booking?.eventDate
+        ? new Date(new Date(booking.eventDate).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        : new Date().toISOString(),
+      status: 'upcoming',
+    },
   ];
 
   const recentMessages = [
@@ -51,35 +84,29 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       from: 'Studio Team',
       message: 'Looking forward to your event!',
       time: '2 days ago',
-      unread: true
+      unread: true,
     },
     {
       from: 'Studio',
       message: 'We have some great ideas for you',
       time: '5 days ago',
-      unread: false
-    }
+      unread: false,
+    },
   ];
 
   const quickActions = [
     { icon: MessageSquare, label: 'Messages', badge: 1, action: 'messages' },
     { icon: Calendar, label: 'View Booking', action: 'booking-detail' },
     { icon: Download, label: 'Upload Docs', action: 'booking-detail' },
-    { icon: ImageIcon, label: 'Gallery', action: 'gallery' }
+    { icon: ImageIcon, label: 'Gallery', action: 'gallery' },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl md:text-4xl font-serif text-gray-800 mb-2">
-            Welcome Back!
-          </h1>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-serif text-gray-800 mb-2">Welcome Back!</h1>
           <p className="text-gray-600">Here's an overview of your wedding planning</p>
         </motion.div>
 
@@ -155,7 +182,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                                 weekday: 'long',
                                 year: 'numeric',
                                 month: 'long',
-                                day: 'numeric'
+                                day: 'numeric',
                               })
                             : 'TBD'}
                         </p>
@@ -180,7 +207,9 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                 </>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No bookings found. Create a booking to get started!</p>
+                  <p className="text-gray-500">
+                    No bookings found. Create a booking to get started!
+                  </p>
                   <button
                     onClick={() => onNavigate('booking')}
                     className="mt-4 py-2 px-6 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium"
@@ -222,7 +251,12 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Balance Due</span>
                     <span className="text-lg font-medium text-rose-500">
-                      ${(order.balanceRemaining || order.summary?.balanceRemaining || 0).toLocaleString()}
+                      $
+                      {(
+                        order.balanceRemaining ||
+                        order.summary?.balanceRemaining ||
+                        0
+                      ).toLocaleString()}
                     </span>
                   </div>
 
@@ -231,8 +265,13 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                       <span>Payment Progress</span>
                       <span>
                         {order.totalAmount > 0
-                          ? Math.round(((order.paidAmount || order.summary?.totalPaid || 0) / order.totalAmount) * 100)
-                          : 0}%
+                          ? Math.round(
+                              ((order.paidAmount || order.summary?.totalPaid || 0) /
+                                order.totalAmount) *
+                                100
+                            )
+                          : 0}
+                        %
                       </span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -241,9 +280,13 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                         style={{
                           width: `${
                             order.totalAmount > 0
-                              ? Math.round(((order.paidAmount || order.summary?.totalPaid || 0) / order.totalAmount) * 100)
+                              ? Math.round(
+                                  ((order.paidAmount || order.summary?.totalPaid || 0) /
+                                    order.totalAmount) *
+                                    100
+                                )
                               : 0
-                          }%`
+                          }%`,
                         }}
                       />
                     </div>
@@ -272,9 +315,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                     <div className="flex flex-col items-center">
                       <div
                         className={`size-10 rounded-full flex items-center justify-center ${
-                          item.status === 'completed'
-                            ? 'bg-green-100'
-                            : 'bg-rose-100'
+                          item.status === 'completed' ? 'bg-green-100' : 'bg-rose-100'
                         }`}
                       >
                         {item.status === 'completed' ? (
@@ -293,7 +334,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                         {new Date(item.date).toLocaleDateString('en-US', {
                           month: 'long',
                           day: 'numeric',
-                          year: 'numeric'
+                          year: 'numeric',
                         })}
                       </p>
                     </div>
@@ -333,9 +374,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                   >
                     <div className="flex items-start justify-between mb-2">
                       <p className="font-medium text-gray-800">{msg.from}</p>
-                      {msg.unread && (
-                        <div className="size-2 bg-rose-500 rounded-full" />
-                      )}
+                      {msg.unread && <div className="size-2 bg-rose-500 rounded-full" />}
                     </div>
                     <p className="text-sm text-gray-600 line-clamp-2">{msg.message}</p>
                     <p className="text-xs text-gray-500 mt-2">{msg.time}</p>

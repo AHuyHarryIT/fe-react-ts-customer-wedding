@@ -25,7 +25,7 @@ export function ProfilePage() {
     confirmPassword: '',
     emailNotifications: true,
     smsNotifications: true,
-    marketingEmails: false
+    marketingEmails: false,
   });
 
   useEffect(() => {
@@ -78,8 +78,12 @@ export function ProfilePage() {
       } else {
         toast.success('Settings saved successfully!');
       }
-    } catch (error: any) {
-      const message = error?.response?.data?.message || 'Failed to save settings';
+    } catch (error: unknown) {
+      let message = 'Failed to save settings';
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { message?: string } } };
+        message = axiosError.response?.data?.message || message;
+      }
       toast.error(message);
     } finally {
       setIsSaving(false);
@@ -90,25 +94,17 @@ export function ProfilePage() {
     { id: 'personal', label: 'Personal Info', icon: FiUser },
     { id: 'wedding', label: 'Wedding Details', icon: FiUser },
     { id: 'security', label: 'Security', icon: FiLock },
-    { id: 'notifications', label: 'Notifications', icon: FiBell }
+    { id: 'notifications', label: 'Notifications', icon: FiBell },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl md:text-4xl font-serif text-gray-800 mb-2">
-            Account Settings
-          </h1>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-serif text-gray-800 mb-2">Account Settings</h1>
           <p className="text-gray-600">Manage your profile and preferences</p>
-          {loading && (
-            <p className="text-sm text-rose-500 mt-2">Loading account details...</p>
-          )}
+          {loading && <p className="text-sm text-rose-500 mt-2">Loading account details...</p>}
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -147,9 +143,7 @@ export function ProfilePage() {
               {/* Personal Info */}
               {activeTab === 'personal' && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-medium text-gray-800 mb-4">
-                    Personal Information
-                  </h2>
+                  <h2 className="text-xl font-medium text-gray-800 mb-4">Personal Information</h2>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -161,9 +155,7 @@ export function ProfilePage() {
                         <input
                           type="text"
                           value={formData.firstName}
-                          onChange={(e) =>
-                            setFormData({ ...formData, firstName: e.target.value })
-                          }
+                          onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                           className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                         />
                       </div>
@@ -178,9 +170,7 @@ export function ProfilePage() {
                         <input
                           type="text"
                           value={formData.lastName}
-                          onChange={(e) =>
-                            setFormData({ ...formData, lastName: e.target.value })
-                          }
+                          onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                           className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                         />
                       </div>
@@ -196,9 +186,7 @@ export function ProfilePage() {
                       <input
                         type="email"
                         value={formData.email}
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                       />
                     </div>
@@ -213,9 +201,7 @@ export function ProfilePage() {
                       <input
                         type="tel"
                         value={formData.phone}
-                        onChange={(e) =>
-                          setFormData({ ...formData, phone: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                       />
                     </div>
@@ -226,9 +212,7 @@ export function ProfilePage() {
               {/* Wedding Details */}
               {activeTab === 'wedding' && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-medium text-gray-800 mb-4">
-                    Wedding Details
-                  </h2>
+                  <h2 className="text-xl font-medium text-gray-800 mb-4">Wedding Details</h2>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -237,9 +221,7 @@ export function ProfilePage() {
                     <input
                       type="date"
                       value={formData.weddingDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, weddingDate: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, weddingDate: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                     />
                   </div>
@@ -251,16 +233,15 @@ export function ProfilePage() {
                     <input
                       type="text"
                       value={formData.weddingVenue}
-                      onChange={(e) =>
-                        setFormData({ ...formData, weddingVenue: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, weddingVenue: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                     />
                   </div>
 
                   <div className="bg-rose-50 rounded-lg p-4">
                     <p className="text-sm text-gray-700">
-                      <strong>Note:</strong> Changes to your wedding date or venue may affect your booking. Please contact us if you need to make significant changes.
+                      <strong>Note:</strong> Changes to your wedding date or venue may affect your
+                      booking. Please contact us if you need to make significant changes.
                     </p>
                   </div>
                 </div>
@@ -269,16 +250,14 @@ export function ProfilePage() {
               {/* Security */}
               {activeTab === 'security' && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-medium text-gray-800 mb-4">
-                    Change Password
-                  </h2>
+                  <h2 className="text-xl font-medium text-gray-800 mb-4">Change Password</h2>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Current Password
                     </label>
                     <div className="relative">
-                        <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                       <input
                         type="password"
                         value={formData.currentPassword}
@@ -295,13 +274,11 @@ export function ProfilePage() {
                       New Password
                     </label>
                     <div className="relative">
-                        <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                       <input
                         type="password"
                         value={formData.newPassword}
-                        onChange={(e) =>
-                          setFormData({ ...formData, newPassword: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                         className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                       />
                     </div>
@@ -312,7 +289,7 @@ export function ProfilePage() {
                       Confirm New Password
                     </label>
                     <div className="relative">
-                        <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                       <input
                         type="password"
                         value={formData.confirmPassword}
@@ -337,7 +314,9 @@ export function ProfilePage() {
                     <label className="flex items-center justify-between p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-rose-50 transition-colors">
                       <div>
                         <p className="font-medium text-gray-800">Email Notifications</p>
-                        <p className="text-sm text-gray-600">Receive updates about your booking via email</p>
+                        <p className="text-sm text-gray-600">
+                          Receive updates about your booking via email
+                        </p>
                       </div>
                       <input
                         type="checkbox"
@@ -352,7 +331,9 @@ export function ProfilePage() {
                     <label className="flex items-center justify-between p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-rose-50 transition-colors">
                       <div>
                         <p className="font-medium text-gray-800">SMS Notifications</p>
-                        <p className="text-sm text-gray-600">Get text messages for important updates</p>
+                        <p className="text-sm text-gray-600">
+                          Get text messages for important updates
+                        </p>
                       </div>
                       <input
                         type="checkbox"
@@ -367,7 +348,9 @@ export function ProfilePage() {
                     <label className="flex items-center justify-between p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-rose-50 transition-colors">
                       <div>
                         <p className="font-medium text-gray-800">Marketing Emails</p>
-                        <p className="text-sm text-gray-600">Receive tips, offers, and wedding inspiration</p>
+                        <p className="text-sm text-gray-600">
+                          Receive tips, offers, and wedding inspiration
+                        </p>
                       </div>
                       <input
                         type="checkbox"

@@ -66,83 +66,84 @@ export const useChat = (): UseChatState & UseChatActions => {
     }
   }, []);
 
-  const selectChat = useCallback(async (chatId: string) => {
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-    try {
-      // Disconnect from previous chat
-      if (state.currentChat) {
-        chatService.leaveChat(state.currentChat.id);
-      }
+  const selectChat = useCallback(
+    async (chatId: string) => {
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+      try {
+        // Disconnect from previous chat
+        if (state.currentChat) {
+          chatService.leaveChat(state.currentChat.id);
+        }
 
-      const chat = await chatService.getChat(chatId);
-      if (chat) {
-        setState((prev) => ({ ...prev, currentChat: chat }));
+        const chat = await chatService.getChat(chatId);
+        if (chat) {
+          setState((prev) => ({ ...prev, currentChat: chat }));
 
-        // Load messages FIRST, before connecting WebSocket
-        // This prevents messages from being added twice
-        await loadMessages(chatId);
+          // Load messages FIRST, before connecting WebSocket
+          // This prevents messages from being added twice
+          await loadMessages(chatId);
 
-        // Get userId from auth store
-        let authStore = useAuthStore.getState();
-        let userId = authStore.user?.id;
+          // Get userId from auth store
+          const authStore = useAuthStore.getState();
+          let userId = authStore.user?.id;
 
-        // If not in store, try to fetch from /auth/me endpoint
-        if (!userId) {
-          try {
-            const meResponse = await api.get('/auth/me');
-            const user = meResponse.data?.data || meResponse.data?.user;
-            if (user?.id) {
-              userId = user.id;
-              // Update the auth store with the fetched user
-              authStore.setAuth(user);
+          // If not in store, try to fetch from /auth/me endpoint
+          if (!userId) {
+            try {
+              const meResponse = await api.get('/auth/me');
+              const user = meResponse.data?.data || meResponse.data?.user;
+              if (user?.id) {
+                userId = user.id;
+                // Update the auth store with the fetched user
+                authStore.setAuth(user);
+              }
+            } catch (err) {
+              console.error('Failed to fetch user from /auth/me:', err);
             }
-          } catch (err) {
-            console.error('Failed to fetch user from /auth/me:', err);
+          }
+
+          if (userId) {
+            // Now connect to WebSocket AFTER loading historical messages
+            // Any new messages arriving via Socket.IO will be added here
+            chatService.connectWebSocket(chatId, userId, {
+              onMessageReceived: (message) => {
+                if (message.chatId !== chatId) {
+                  return;
+                }
+
+                setState((prev) => {
+                  // Deduplicate: only add if message doesn't already exist
+                  const messageExists = prev.messages.some((msg) => msg.id === message.id);
+                  if (messageExists) {
+                    return prev;
+                  }
+                  return {
+                    ...prev,
+                    messages: [...prev.messages, message],
+                    error: null,
+                  };
+                });
+              },
+              onConnectionChange: (connected) => {
+                setState((prev) => ({ ...prev, isConnected: connected }));
+              },
+            });
+          } else {
+            console.warn('User ID not available for WebSocket connection');
+            setState((prev) => ({ ...prev, isConnected: false }));
           }
         }
-
-        if (userId) {
-          // Now connect to WebSocket AFTER loading historical messages
-          // Any new messages arriving via Socket.IO will be added here
-          chatService.connectWebSocket(chatId, userId, {
-            onMessageReceived: (message) => {
-              if (message.chatId !== chatId) {
-                return;
-              }
-
-              setState((prev) => {
-                // Deduplicate: only add if message doesn't already exist
-                const messageExists = prev.messages.some(
-                  (msg) => msg.id === message.id
-                );
-                if (messageExists) {
-                  return prev;
-                }
-                return {
-                  ...prev,
-                  messages: [...prev.messages, message],
-                  error: null,
-                };
-              });
-            },
-            onConnectionChange: (connected) => {
-              setState((prev) => ({ ...prev, isConnected: connected }));
-            },
-          });
-        } else {
-          console.warn('User ID not available for WebSocket connection');
-          setState((prev) => ({ ...prev, isConnected: false }));
-        }
+      } catch (err) {
+        setState((prev) => ({
+          ...prev,
+          error: (err as Error).message || 'Failed to select chat',
+        }));
+      } finally {
+        setState((prev) => ({ ...prev, loading: false }));
       }
-    } catch (err) {
-      setState((prev) => ({
-        ...prev,
-        error: (err as Error).message || 'Failed to select chat',
-      }));
-    } finally {
-      setState((prev) => ({ ...prev, loading: false }));
-    }
-  }, [state.currentChat]);
+    },
+    [state.currentChat]
+  );
 
   const loadMessages = useCallback(async (chatId: string) => {
     try {
@@ -184,9 +185,7 @@ export const useChat = (): UseChatState & UseChatActions => {
         // the REST response message once (deduplicated by id).
         if (sentMessage) {
           setState((prev) => {
-            const messageExists = prev.messages.some(
-              (msg) => msg.id === sentMessage.id
-            );
+            const messageExists = prev.messages.some((msg) => msg.id === sentMessage.id);
             if (messageExists) {
               return prev;
             }
@@ -212,52 +211,53 @@ export const useChat = (): UseChatState & UseChatActions => {
       await chatService.markAsRead(chatId);
       setState((prev) => ({
         ...prev,
-        chats: prev.chats.map((chat) =>
-          chat.id === chatId ? { ...chat, unreadCount: 0 } : chat
-        ),
+        chats: prev.chats.map((chat) => (chat.id === chatId ? { ...chat, unreadCount: 0 } : chat)),
       }));
     } catch (err) {
       console.error('Failed to mark as read:', err);
     }
   }, []);
 
-  const createChat = useCallback(async (bookingId?: string): Promise<Chat | null> => {
-    try {
-      // Try authStore first
-      let customerId = useAuthStore.getState().user?.id;
-      
-      // If not in authStore, try to get current user from API
-      if (!customerId) {
-        try {
-          // Try to get current user from auth endpoint
-          // The api client from authService will automatically attach the JWT token
-          const currentUserResponse = await api.get('/auth/me');
-          const currentUser = currentUserResponse.data?.data || currentUserResponse.data;
-          customerId = currentUser?.id || currentUser?.sub;
-        } catch (authError) {
-          console.error('Failed to get current user:', authError);
-          toast.error('Failed to authenticate. Please log in again.');
+  const createChat = useCallback(
+    async (bookingId?: string): Promise<Chat | null> => {
+      try {
+        // Try authStore first
+        let customerId = useAuthStore.getState().user?.id;
+
+        // If not in authStore, try to get current user from API
+        if (!customerId) {
+          try {
+            // Try to get current user from auth endpoint
+            // The api client from authService will automatically attach the JWT token
+            const currentUserResponse = await api.get('/auth/me');
+            const currentUser = currentUserResponse.data?.data || currentUserResponse.data;
+            customerId = currentUser?.id || currentUser?.sub;
+          } catch (authError) {
+            console.error('Failed to get current user:', authError);
+            toast.error('Failed to authenticate. Please log in again.');
+            return null;
+          }
+        }
+
+        if (!customerId) {
+          console.error('Could not determine user ID');
+          toast.error('You must be logged in to create a chat');
           return null;
         }
-      }
-      
-      if (!customerId) {
-        console.error('Could not determine user ID');
-        toast.error('You must be logged in to create a chat');
+
+        const newChat = await chatService.createChat(customerId, bookingId);
+        if (newChat) {
+          await loadChats();
+        }
+        return newChat;
+      } catch (error) {
+        console.error('Failed to create chat:', error);
+        toast.error('Failed to create chat');
         return null;
       }
-      
-      const newChat = await chatService.createChat(customerId, bookingId);
-      if (newChat) {
-        await loadChats();
-      }
-      return newChat;
-    } catch (error) {
-      console.error('Failed to create chat:', error);
-      toast.error('Failed to create chat');
-      return null;
-    }
-  }, [loadChats]);
+    },
+    [loadChats]
+  );
 
   const disconnect = useCallback(() => {
     chatService.disconnectWebSocket();

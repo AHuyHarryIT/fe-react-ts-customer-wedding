@@ -124,11 +124,7 @@ class ChatService {
   }
 
   // WebSocket Connection Management
-  connectWebSocket(
-    chatId: string,
-    userId: string,
-    handlers?: ConnectWebSocketHandlers
-  ): void {
+  connectWebSocket(chatId: string, userId: string, handlers?: ConnectWebSocketHandlers): void {
     if (this.socket?.connected) {
       this.socket.emit('join_chat', { chatId });
       handlers?.onConnectionChange?.(true);

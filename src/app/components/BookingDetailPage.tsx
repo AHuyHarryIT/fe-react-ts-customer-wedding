@@ -1,4 +1,13 @@
-import { Calendar, MapPin, Camera, CreditCard, Download, Upload, FileText, User } from 'lucide-react';
+import {
+  Calendar,
+  MapPin,
+  Camera,
+  CreditCard,
+  Download,
+  Upload,
+  FileText,
+  User,
+} from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { bookingService, orderService } from '../../services/bookingService';
@@ -11,8 +20,8 @@ interface BookingDetailPageProps {
 
 export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingDetailPageProps) {
   const { bookings } = useCustomerBookings();
-  const [booking, setBooking] = useState<any>(null);
-  const [order, setOrder] = useState<any>(null);
+  const [booking, setBooking] = useState<Record<string, unknown> | null>(null);
+  const [order, setOrder] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,7 +73,7 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
     paidAmount: 1999,
     paymentSchedule: [
       { date: '2026-02-03', amount: 1999, status: 'paid', description: 'Booking Deposit (50%)' },
-      { date: '2026-05-15', amount: 2000, status: 'pending', description: 'Final Payment (50%)' }
+      { date: '2026-05-15', amount: 2000, status: 'pending', description: 'Final Payment (50%)' },
     ],
     services: [
       'Full Day Coverage (10 hours)',
@@ -73,14 +82,14 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
       'Engagement Session',
       'Premium Photo Album',
       '2 Photographers',
-      'USB Drive with all photos'
-    ]
+      'USB Drive with all photos',
+    ],
   };
 
   const documents = [
     { name: 'Wedding Photography Contract.pdf', size: '245 KB', uploaded: true },
     { name: 'Timeline & Shot List.pdf', size: '182 KB', uploaded: true },
-    { name: 'Venue Information.pdf', size: '156 KB', uploaded: false }
+    { name: 'Venue Information.pdf', size: '156 KB', uploaded: false },
   ];
 
   if (loading) {
@@ -114,11 +123,7 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <button
             onClick={onBack}
             className="text-gray-600 hover:text-rose-500 mb-4 transition-colors"
@@ -149,7 +154,7 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
               className="bg-white rounded-2xl shadow-lg p-6"
             >
               <h2 className="text-xl font-medium text-gray-800 mb-6">Wedding Information</h2>
-              
+
               <div className="space-y-4">
                 <div className="flex items-start gap-4 p-4 bg-rose-50 rounded-lg">
                   <Calendar className="size-6 text-rose-500 mt-1" />
@@ -161,11 +166,13 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
                             weekday: 'long',
                             year: 'numeric',
                             month: 'long',
-                            day: 'numeric'
+                            day: 'numeric',
                           })
                         : 'TBD'}
                     </p>
-                    <p className="text-sm text-gray-700">{displayBooking.weddingTime || 'Time TBD'}</p>
+                    <p className="text-sm text-gray-700">
+                      {displayBooking.weddingTime || 'Time TBD'}
+                    </p>
                   </div>
                 </div>
 
@@ -173,7 +180,9 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
                   <MapPin className="size-6 text-rose-500 mt-1" />
                   <div>
                     <p className="text-sm text-gray-600">Location</p>
-                    <p className="font-medium text-gray-800">{displayBooking.location || 'Location TBD'}</p>
+                    <p className="font-medium text-gray-800">
+                      {displayBooking.location || 'Location TBD'}
+                    </p>
                   </div>
                 </div>
 
@@ -225,7 +234,7 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
               className="bg-white rounded-2xl shadow-lg p-6"
             >
               <h2 className="text-xl font-medium text-gray-800 mb-6">Your Team</h2>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="size-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center text-white font-medium">
@@ -317,14 +326,26 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-600">Amount Paid</span>
                   <span className="font-medium text-green-600">
-                    ${(order?.paidAmount || order?.summary?.totalPaid || displayBooking.paidAmount || 0).toLocaleString()}
+                    $
+                    {(
+                      order?.paidAmount ||
+                      order?.summary?.totalPaid ||
+                      displayBooking.paidAmount ||
+                      0
+                    ).toLocaleString()}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-600">Balance Due</span>
                   <span className="font-medium text-rose-500">
-                    ${(order?.balanceRemaining || order?.summary?.balanceRemaining || (displayBooking.totalAmount - displayBooking.paidAmount) || 0).toLocaleString()}
+                    $
+                    {(
+                      order?.balanceRemaining ||
+                      order?.summary?.balanceRemaining ||
+                      displayBooking.totalAmount - displayBooking.paidAmount ||
+                      0
+                    ).toLocaleString()}
                   </span>
                 </div>
 
@@ -333,10 +354,17 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
                     <span>Payment Progress</span>
                     <span>
                       {order?.totalAmount > 0
-                        ? Math.round(((order.paidAmount || order.summary?.totalPaid || 0) / order.totalAmount) * 100)
+                        ? Math.round(
+                            ((order.paidAmount || order.summary?.totalPaid || 0) /
+                              order.totalAmount) *
+                              100
+                          )
                         : displayBooking.totalAmount > 0
-                        ? Math.round((displayBooking.paidAmount / displayBooking.totalAmount) * 100)
-                        : 0}%
+                          ? Math.round(
+                              (displayBooking.paidAmount / displayBooking.totalAmount) * 100
+                            )
+                          : 0}
+                      %
                     </span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -345,11 +373,17 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
                       style={{
                         width: `${
                           order?.totalAmount > 0
-                            ? Math.round(((order.paidAmount || order.summary?.totalPaid || 0) / order.totalAmount) * 100)
+                            ? Math.round(
+                                ((order.paidAmount || order.summary?.totalPaid || 0) /
+                                  order.totalAmount) *
+                                  100
+                              )
                             : displayBooking.totalAmount > 0
-                            ? Math.round((displayBooking.paidAmount / displayBooking.totalAmount) * 100)
-                            : 0
-                        }%`
+                              ? Math.round(
+                                  (displayBooking.paidAmount / displayBooking.totalAmount) * 100
+                                )
+                              : 0
+                        }%`,
                       }}
                     />
                   </div>
@@ -360,39 +394,42 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
               <div className="space-y-3">
                 <h3 className="font-medium text-gray-800 text-sm">Payment Information</h3>
                 {displayBooking.paymentSchedule && displayBooking.paymentSchedule.length > 0 ? (
-                  displayBooking.paymentSchedule.map((payment: any, index: number) => (
-                    <div
-                      key={index}
-                      className={`p-3 rounded-lg ${
-                        payment.status === 'paid' ? 'bg-green-50' : 'bg-amber-50'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-sm font-medium text-gray-800">
-                          ${payment.amount.toLocaleString()}
-                        </span>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            payment.status === 'paid'
-                              ? 'bg-green-200 text-green-800'
-                              : 'bg-amber-200 text-amber-800'
-                          }`}
-                        >
-                          {payment.status}
-                        </span>
+                  (displayBooking.paymentSchedule as Record<string, unknown>[]).map(
+                    (payment: Record<string, unknown>, index: number) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg ${
+                          payment.status === 'paid' ? 'bg-green-50' : 'bg-amber-50'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="text-sm font-medium text-gray-800">
+                            ${payment.amount.toLocaleString()}
+                          </span>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              payment.status === 'paid'
+                                ? 'bg-green-200 text-green-800'
+                                : 'bg-amber-200 text-amber-800'
+                            }`}
+                          >
+                            {payment.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600">{payment.description}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Due: {new Date(payment.date).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-600">{payment.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Due: {new Date(payment.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))
+                    )
+                  )
                 ) : (
                   <p className="text-sm text-gray-600">No payment schedule available</p>
                 )}
               </div>
 
-              {(order?.balanceRemaining || (displayBooking.totalAmount - displayBooking.paidAmount)) > 0 && (
+              {(order?.balanceRemaining || displayBooking.totalAmount - displayBooking.paidAmount) >
+                0 && (
                 <button className="w-full mt-6 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium">
                   Make Payment
                 </button>

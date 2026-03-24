@@ -26,18 +26,15 @@ export function useCustomerOrders() {
   }, [user?.id]);
 
   // Get order for specific booking
-  const getOrderForBooking = useCallback(
-    async (bookingId: string) => {
-      try {
-        const order = await orderService.getOrderByBookingId(bookingId);
-        return order;
-      } catch (err) {
-        console.error('Failed to fetch order:', err);
-        return null;
-      }
-    },
-    []
-  );
+  const getOrderForBooking = useCallback(async (bookingId: string) => {
+    try {
+      const order = await orderService.getOrderByBookingId(bookingId);
+      return order;
+    } catch (err) {
+      console.error('Failed to fetch order:', err);
+      return null;
+    }
+  }, []);
 
   // Get order status for specific booking
   const getOrderStatus = useCallback(async (bookingId: string) => {

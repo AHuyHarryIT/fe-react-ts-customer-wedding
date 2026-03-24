@@ -17,7 +17,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
-  
+
   const { setAuth } = useAuthStore();
 
   const validateForm = () => {
@@ -25,7 +25,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
 
     if (!phoneNumber) {
       newErrors.phoneNumber = 'Phone is required';
-    } else if (!/^\+?[\d\s\-\(\)]{10,}$/.test(phoneNumber)) {
+    } else if (!/^\+?[\d\s\-()\]]{10,}$/.test(phoneNumber)) {
       newErrors.phoneNumber = 'Phone is invalid';
     }
 
@@ -57,7 +57,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
       } else {
         data = await authApi.register({ phoneNumber, password, firstName, lastName });
       }
-      
+
       // Normalize nullable profile fields to store shape.
       setAuth({
         ...data.user,
@@ -67,7 +67,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
       });
       onLogin(phoneNumber);
     } catch (error) {
-      const errorMessage = (error as any)?.response?.data?.message || (error as Error).message || 'An error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setServerError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -85,7 +85,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="bg-gradient-to-br from-rose-400 to-pink-500 p-3 rounded-full">
-              <FiHeart className="size-6 text-white fill-white"  />
+              <FiHeart className="size-6 text-white fill-white" />
             </div>
             <span className="text-2xl font-serif text-gray-800">Studio HaMy</span>
           </div>
@@ -122,9 +122,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                 <div className="relative">
                   <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                   <input
@@ -162,9 +160,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
               <div className="relative">
                 <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                 <input
@@ -182,9 +178,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <div className="relative">
                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                 <input
@@ -196,9 +190,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
                   disabled={isLoading}
                 />
               </div>
-              {errors.password && (
-                <p className="text-sm text-red-500 mt-1">{errors.password}</p>
-              )}
+              {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
             </div>
 
             {serverError && (
@@ -209,10 +201,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
 
             {isLogin && (
               <div className="flex justify-end">
-                <button
-                  type="button"
-                  className="text-sm text-rose-500 hover:text-rose-600"
-                >
+                <button type="button" className="text-sm text-rose-500 hover:text-rose-600">
                   Forgot password?
                 </button>
               </div>

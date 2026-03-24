@@ -79,9 +79,7 @@ export const bookingService = {
   // Get single booking details
   getBookingDetails: async (bookingId: string) => {
     try {
-      const response = await api.get<StandardResponse<Booking>>(
-        `/bookings/${bookingId}`
-      );
+      const response = await api.get<StandardResponse<Booking>>(`/bookings/${bookingId}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching booking details:', error);
@@ -120,9 +118,7 @@ export const orderService = {
   // Get order for booking
   getOrderByBookingId: async (bookingId: string) => {
     try {
-      const response = await api.get<StandardResponse<Order>>(
-        `/orders/${bookingId}`
-      );
+      const response = await api.get<StandardResponse<Order>>(`/orders/${bookingId}`);
       return response.data.data || null;
     } catch (error) {
       console.error('Error fetching order:', error);

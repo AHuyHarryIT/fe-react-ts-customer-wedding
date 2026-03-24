@@ -27,6 +27,14 @@ import { useAuthStore } from '../stores/authStore';
 import { initializeAuth } from '../services/authService';
 import { usePackageDetail } from '../hooks/usePackageDetail';
 
+type PageNavigationData = {
+  package?: {
+    id: string | number;
+    name?: string;
+    price?: number;
+  };
+};
+
 const POST_LOGIN_REDIRECT_KEY = 'post_login_redirect';
 
 const normalizeRedirectPath = (value?: string | null): string => {
@@ -226,29 +234,44 @@ const rootRoute = createRootRoute({
   component: RootLayout,
 });
 
+function HomeRoute() {
+  const navigate = useNavigate();
+  return (
+    <HomePage
+      onNavigate={(page: string, data?: PageNavigationData) => {
+        if (page === 'package-detail') {
+          const packageId = data?.package?.id;
+          if (packageId) {
+            navigate({ to: '/package/$packageId', params: { packageId: String(packageId) } });
+            return;
+          }
+          navigate({ to: '/packages' });
+          return;
+        }
+        navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' });
+      }}
+    />
+  );
+}
+
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: () => {
-    const navigate = useNavigate();
-    return (
-      <HomePage
-        onNavigate={(page: string, data?: any) => {
-          if (page === 'package-detail') {
-            const packageId = data?.package?.id;
-            if (packageId) {
-              navigate({ to: '/package/$packageId', params: { packageId: String(packageId) } });
-              return;
-            }
-            navigate({ to: '/packages' });
-            return;
-          }
-          navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' });
-        }}
-      />
-    );
-  },
+  component: HomeRoute,
 });
+
+function AuthRoute() {
+  const navigate = useNavigate();
+
+  return (
+    <AuthPage
+      onLogin={() => {
+        const redirectPath = consumePostLoginRedirect();
+        navigate({ to: redirectPath as '/' });
+      }}
+    />
+  );
+}
 
 const authRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -260,108 +283,105 @@ const authRoute = createRoute({
       throw redirect({ to: redirectPath as '/' });
     }
   },
-  component: () => {
-    const navigate = useNavigate();
-
-    return (
-      <AuthPage
-        onLogin={() => {
-          const redirectPath = consumePostLoginRedirect();
-          navigate({ to: redirectPath as '/' });
-        }}
-      />
-    );
-  },
+  component: AuthRoute,
 });
+
+function PackagesRoute() {
+  const navigate = useNavigate();
+  return (
+    <PackagesPage
+      onNavigate={(page: string, data?: PageNavigationData) => {
+        if (page === 'package-detail') {
+          const packageId = data?.package?.id;
+          if (packageId) {
+            navigate({ to: '/package/$packageId', params: { packageId: String(packageId) } });
+            return;
+          }
+          navigate({ to: '/packages' });
+          return;
+        }
+        navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' });
+      }}
+    />
+  );
+}
 
 const packagesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/packages',
-  component: () => {
-    const navigate = useNavigate();
-    return (
-      <PackagesPage
-        onNavigate={(page: string, data?: any) => {
-          if (page === 'package-detail') {
-            const packageId = data?.package?.id;
-            if (packageId) {
-              navigate({ to: '/package/$packageId', params: { packageId: String(packageId) } });
-              return;
-            }
-            navigate({ to: '/packages' });
-            return;
-          }
-          navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' });
-        }}
-      />
-    );
-  },
+  component: PackagesRoute,
 });
+
+function PackageDetailRoute() {
+  const navigate = useNavigate();
+  const packageId = useRouterState({ select: (s) => s.location.pathname.split('/').pop() || '' });
+  const { packageData } = usePackageDetail(packageId);
+
+  const fallbackPackage = {
+    id: packageId,
+    name: `Package #${packageId}`,
+    price: 0,
+    description: 'Selected package details',
+    features: [],
+    image: '',
+  };
+
+  return (
+    <PackageDetailPage
+      packageData={packageData || fallbackPackage}
+      onNavigate={(page: string) => {
+        if (page === 'booking') {
+          navigate({ to: '/booking' });
+          return;
+        }
+        navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' });
+      }}
+      onBack={() => window.history.back()}
+    />
+  );
+}
 
 const packageDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/package/$packageId',
-  component: () => {
-    const navigate = useNavigate();
-    const packageId = useRouterState({ select: (s) => s.location.pathname.split('/').pop() || '' });
-    const { packageData } = usePackageDetail(packageId);
-
-    const fallbackPackage = {
-      id: packageId,
-      name: `Package #${packageId}`,
-      price: 0,
-      description: 'Selected package details',
-      features: [],
-      image: '',
-    };
-
-    return (
-      <PackageDetailPage
-        packageData={packageData || fallbackPackage}
-        onNavigate={(page: string) => {
-          if (page === 'booking') {
-            navigate({ to: '/booking' });
-            return;
-          }
-          navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' });
-        }}
-        onBack={() => window.history.back()}
-      />
-    );
-  },
+  component: PackageDetailRoute,
 });
+
+function BookingRoute() {
+  const navigate = useNavigate();
+  return (
+    <BookingFlowPage
+      onNavigate={(page: string) =>
+        navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' })
+      }
+      onBack={() => window.history.back()}
+    />
+  );
+}
 
 const bookingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/booking',
   beforeLoad: ({ location }) => requireAuth({ location }),
-  component: () => {
-    const navigate = useNavigate();
-    return (
-      <BookingFlowPage
-        onNavigate={(page: string) =>
-          navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' })
-        }
-        onBack={() => window.history.back()}
-      />
-    );
-  },
+  component: BookingRoute,
 });
+
+function DashboardRoute() {
+  const navigate = useNavigate();
+  return (
+    <DashboardPage
+      onNavigate={(page: string) =>
+        navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' })
+      }
+    />
+  );
+}
 
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/dashboard',
   beforeLoad: ({ location }) => requireAuth({ location }),
-  component: () => {
-    const navigate = useNavigate();
-    return (
-      <DashboardPage
-        onNavigate={(page: string) =>
-          navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' })
-        }
-      />
-    );
-  },
+  component: DashboardRoute,
 });
 
 const bookingDetailRoute = createRoute({
@@ -371,19 +391,21 @@ const bookingDetailRoute = createRoute({
   component: () => <BookingDetailPage onBack={() => window.history.back()} />,
 });
 
+function GalleryRoute() {
+  const navigate = useNavigate();
+  return (
+    <GalleryPage
+      onNavigate={(page: string) =>
+        navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' })
+      }
+    />
+  );
+}
+
 const galleryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/gallery',
-  component: () => {
-    const navigate = useNavigate();
-    return (
-      <GalleryPage
-        onNavigate={(page: string) =>
-          navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' })
-        }
-      />
-    );
-  },
+  component: GalleryRoute,
 });
 
 const messagesRoute = createRoute({
