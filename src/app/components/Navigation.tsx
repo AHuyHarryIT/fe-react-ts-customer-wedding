@@ -1,4 +1,4 @@
-import { Heart, Menu, X, User } from 'lucide-react';
+import { FiHeart, FiMenu, FiX, FiUser } from 'react-icons/fi';
 import { useState } from 'react';
 
 interface NavigationProps {
@@ -33,7 +33,7 @@ export function Navigation({ currentPage, onNavigate, isLoggedIn, onLogout }: Na
             className="flex items-center gap-2 group"
           >
             <div className="bg-gradient-to-br from-rose-400 to-pink-500 p-2 rounded-full">
-              <Heart className="size-5 text-white fill-white" />
+              <FiHeart className="size-5 text-white" />
             </div>
             <span className="text-xl font-serif text-gray-800">Studio HaMy</span>
           </button>
@@ -63,7 +63,7 @@ export function Navigation({ currentPage, onNavigate, isLoggedIn, onLogout }: Na
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                   className="flex items-center gap-2 px-4 py-2 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
                 >
-                  <User className="size-4" />
+                  <FiUser className="size-4" />
                   <span className="text-sm">Profile</span>
                 </button>
                 {profileMenuOpen && (
@@ -104,7 +104,7 @@ export function Navigation({ currentPage, onNavigate, isLoggedIn, onLogout }: Na
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 text-gray-600"
           >
-            {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
+            {mobileMenuOpen ? <FiX className="size-6" /> : <FiMenu className="size-6" />}
           </button>
         </div>
 

@@ -1,11 +1,13 @@
 import { useState } from "react";
 import {
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle,
-  Plus,
-  Calendar,
-} from "lucide-react";
+  FiChevronLeft,
+  FiChevronRight,
+  FiCheckCircle,
+  FiPlus,
+  FiCalendar,
+  FiPhone,
+  FiCamera
+} from 'react-icons/fi';
 import { motion } from "motion/react";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import { formatMoneyVND } from "@/utils/money";
@@ -51,27 +53,18 @@ export function PackageDetailPage({
     (img, idx, arr): img is string => Boolean(img) && arr.indexOf(img) === idx,
   );
 
+  const TimelineIcons = {
+    Consultation: FiPhone,
+    'Pre-Wedding': FiCamera,
+    'Wedding Day': FiCalendar,
+    Delivery: FiCheckCircle
+  };
+
   const timeline = [
-    {
-      phase: "Consultation",
-      description: "Initial meeting to discuss your vision",
-      icon: "💬",
-    },
-    {
-      phase: "Pre-Wedding",
-      description: "Engagement or pre-wedding photo session",
-      icon: "📸",
-    },
-    {
-      phase: "Wedding Day",
-      description: "Full coverage of your special day",
-      icon: "💒",
-    },
-    {
-      phase: "Delivery",
-      description: "Edited photos and videos within 4-6 weeks",
-      icon: "🎁",
-    },
+    { phase: 'Consultation', description: 'Initial meeting to discuss your vision' },
+    { phase: 'Pre-Wedding', description: 'Engagement or pre-wedding photo session' },
+    { phase: 'Wedding Day', description: 'Full coverage of your special day' },
+    { phase: 'Delivery', description: 'Edited photos and videos within 4-6 weeks' }
   ];
 
 
@@ -93,7 +86,7 @@ export function PackageDetailPage({
           onClick={onBack}
           className="flex items-center gap-2 text-gray-600 hover:text-rose-500 mb-8 transition-colors"
         >
-          <ChevronLeft className="size-5" />
+          <FiChevronLeft className="size-5" />
           Back to Packages
         </button>
 
@@ -115,13 +108,13 @@ export function PackageDetailPage({
                 onClick={prevImage}
                 className="absolute left-4 top-1/2 -translate-y-1/2 size-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all"
               >
-                <ChevronLeft className="size-5 text-gray-800" />
+                <FiChevronLeft className="size-5 text-gray-800" />
               </button>
               <button
                 onClick={nextImage}
                 className="absolute right-4 top-1/2 -translate-y-1/2 size-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all"
               >
-                <ChevronRight className="size-5 text-gray-800" />
+                <FiChevronRight className="size-5 text-gray-800" />
               </button>
 
               {/* Image Counter */}
@@ -194,7 +187,7 @@ export function PackageDetailPage({
                       className="flex items-start justify-between gap-3"
                     >
                       <div className="flex items-start gap-3">
-                        <CheckCircle className="size-5 text-rose-400 flex-shrink-0 mt-0.5" />
+                        <FiCheckCircle className="size-5 text-rose-400 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="text-gray-700 font-medium">
                             {service.name}
@@ -222,19 +215,22 @@ export function PackageDetailPage({
                 Process Timeline
               </h2>
               <div className="space-y-4">
-                {timeline.map((item, index) => (
-                  <div key={index} className="flex gap-4">
-                    <div className="text-2xl">{item.icon}</div>
-                    <div>
-                      <h3 className="font-medium text-gray-800">
-                        {item.phase}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {item.description}
-                      </p>
+                {timeline.map((item, index) => {
+                  const IconComponent = TimelineIcons[item.phase as keyof typeof TimelineIcons];
+                  return (
+                    <div key={index} className="flex gap-4">
+                      {IconComponent && <IconComponent className="size-6 text-rose-400 flex-shrink-0" />}
+                      <div>
+                        <h3 className="font-medium text-gray-800">
+                          {item.phase}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {item.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -245,7 +241,7 @@ export function PackageDetailPage({
                 onClick={() => onNavigate("booking", { package: packageData })}
                 className="flex-1 py-4 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-xl transition-all font-medium flex items-center justify-center gap-2"
               >
-                <Calendar className="size-5" />
+                <FiCalendar className="size-5" />
                 Book This Package
               </button>
               <button

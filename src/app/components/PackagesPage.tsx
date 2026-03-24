@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, Video, Image, CheckCircle, SlidersHorizontal } from 'lucide-react';
+import { FiCamera, FiVideo, FiImage, FiCheckCircle, FiSliders } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { formatMoneyVND } from '@/utils/money';
@@ -177,7 +177,7 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
           className="bg-white rounded-xl shadow-md p-6 mb-8"
         >
           <div className="flex items-center gap-2 mb-4">
-            <SlidersHorizontal className="size-5 text-rose-500" />
+            <FiSliders className="size-5 text-rose-500" />
             <h2 className="font-medium text-gray-800">Filters</h2>
           </div>
 
@@ -258,9 +258,9 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
                 />
                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
                   <div className="flex items-center gap-1">
-                    {pkg.category === 'photography' && <Camera className="size-4 text-rose-500" />}
-                    {pkg.category === 'video' && <Video className="size-4 text-rose-500" />}
-                    {pkg.category === 'full-service' && <Image className="size-4 text-rose-500" />}
+                    {pkg.category === 'photography' && <FiCamera className="size-4 text-rose-500" />}
+                    {pkg.category === 'video' && <FiVideo className="size-4 text-rose-500" />}
+                    {pkg.category === 'full-service' && <FiImage className="size-4 text-rose-500" />}
                     <span className="text-xs font-medium text-gray-700 capitalize">
                       {pkg.category === 'full-service' ? 'Photo + Video' : pkg.category}
                     </span>
@@ -278,7 +278,7 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
                 <ul className="space-y-2 mb-6">
                   {pkg.features.slice(0, 4).map((feature, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                      <CheckCircle className="size-4 text-rose-400 flex-shrink-0" />
+                      <FiCheckCircle className="size-4 text-rose-400 flex-shrink-0" />
                       {feature}
                     </li>
                   ))}

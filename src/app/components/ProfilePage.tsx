@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { User, Mail, Phone, Lock, Bell, Save } from 'lucide-react';
+import { FiUser, FiMail, FiPhone, FiLock, FiBell, FiSave } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import {
@@ -87,10 +87,10 @@ export function ProfilePage() {
   };
 
   const tabs = [
-    { id: 'personal', label: 'Personal Info', icon: User },
-    { id: 'wedding', label: 'Wedding Details', icon: User },
-    { id: 'security', label: 'Security', icon: Lock },
-    { id: 'notifications', label: 'Notifications', icon: Bell }
+    { id: 'personal', label: 'Personal Info', icon: FiUser },
+    { id: 'wedding', label: 'Wedding Details', icon: FiUser },
+    { id: 'security', label: 'Security', icon: FiLock },
+    { id: 'notifications', label: 'Notifications', icon: FiBell }
   ];
 
   return (
@@ -157,7 +157,7 @@ export function ProfilePage() {
                         First Name
                       </label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                        <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                         <input
                           type="text"
                           value={formData.firstName}
@@ -174,7 +174,7 @@ export function ProfilePage() {
                         Last Name
                       </label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                        <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                         <input
                           type="text"
                           value={formData.lastName}
@@ -192,7 +192,7 @@ export function ProfilePage() {
                       Email Address
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                      <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                       <input
                         type="email"
                         value={formData.email}
@@ -209,7 +209,7 @@ export function ProfilePage() {
                       Phone Number
                     </label>
                     <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                      <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                       <input
                         type="tel"
                         value={formData.phone}
@@ -278,7 +278,7 @@ export function ProfilePage() {
                       Current Password
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                        <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                       <input
                         type="password"
                         value={formData.currentPassword}
@@ -295,7 +295,7 @@ export function ProfilePage() {
                       New Password
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                        <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                       <input
                         type="password"
                         value={formData.newPassword}
@@ -312,7 +312,7 @@ export function ProfilePage() {
                       Confirm New Password
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                        <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                       <input
                         type="password"
                         value={formData.confirmPassword}
@@ -389,7 +389,7 @@ export function ProfilePage() {
                   disabled={isSaving}
                   className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2"
                 >
-                  <Save className="size-5" />
+                  <FiSave className="size-5" />
                   {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>

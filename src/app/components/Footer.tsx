@@ -1,4 +1,4 @@
-import { Heart, Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react';
+import { FiHeart, FiInstagram, FiFacebook, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
 
 export function Footer() {
   return (
@@ -9,7 +9,7 @@ export function Footer() {
           <div className="col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="bg-gradient-to-br from-rose-400 to-pink-500 p-2 rounded-full">
-                <Heart className="size-4 text-white fill-white" />
+                <FiHeart className="size-4 text-white" />
               </div>
               <span className="font-serif text-lg text-gray-800">Studio HaMy</span>
             </div>
@@ -23,15 +23,15 @@ export function Footer() {
             <h3 className="font-medium text-gray-800 mb-4">Contact Us</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Phone className="size-4 text-rose-400" />
+                <FiPhone className="size-4 text-rose-400" />
                 <span>+84 (555) 123-4567</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Mail className="size-4 text-rose-400" />
+                <FiMail className="size-4 text-rose-400" />
                 <span>studiohamy@gmail.com</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <MapPin className="size-4 text-rose-400" />
+                <FiMapPin className="size-4 text-rose-400" />
                 <span>20 Cong Hoa, HCM City</span>
               </div>
             </div>
@@ -53,10 +53,10 @@ export function Footer() {
             <h3 className="font-medium text-gray-800 mb-4">Follow Us</h3>
             <div className="flex gap-3 mb-6">
               <a href="#" className="size-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-200 transition-colors">
-                <Instagram className="size-4" />
+                <FiInstagram className="size-4" />
               </a>
               <a href="#" className="size-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-200 transition-colors">
-                <Facebook className="size-4" />
+                <FiFacebook className="size-4" />
               </a>
             </div>
             <ul className="space-y-2">

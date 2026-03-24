@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Lock, User, Phone } from 'lucide-react';
+import { FiHeart, FiLock, FiUser, FiPhone } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { useAuthStore } from '../../stores/authStore';
 import { authApi } from '../../services/authService';
@@ -80,7 +80,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="bg-gradient-to-br from-rose-400 to-pink-500 p-3 rounded-full">
-              <Heart className="size-6 text-white fill-white" />
+              <FiHeart className="size-6 text-white fill-white"  />
             </div>
             <span className="text-2xl font-serif text-gray-800">Studio HaMy</span>
           </div>
@@ -121,7 +121,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
                   First Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                   <input
                     type="text"
                     value={firstName}
@@ -143,7 +143,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
                   Last Name (Optional)
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                  <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                   <input
                     type="text"
                     value={lastName}
@@ -161,7 +161,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
                 Phone Number
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                 <input
                   type="tel"
                   value={phoneNumber}
@@ -181,7 +181,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                 <input
                   type="password"
                   value={password}
