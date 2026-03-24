@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { FiHeart, FiLock, FiUser, FiPhone } from 'react-icons/fi';
 import { motion } from 'motion/react';
-import { useAuthStore } from '../../stores/authStore';
-import { authApi } from '../../services/authService';
+import { useAuthStore } from '@/stores/authStore';
+import { authApi } from '@/services/authService';
 
 interface AuthPageProps {
   onLogin: (phoneNumber: string) => void;

@@ -3,7 +3,7 @@ import { FiCamera, FiVideo, FiImage, FiCheckCircle, FiSliders } from 'react-icon
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { formatMoneyVND } from '@/utils/money';
-import { usePackages } from '../../hooks/usePackages';
+import { usePackages } from '@/hooks/usePackages';
 
 const DEFAULT_PACKAGE_IMAGE = 'https://images.unsplash.com/photo-1692167900605-e02666cadb6d';
 

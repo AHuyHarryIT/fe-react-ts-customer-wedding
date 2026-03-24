@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Send, Paperclip, Image as ImageIcon, Smile, Check } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useChat } from '../../hooks/useChat';
-import type { Chat } from '../../services/chatService';
-import { useAuthStore } from '../../stores/authStore';
+import { useChat } from '@/hooks/useChat';
+import type { Chat } from '@/services/chatService';
+import { useAuthStore } from '@/stores/authStore';
 
 interface MessagesPageProps {
   onNavigate?: (page: string) => void;
@@ -42,9 +42,9 @@ export function MessagesPage({ onNavigate }: MessagesPageProps) {
       chats.length > 0 &&
       (!currentChat || !chats.some((chat) => chat.id === currentChat.id))
     ) {
-      handleSelectChat(chats[0].id);
+      selectChat(chats[0].id);
     }
-  }, [chats, currentChat]);
+  }, [chats, currentChat, selectChat]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {

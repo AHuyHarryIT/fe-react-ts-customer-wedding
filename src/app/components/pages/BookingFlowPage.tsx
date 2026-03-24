@@ -10,7 +10,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 
 interface BookingFlowPageProps {
   packageData?: Record<string, unknown>;
@@ -80,7 +80,7 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
       }
 
       // Call booking API
-      const { api } = await import('../../services/bookingService');
+      const { api } = await import('@/services/bookingService');
 
       // Since the backend expects specific fields, we'll send what we have
       const bookingPayload = {

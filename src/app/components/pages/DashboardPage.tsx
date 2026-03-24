@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { useCustomerBookings } from '../../hooks/useCustomerBookings';
+import { useCustomerBookings } from '@/hooks/useCustomerBookings';
 
 interface DashboardPageProps {
   onNavigate: (page: string, data?: Record<string, unknown>) => void;
@@ -30,7 +30,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       const fetchOrder = async () => {
         setOrderLoading(true);
         try {
-          const { orderService } = await import('../../services/bookingService');
+          const { orderService } = await import('@/services/bookingService');
           const orderData = await orderService.getOrderByBookingId(booking.id);
           setOrder(orderData);
         } finally {

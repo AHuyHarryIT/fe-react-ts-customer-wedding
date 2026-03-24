@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Avatar } from './ui/avatar';
-import { chatService, type Chat } from '../../services/chatService';
+import { chatService, type Chat } from '@/services/chatService';
 
 export function ChatListPage() {
   const [chats, setChats] = useState<Chat[]>([]);

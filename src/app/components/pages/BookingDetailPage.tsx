@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { bookingService, orderService } from '../../services/bookingService';
-import { useCustomerBookings } from '../../hooks/useCustomerBookings';
+import { bookingService, orderService } from '@/services/bookingService';
+import { useCustomerBookings } from '@/hooks/useCustomerBookings';
 
 interface BookingDetailPageProps {
   bookingId?: string;

@@ -10,7 +10,7 @@ import {
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { formatMoneyVND } from '@/utils/money';
-import type { Package } from '../../hooks/usePackages';
+import type { Package } from '@/hooks/usePackages';
 
 interface PackageDetailPageProps {
   packageData: Package & {
