@@ -25,6 +25,7 @@ import { ProfilePage } from './components/ProfilePage';
 import { ContactPage } from './components/ContactPage';
 import { useAuthStore } from '../stores/authStore';
 import { initializeAuth } from '../services/authService';
+import { usePackageDetail } from '../hooks/usePackageDetail';
 
 const POST_LOGIN_REDIRECT_KEY = 'post_login_redirect';
 
@@ -303,6 +304,7 @@ const packageDetailRoute = createRoute({
   component: () => {
     const navigate = useNavigate();
     const packageId = useRouterState({ select: (s) => s.location.pathname.split('/').pop() || '' });
+    const { packageData } = usePackageDetail(packageId);
 
     const fallbackPackage = {
       id: packageId,
@@ -315,7 +317,7 @@ const packageDetailRoute = createRoute({
 
     return (
       <PackageDetailPage
-        packageData={fallbackPackage}
+        packageData={packageData || fallbackPackage}
         onNavigate={(page: string) => {
           if (page === 'booking') {
             navigate({ to: '/booking' });

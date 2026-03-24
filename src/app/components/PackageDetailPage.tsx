@@ -1,46 +1,88 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, CheckCircle, Plus, Calendar } from 'lucide-react';
-import { motion } from 'motion/react';
-import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import { useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  Plus,
+  Calendar,
+} from "lucide-react";
+import { motion } from "motion/react";
+import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
+import { formatMoneyVND } from "@/utils/money";
+import type { Package } from "../../hooks/usePackages";
 
 interface PackageDetailPageProps {
-  packageData: any;
+  packageData: Package & {
+    image?: string;
+    features?: string[];
+    category?: string;
+  };
   onNavigate: (page: string, data?: any) => void;
   onBack: () => void;
 }
 
-export function PackageDetailPage({ packageData, onNavigate, onBack }: PackageDetailPageProps) {
+export function PackageDetailPage({
+  packageData,
+  onNavigate,
+  onBack,
+}: PackageDetailPageProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  const includedServices = (packageData.services || [])
+    .map((item) => item.service)
+    .filter(
+      (
+        service,
+      ): service is NonNullable<
+        NonNullable<Package["services"]>[number]["service"]
+      > => Boolean(service),
+    );
+
+  const apiGalleryImages = (packageData.images || [])
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((item) => item.imageUrl)
+    .filter(Boolean);
+
   const galleryImages = [
-    packageData.image,
-    'https://images.unsplash.com/photo-1765350226723-a96ab0705403?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwd2VkZGluZyUyMGNvdXBsZSUyMG91dGRvb3J8ZW58MXx8fHwxNzcwMDU1NTMxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    'https://images.unsplash.com/photo-1765615197770-a46baa12db63?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwY2VyZW1vbnklMjByb21hbnRpY3xlbnwxfHx8fDE3NzAxMDkxODJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    'https://images.unsplash.com/photo-1692167900605-e02666cadb6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwYm91cXVldCUyMGZsb3dlcnN8ZW58MXx8fHwxNzcwMDA5MDU0fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  ];
+    packageData.coverImageUrl || packageData.image || apiGalleryImages[0],
+    ...apiGalleryImages,
+  ].filter(
+    (img, idx, arr): img is string => Boolean(img) && arr.indexOf(img) === idx,
+  );
 
   const timeline = [
-    { phase: 'Consultation', description: 'Initial meeting to discuss your vision', icon: '💬' },
-    { phase: 'Pre-Wedding', description: 'Engagement or pre-wedding photo session', icon: '📸' },
-    { phase: 'Wedding Day', description: 'Full coverage of your special day', icon: '💒' },
-    { phase: 'Delivery', description: 'Edited photos and videos within 4-6 weeks', icon: '🎁' }
+    {
+      phase: "Consultation",
+      description: "Initial meeting to discuss your vision",
+      icon: "💬",
+    },
+    {
+      phase: "Pre-Wedding",
+      description: "Engagement or pre-wedding photo session",
+      icon: "📸",
+    },
+    {
+      phase: "Wedding Day",
+      description: "Full coverage of your special day",
+      icon: "💒",
+    },
+    {
+      phase: "Delivery",
+      description: "Edited photos and videos within 4-6 weeks",
+      icon: "🎁",
+    },
   ];
 
-  const addOns = [
-    { name: 'Extra Hour Coverage', price: 350 },
-    { name: 'Premium Photo Album', price: 450 },
-    { name: 'Drone Footage', price: 600 },
-    { name: 'Same Day Edit Video', price: 800 },
-    { name: 'Parent Albums', price: 250 },
-    { name: 'Canvas Prints', price: 200 }
-  ];
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+    setCurrentImageIndex(
+      (prev) => (prev - 1 + galleryImages.length) % galleryImages.length,
+    );
   };
 
   return (
@@ -67,7 +109,7 @@ export function PackageDetailPage({ packageData, onNavigate, onBack }: PackageDe
                 alt={`${packageData.name} ${currentImageIndex + 1}`}
                 className="w-full h-full object-cover"
               />
-              
+
               {/* Navigation Arrows */}
               <button
                 onClick={prevImage}
@@ -95,7 +137,7 @@ export function PackageDetailPage({ packageData, onNavigate, onBack }: PackageDe
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
                   className={`relative flex-1 aspect-square rounded-lg overflow-hidden ${
-                    currentImageIndex === index ? 'ring-2 ring-rose-400' : ''
+                    currentImageIndex === index ? "ring-2 ring-rose-400" : ""
                   }`}
                 >
                   <ImageWithFallback
@@ -119,72 +161,95 @@ export function PackageDetailPage({ packageData, onNavigate, onBack }: PackageDe
                 {packageData.name}
               </h1>
               <p className="text-gray-600 mb-4">{packageData.description}</p>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="px-3 py-1 rounded-full text-sm bg-rose-100 text-rose-700">
+                  {packageData.services?.length || 0} Services
+                </span>
+                <span
+                  className={
+                    `px-3 py-1 rounded-full text-sm ` +
+                    (packageData.isActive
+                      ? "bg-green-100 text-green-700"
+                      : "bg-gray-100 text-gray-500")
+                  }
+                >
+                  {packageData.isActive ? "Available" : "On Request"}
+                </span>
+              </div>
               <p className="text-4xl font-medium text-rose-500">
-                ${packageData.price.toLocaleString()}
+                {formatMoneyVND(packageData.price)}
               </p>
             </div>
 
             {/* Features */}
             <div className="bg-white rounded-xl p-6 shadow-md">
-              <h2 className="text-xl font-medium text-gray-800 mb-4">What's Included</h2>
-              <ul className="space-y-3">
-                {packageData.features.map((feature: string, index: number) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <CheckCircle className="size-5 text-rose-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              <h2 className="text-xl font-medium text-gray-800 mb-4">
+                What's Included
+              </h2>
+              {includedServices.length > 0 ? (
+                <ul className="space-y-3">
+                  {includedServices.map((service) => (
+                    <li
+                      key={service.id}
+                      className="flex items-start justify-between gap-3"
+                    >
+                      <div className="flex items-start gap-3">
+                        <CheckCircle className="size-5 text-rose-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-gray-700 font-medium">
+                            {service.name}
+                          </p>
+                          {service.description && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              {service.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500">
+                  No services included in this package.
+                </p>
+              )}
             </div>
 
             {/* Timeline */}
             <div className="bg-white rounded-xl p-6 shadow-md">
-              <h2 className="text-xl font-medium text-gray-800 mb-4">Process Timeline</h2>
+              <h2 className="text-xl font-medium text-gray-800 mb-4">
+                Process Timeline
+              </h2>
               <div className="space-y-4">
                 {timeline.map((item, index) => (
                   <div key={index} className="flex gap-4">
                     <div className="text-2xl">{item.icon}</div>
                     <div>
-                      <h3 className="font-medium text-gray-800">{item.phase}</h3>
-                      <p className="text-sm text-gray-600">{item.description}</p>
+                      <h3 className="font-medium text-gray-800">
+                        {item.phase}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {item.description}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Add-ons */}
-            <div className="bg-white rounded-xl p-6 shadow-md">
-              <h2 className="text-xl font-medium text-gray-800 mb-4">Available Add-ons</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {addOns.map((addon, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 border border-rose-100 rounded-lg hover:bg-rose-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Plus className="size-4 text-rose-400" />
-                      <span className="text-sm text-gray-700">{addon.name}</span>
-                    </div>
-                    <span className="text-sm font-medium text-rose-500">
-                      +${addon.price}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                onClick={() => onNavigate('booking', { package: packageData })}
+                onClick={() => onNavigate("booking", { package: packageData })}
                 className="flex-1 py-4 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-xl transition-all font-medium flex items-center justify-center gap-2"
               >
                 <Calendar className="size-5" />
                 Book This Package
               </button>
               <button
-                onClick={() => onNavigate('contact')}
+                onClick={() => onNavigate("contact")}
                 className="flex-1 py-4 border-2 border-rose-400 text-rose-500 rounded-full hover:bg-rose-50 transition-all font-medium"
               >
                 Request Consultation

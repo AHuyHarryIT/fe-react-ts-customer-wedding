@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { Camera, Video, Image, CheckCircle, SlidersHorizontal } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import { formatMoneyVND } from '@/utils/money';
 import { usePackages } from '../../hooks/usePackages';
+
+const DEFAULT_PACKAGE_IMAGE =
+  'https://images.unsplash.com/photo-1692167900605-e02666cadb6d';
 
 interface PackagesPageProps {
   onNavigate: (page: string, data?: any) => void;
@@ -115,15 +119,23 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
   ];
 
   // Use API packages if available, else use fallback
-  const displayPackages = apiPackages && apiPackages.length > 0 
+  const displayPackages = apiPackages && apiPackages.length > 0
     ? apiPackages.map(pkg => ({
         id: pkg.id,
         name: pkg.name,
         price: pkg.price || 0,
-        category: 'photography', // Default category
+        category: 'photography',
         description: pkg.description || 'Wedding service package',
-        features: ['See details for full features'],
-        image: 'https://images.unsplash.com/photo-1692167900605-e02666cadb6d'
+        features:
+          pkg.services && pkg.services.length > 0
+            ? pkg.services
+                .map((serviceItem) => serviceItem.service?.name)
+                .filter((name): name is string => Boolean(name))
+            : ['See details for full features'],
+        image: pkg.coverImageUrl || pkg.images?.[0]?.imageUrl || DEFAULT_PACKAGE_IMAGE,
+        images: pkg.images,
+        services: pkg.services,
+        isActive: pkg.isActive,
       }))
     : fallbackPackages;
 
@@ -150,7 +162,7 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-serif text-gray-800 mb-4">
-            Wedding Packages
+            Packages
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Choose the perfect package to capture your special day
@@ -260,7 +272,7 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
                 <h3 className="text-2xl font-serif text-gray-800 mb-2">{pkg.name}</h3>
                 <p className="text-sm text-gray-600 mb-4">{pkg.description}</p>
                 <p className="text-3xl font-medium text-rose-500 mb-4">
-                  ${pkg.price.toLocaleString()}
+                  {formatMoneyVND(pkg.price)}
                 </p>
 
                 <ul className="space-y-2 mb-6">
