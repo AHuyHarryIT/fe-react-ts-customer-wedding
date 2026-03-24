@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Button } from '../ui/button';
-import { Card } from '../ui/card';
-import { Avatar } from '../ui/avatar';
-import ChatService, { Chat } from '../../services/ChatService';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
+import { Avatar } from './ui/avatar';
+import { chatService, type Chat } from '../../services/chatService';
 
 export function ChatListPage() {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -13,7 +13,7 @@ export function ChatListPage() {
     const loadChats = async () => {
       try {
         setLoading(true);
-        const data = await ChatService.getChats();
+        const data = await chatService.getChats();
         setChats(data);
         setError(null);
       } catch (err) {

@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useChat } from "../../hooks/useChat";
-import { Chat } from "../../services/chatService";
+import type { Chat } from "../../services/chatService";
 import { useAuthStore } from "../../stores/authStore";
 
 interface MessagesPageProps {
@@ -16,6 +16,7 @@ interface MessagesPageProps {
 }
 
 export function MessagesPage({ onNavigate }: MessagesPageProps) {
+  void onNavigate;
   const {
     chats,
     currentChat,

@@ -136,6 +136,7 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
         images: pkg.images,
         services: pkg.services,
         isActive: pkg.isActive,
+        popular: false,
       }))
     : fallbackPackages;
 

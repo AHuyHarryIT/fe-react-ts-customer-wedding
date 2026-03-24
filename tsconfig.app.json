@@ -1,0 +1,48 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Path aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@lib": ["src/lib/index.ts"],
+      "@lib/*": ["src/lib/*"],
+      "@services/*": ["src/services/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks": ["src/hooks/index.ts"],
+      "@hooks/*": ["src/hooks/*"],
+      "@stores": ["src/stores/index.ts"],
+      "@stores/*": ["src/stores/*"],
+      "@types": ["src/types/index.ts"],
+      "@types/*": ["src/types/*"],
+      "@routes/*": ["src/routes/*"],
+      "@config/*": ["src/config/*"],
+      "@providers/*": ["src/providers/*"],
+      "@utils/*": ["src/utils/*"],
+      "@assets/*" : ["src/assets/*"],
+      "@/*": ["src/*"]
+    },
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"]
+}

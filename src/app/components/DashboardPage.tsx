@@ -2,7 +2,6 @@ import { Calendar, Camera, CreditCard, Download, MessageSquare, Clock, CheckCirc
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { useCustomerBookings } from '../../hooks/useCustomerBookings';
-import { useCustomerOrders } from '../../hooks/useCustomerOrders';
 
 interface DashboardPageProps {
   onNavigate: (page: string, data?: any) => void;

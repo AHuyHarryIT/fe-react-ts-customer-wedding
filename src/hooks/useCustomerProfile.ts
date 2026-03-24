@@ -19,6 +19,22 @@ export function useCustomerProfile() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const normalizeUser = (incoming: {
+    id: string;
+    phoneNumber: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt?: string;
+  }): UserProfile => ({
+    ...incoming,
+    firstName: incoming.firstName ?? undefined,
+    lastName: incoming.lastName ?? undefined,
+    email: incoming.email ?? undefined,
+  });
+
   // Fetch customer profile details
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return;
@@ -27,10 +43,11 @@ export function useCustomerProfile() {
       setLoading(true);
       setError(null);
       const profileData = await authApi.getProfile();
-      setProfile(profileData);
+      const normalizedProfile = normalizeUser(profileData);
+      setProfile(normalizedProfile);
       // Update auth store with fresh data
-      if (profileData) {
-        setAuth(profileData);
+      if (normalizedProfile) {
+        setAuth(normalizedProfile);
       }
     } catch (err) {
       console.error('Failed to fetch customer profile:', err);

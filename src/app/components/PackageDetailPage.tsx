@@ -3,7 +3,6 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiCheckCircle,
-  FiPlus,
   FiCalendar,
   FiPhone,
   FiCamera

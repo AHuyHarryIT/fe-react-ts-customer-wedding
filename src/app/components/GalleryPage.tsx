@@ -8,6 +8,7 @@ interface GalleryPageProps {
 }
 
 export function GalleryPage({ onNavigate }: GalleryPageProps) {
+  void onNavigate;
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);

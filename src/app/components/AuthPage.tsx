@@ -58,8 +58,13 @@ export function AuthPage({ onLogin }: AuthPageProps) {
         data = await authApi.register({ phoneNumber, password, firstName, lastName });
       }
       
-      // Update Zustand store with user data
-      setAuth(data.user);
+      // Normalize nullable profile fields to store shape.
+      setAuth({
+        ...data.user,
+        firstName: data.user.firstName ?? undefined,
+        lastName: data.user.lastName ?? undefined,
+        email: data.user.email ?? undefined,
+      });
       onLogin(phoneNumber);
     } catch (error) {
       const errorMessage = (error as any)?.response?.data?.message || (error as Error).message || 'An error occurred';

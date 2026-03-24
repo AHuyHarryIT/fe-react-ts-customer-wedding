@@ -21,7 +21,7 @@ export default function App() {
   const [pageData, setPageData] = useState<any>(null);
   const [previousPage, setPreviousPage] = useState('home');
   
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   // Initialize auth on mount
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function App() {
     setPageData(null);
   };
 
-  const handleLogin = (phoneNumber: string) => {
+  const handleLogin = () => {
     handleNavigate('dashboard');
   };
 

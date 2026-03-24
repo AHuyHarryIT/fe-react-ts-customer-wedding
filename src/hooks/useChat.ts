@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { chatService, Chat, Message } from '../services/chatService';
+import { chatService } from '../services/chatService';
+import type { Chat, Message } from '../services/chatService';
 import { api } from '../services/authService';
 import { useAuthStore } from '../stores/authStore';
 import { toast } from 'sonner';

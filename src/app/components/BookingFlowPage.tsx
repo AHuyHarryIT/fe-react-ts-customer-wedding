@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Check, Calendar, MapPin, User, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Calendar, MapPin, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -71,7 +71,7 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
       }
 
       // Call booking API
-      const { bookingService } = await import('../../services/bookingService');
+      const { api } = await import('../../services/bookingService');
       
       // Since the backend expects specific fields, we'll send what we have
       const bookingPayload = {
@@ -82,7 +82,7 @@ export function BookingFlowPage({ packageData, onNavigate, onBack }: BookingFlow
         status: 'PENDING'
       };
 
-      const response = await bookingService.api.post('/bookings', bookingPayload);
+      const response = await api.post('/bookings', bookingPayload);
       
       if (response.data?.success || response.status === 201) {
         setShowSuccess(true);
