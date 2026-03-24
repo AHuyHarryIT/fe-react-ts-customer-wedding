@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { HomePage } from '@/app/components/pages/HomePage';
+import { HomePage } from '@components/pages/HomePage';
 import { mapPageToPath, type AppPage, type PageNavigationData } from '@/shared/routeConfig';
 
 function HomeComponent() {

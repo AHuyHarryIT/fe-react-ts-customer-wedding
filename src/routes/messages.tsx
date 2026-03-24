@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { MessagesPage } from '@/app/components/pages/MessagesPage';
+import { MessagesPage } from '@components/pages/MessagesPage';
 import { requireAuth } from '@/shared/routeConfig';
 
 function MessagesComponent() {

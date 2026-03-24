@@ -45,6 +45,7 @@
     "@radix-ui/react-toggle-group": "1.1.2",
     "@radix-ui/react-tooltip": "1.1.8",
     "@tanstack/react-router": "^1.168.2",
+    "antd": "^6.3.3",
     "axios": "^1.13.6",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -78,6 +79,8 @@
     "@eslint/js": "^9.39.4",
     "@tailwindcss/vite": "4.1.12",
     "@tanstack/router-plugin": "^1.167.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "4.7.0",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
@@ -90,23 +93,6 @@
     "tailwindcss": "4.1.12",
     "typescript-eslint": "^8.57.2",
     "vite": "6.3.5"
-  },
-  "peerDependencies": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    },
-    "react-dom": {
-      "optional": true
-    }
-  },
-  "pnpm": {
-    "overrides": {
-      "vite": "6.3.5"
-    }
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [

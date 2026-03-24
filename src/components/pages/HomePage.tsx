@@ -1,6 +1,6 @@
 import { Camera, Award, Heart, Users, ArrowRight, Star, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import { ImageWithFallback } from '@components/figma/ImageWithFallback';
 
 interface HomePageProps {
   onNavigate: (page: string, data?: Record<string, unknown>) => void;

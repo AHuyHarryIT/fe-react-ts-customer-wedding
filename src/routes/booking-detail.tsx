@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { BookingDetailPage } from '@/app/components/pages/BookingDetailPage';
+import { BookingDetailPage } from '@components/pages/BookingDetailPage';
 import { requireAuth } from '@/shared/routeConfig';
 
 function BookingDetailComponent() {

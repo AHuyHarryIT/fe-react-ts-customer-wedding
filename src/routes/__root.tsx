@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { Outlet, useNavigate, useRouterState, createRootRoute } from '@tanstack/react-router';
 import { Toaster } from 'sonner';
-import { Navigation } from '@/app/components/layout/Navigation';
-import { Footer } from '@/app/components/layout/Footer';
+import { Navigation } from '@/components/layout/Navigation';
+import { Footer } from '@/components/layout/Footer';
 import { useAuthStore } from '@/stores/authStore';
 import { initializeAuth } from '@/services/authService';
 import {

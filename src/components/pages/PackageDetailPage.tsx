@@ -8,7 +8,7 @@ import {
   FiCamera,
 } from 'react-icons/fi';
 import { motion } from 'motion/react';
-import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import { ImageWithFallback } from '@components/figma/ImageWithFallback';
 import { formatMoneyVND } from '@/utils/money';
 import type { Package } from '@/hooks/usePackages';
 

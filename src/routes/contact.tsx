@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { ContactPage } from '@/app/components/pages/ContactPage';
+import { ContactPage } from '@components/pages/ContactPage';
 
 function ContactComponent() {
   return <ContactPage />;

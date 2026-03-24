@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { AuthPage } from '@/app/components/pages/AuthPage';
+import { AuthPage } from '@components/pages/AuthPage';
 import { useAuthStore } from '@/stores/authStore';
 import { consumePostLoginRedirect } from '@/shared/routeConfig';
 

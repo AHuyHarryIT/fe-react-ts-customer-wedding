@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Download, X, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import { ImageWithFallback } from '@components/figma/ImageWithFallback';
 
 interface GalleryPageProps {
   onNavigate: (page: string) => void;

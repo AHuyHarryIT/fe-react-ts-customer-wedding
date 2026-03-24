@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { GalleryPage } from '@/app/components/pages/GalleryPage';
+import { GalleryPage } from '@components/pages/GalleryPage';
 import { mapPageToPath, type AppPage } from '@/shared/routeConfig';
 
 function GalleryComponent() {

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { DashboardPage } from '@/app/components/pages/DashboardPage';
+import { DashboardPage } from '@components/pages/DashboardPage';
 import { requireAuth, mapPageToPath, type AppPage } from '@/shared/routeConfig';
 
 function DashboardComponent() {
