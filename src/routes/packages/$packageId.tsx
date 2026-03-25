@@ -36,6 +36,6 @@ function PackageDetailComponent() {
   );
 }
 
-export const Route = createFileRoute('/package/$packageId')({
+export const Route = createFileRoute('/packages/$packageId')({
   component: PackageDetailComponent,
 });
