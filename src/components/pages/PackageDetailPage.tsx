@@ -1,30 +1,14 @@
-import { useState } from 'react';
-import {
-  FiChevronLeft,
-  FiChevronRight,
-  FiCheckCircle,
-  FiCalendar,
-  FiPhone,
-  FiCamera,
-} from 'react-icons/fi';
+import { Link } from '@tanstack/react-router';
+import { FiChevronLeft, FiCheckCircle, FiCalendar, FiPhone, FiCamera } from 'react-icons/fi';
 import { motion } from 'motion/react';
-import { ImageWithFallback } from '@components/figma/ImageWithFallback';
+import { ProductImageGallery } from '@components/ui';
 import { formatMoneyVND } from '@/utils/money';
-import type { Package } from '@/hooks/usePackages';
+import type { Package } from '@/types/package';
+import type { PackageDetailPageProps } from '@/types/components';
 
-interface PackageDetailPageProps {
-  packageData: Package & {
-    image?: string;
-    features?: string[];
-    category?: string;
-  };
-  onNavigate: (page: string, data?: Record<string, unknown>) => void;
-  onBack: () => void;
-}
+const DEFAULT_PACKAGE_IMAGE = 'https://images.unsplash.com/photo-1692167900605-e02666cadb6d';
 
-export function PackageDetailPage({ packageData, onNavigate, onBack }: PackageDetailPageProps) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
+export function PackageDetailPage({ packageData, onBack }: PackageDetailPageProps) {
   const includedServices = (packageData.services || [])
     .map((item) => item.service)
     .filter(
@@ -41,7 +25,14 @@ export function PackageDetailPage({ packageData, onNavigate, onBack }: PackageDe
   const galleryImages = [
     packageData.coverImageUrl || packageData.image || apiGalleryImages[0],
     ...apiGalleryImages,
-  ].filter((img, idx, arr): img is string => Boolean(img) && arr.indexOf(img) === idx);
+    DEFAULT_PACKAGE_IMAGE,
+  ]
+    .filter((img, idx, arr): img is string => Boolean(img) && arr.indexOf(img) === idx)
+    .map((image, index) => ({
+      id: `${packageData.id}-${index}`,
+      src: image,
+      alt: `${packageData.name} image ${index + 1}`,
+    }));
 
   const TimelineIcons = {
     Consultation: FiPhone,
@@ -56,14 +47,6 @@ export function PackageDetailPage({ packageData, onNavigate, onBack }: PackageDe
     { phase: 'Wedding Day', description: 'Full coverage of your special day' },
     { phase: 'Delivery', description: 'Edited photos and videos within 4-6 weeks' },
   ];
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-8">
@@ -80,51 +63,7 @@ export function PackageDetailPage({ packageData, onNavigate, onBack }: PackageDe
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Image Gallery */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4">
-              <ImageWithFallback
-                src={galleryImages[currentImageIndex]}
-                alt={`${packageData.name} ${currentImageIndex + 1}`}
-                className="w-full h-full object-cover"
-              />
-
-              {/* Navigation Arrows */}
-              <button
-                onClick={prevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 size-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all"
-              >
-                <FiChevronLeft className="size-5 text-gray-800" />
-              </button>
-              <button
-                onClick={nextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 size-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all"
-              >
-                <FiChevronRight className="size-5 text-gray-800" />
-              </button>
-
-              {/* Image Counter */}
-              <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
-                {currentImageIndex + 1} / {galleryImages.length}
-              </div>
-            </div>
-
-            {/* Thumbnail Strip */}
-            <div className="flex gap-2">
-              {galleryImages.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentImageIndex(index)}
-                  className={`relative flex-1 aspect-square rounded-lg overflow-hidden ${
-                    currentImageIndex === index ? 'ring-2 ring-rose-400' : ''
-                  }`}
-                >
-                  <ImageWithFallback
-                    src={image}
-                    alt={`Thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+            <ProductImageGallery images={galleryImages} name={packageData.name} />
           </motion.div>
 
           {/* Package Details */}
@@ -203,19 +142,20 @@ export function PackageDetailPage({ packageData, onNavigate, onBack }: PackageDe
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => onNavigate('booking', { package: packageData })}
+              <Link
+                to="/booking"
+                search={{ packageId: String(packageData.id) }}
                 className="flex-1 py-4 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-xl transition-all font-medium flex items-center justify-center gap-2"
               >
                 <FiCalendar className="size-5" />
-                Book This Package
-              </button>
-              <button
-                onClick={() => onNavigate('contact')}
+                Start Consultation
+              </Link>
+              <Link
+                to="/contact"
                 className="flex-1 py-4 border-2 border-rose-400 text-rose-500 rounded-full hover:bg-rose-50 transition-all font-medium"
               >
                 Request Consultation
-              </button>
+              </Link>
             </div>
           </motion.div>
         </div>
