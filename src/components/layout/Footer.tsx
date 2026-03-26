@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { FiHeart, FiInstagram, FiFacebook, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
 
 export function Footer() {
@@ -42,24 +43,36 @@ export function Footer() {
             <h3 className="font-medium text-gray-800 mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
-                  About Us
-                </a>
+                <Link
+                  to="/"
+                  className="text-sm text-gray-600 hover:text-rose-500 transition-colors"
+                >
+                  Home
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
+                <Link
+                  to="/packages"
+                  className="text-sm text-gray-600 hover:text-rose-500 transition-colors"
+                >
                   Packages
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
+                <Link
+                  to="/gallery"
+                  className="text-sm text-gray-600 hover:text-rose-500 transition-colors"
+                >
                   Gallery
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
-                  FAQs
-                </a>
+                <Link
+                  to="/contact"
+                  className="text-sm text-gray-600 hover:text-rose-500 transition-colors"
+                >
+                  Contact
+                </Link>
               </li>
             </ul>
           </div>
@@ -69,13 +82,19 @@ export function Footer() {
             <h3 className="font-medium text-gray-800 mb-4">Follow Us</h3>
             <div className="flex gap-3 mb-6">
               <a
-                href="#"
+                href="https://www.instagram.com/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Studio HaMy on Instagram"
                 className="size-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-200 transition-colors"
               >
                 <FiInstagram className="size-4" />
               </a>
               <a
-                href="#"
+                href="https://www.facebook.com/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Studio HaMy on Facebook"
                 className="size-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-200 transition-colors"
               >
                 <FiFacebook className="size-4" />
@@ -83,12 +102,18 @@ export function Footer() {
             </div>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
+                <a
+                  href="mailto:studiohamy@gmail.com?subject=Privacy%20Policy%20Request"
+                  className="text-sm text-gray-600 hover:text-rose-500 transition-colors"
+                >
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-rose-500 transition-colors">
+                <a
+                  href="mailto:studiohamy@gmail.com?subject=Terms%20of%20Service%20Request"
+                  className="text-sm text-gray-600 hover:text-rose-500 transition-colors"
+                >
                   Terms of Service
                 </a>
               </li>

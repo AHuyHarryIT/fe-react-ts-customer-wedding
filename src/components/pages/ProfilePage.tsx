@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FiUser, FiMail, FiPhone, FiLock, FiBell, FiSave } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiLock, FiSave } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import {
@@ -92,9 +92,7 @@ export function ProfilePage() {
 
   const tabs = [
     { id: 'personal', label: 'Personal Info', icon: FiUser },
-    { id: 'wedding', label: 'Wedding Details', icon: FiUser },
     { id: 'security', label: 'Security', icon: FiLock },
-    { id: 'notifications', label: 'Notifications', icon: FiBell },
   ];
 
   return (

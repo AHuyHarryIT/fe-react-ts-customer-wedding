@@ -1,17 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { authApi } from '../services/authService';
 import { useAuthStore } from '../stores/authStore';
-
-export interface UserProfile {
-  id: string;
-  phoneNumber: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
+import type { UserProfile } from '@/types/auth';
 
 export function useCustomerProfile() {
   const { user, setAuth } = useAuthStore();

@@ -1,9 +1,14 @@
+import defaultImg from '@assets/default-image.svg';
 import { Image } from 'antd';
-import type { ComponentProps } from 'react';
+import { type ComponentProps } from 'react';
+
+const ERROR_IMG_SRC = defaultImg;
 
 type AntdImageProps = ComponentProps<typeof Image>;
 
-interface CloudinaryImageProps extends Omit<AntdImageProps, 'src'> {
+interface CloudinaryImageProps extends Omit<AntdImageProps, 'src' | 'width' | 'height'> {
+  width?: number;
+  height?: number;
   src: string;
   previewOriginal?: boolean;
   cloudinaryCropMode?: 'fill' | 'fit' | 'thumb' | 'scale';
@@ -11,20 +16,17 @@ interface CloudinaryImageProps extends Omit<AntdImageProps, 'src'> {
 
 const toCloudinaryTransformedUrl = (
   url: string,
-  width?: number | string,
-  height?: number | string,
+  width?: number,
+  height?: number,
   mode: CloudinaryImageProps['cloudinaryCropMode'] = 'fill'
 ) => {
-  const numericWidth = typeof width === 'number' ? width : undefined;
-  const numericHeight = typeof height === 'number' ? height : undefined;
-
   if (!url.includes('res.cloudinary.com') || !url.includes('/upload/')) {
     return url;
   }
   const transformations = [
     mode && `c_${mode}`,
-    numericWidth && `w_${numericWidth}`,
-    numericHeight && `h_${numericHeight}`,
+    width && `w_${width}`,
+    height && `h_${height}`,
   ].join(',');
 
   return url.replace('/upload/', `/upload/${transformations}/`);
@@ -48,6 +50,7 @@ export function CloudinaryImage({
       src={transformedSrc}
       preview={preview ?? (previewOriginal ? { src } : true)}
       {...imageProps}
+      fallback={ERROR_IMG_SRC}
     />
   );
 }

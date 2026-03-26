@@ -4,22 +4,20 @@ import { Toaster } from 'sonner';
 import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
 import { useAuthStore } from '@/stores/authStore';
-import { initializeAuth } from '@/services/authService';
-import {
-  mapPathToPage,
-  mapPageToPath,
-  savePostLoginRedirect,
-  type AppPage,
-} from '@/shared/routeConfig';
+import { authApi, initializeAuth } from '@/services/authService';
+import { hasAuthSessionHint } from '@/services/authSession';
+import { savePostLoginRedirect } from '@/shared/routeConfig';
 
 function RootLayout() {
   const navigate = useNavigate();
   const location = useRouterState({ select: (s) => s.location });
   const pathname = location.pathname;
-  const { isAuthenticated, user, clearAuth } = useAuthStore();
+  const { isAuthenticated, isInitialized, loading, user } = useAuthStore();
 
   useEffect(() => {
-    initializeAuth();
+    if (hasAuthSessionHint()) {
+      void initializeAuth();
+    }
   }, []);
 
   useEffect(() => {
@@ -33,30 +31,29 @@ function RootLayout() {
     }
   }, [location.hash, location.pathname, location.searchStr, pathname]);
 
-  const handleNavigate = (page: string) => {
-    const mapped = mapPageToPath((page as AppPage) || 'home');
-    navigate({ to: mapped as '/' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } finally {
+      navigate({ to: '/' });
+    }
   };
-
-  const handleLogout = () => {
-    clearAuth();
-    navigate({ to: '/' });
-  };
-
-  const currentPage = mapPathToPage(pathname);
 
   return (
     <div className="min-h-screen bg-white">
-      <Navigation
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        isLoggedIn={isAuthenticated && !!user}
-        onLogout={handleLogout}
-      />
+      <Navigation isLoggedIn={isAuthenticated && !!user} onLogout={handleLogout} />
 
       <main>
-        <Outlet />
+        {loading && !isInitialized ? (
+          <div className="flex min-h-[50vh] items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-4 border-rose-200 border-t-rose-500" />
+              <p className="text-sm text-gray-500">Checking your session...</p>
+            </div>
+          </div>
+        ) : (
+          <Outlet />
+        )}
       </main>
 
       <Footer />

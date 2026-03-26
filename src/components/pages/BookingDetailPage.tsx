@@ -1,118 +1,82 @@
-import {
-  Calendar,
-  MapPin,
-  Camera,
-  CreditCard,
-  Download,
-  Upload,
-  FileText,
-  User,
-} from 'lucide-react';
+import { Calendar, Camera, CreditCard, MessageSquare, User } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useEffect, useState } from 'react';
-import { bookingService, orderService } from '@/services/bookingService';
+import { useEffect, useMemo, useState } from 'react';
+import { bookingService } from '@/services/bookingService';
+import type { Booking } from '@/types/booking';
 import { useCustomerBookings } from '@/hooks/useCustomerBookings';
+import { formatMoneyVND } from '@/utils/money';
+import type { BookingDetailPageProps } from '@/types/components';
 
-interface BookingDetailPageProps {
-  bookingId?: string;
-  onBack: () => void;
-}
-
-export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingDetailPageProps) {
+export function BookingDetailPage({
+  bookingId: propBookingId,
+  onBack,
+  onMessages,
+}: BookingDetailPageProps) {
   const { bookings } = useCustomerBookings();
-  const [booking, setBooking] = useState<Record<string, unknown> | null>(null);
-  const [order, setOrder] = useState<Record<string, unknown> | null>(null);
+  const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Use the first booking from the list or the prop
-  const currentBookingId = propBookingId || bookings?.[0]?.id;
+  const currentBookingId = propBookingId || bookings[0]?.id;
 
   useEffect(() => {
     const loadBookingDetails = async () => {
       if (!currentBookingId) {
         setLoading(false);
+        setBooking(null);
         return;
       }
 
       try {
         setLoading(true);
         setError(null);
-
-        // Fetch booking details
         const bookingData = await bookingService.getBookingDetails(currentBookingId);
         setBooking(bookingData);
-
-        // Fetch order for this booking
-        const orderData = await orderService.getOrderByBookingId(currentBookingId);
-        setOrder(orderData);
       } catch (err) {
         console.error('Failed to load booking details:', err);
-        setError('Failed to load booking details');
+        setError('Failed to load booking details.');
       } finally {
         setLoading(false);
       }
     };
 
-    loadBookingDetails();
+    void loadBookingDetails();
   }, [currentBookingId]);
 
-  // Fallback data structure while loading
-  const displayBooking = booking || {
-    id: 'WED-2026-001',
-    package: 'Premium Photography',
-    status: 'confirmed',
-    weddingDate: '2026-06-15',
-    weddingTime: '3:00 PM',
-    location: 'The Grand Hotel, 123 Wedding Lane, Los Angeles, CA 90210',
-    brideName: 'Sarah Johnson',
-    groomName: 'Michael Thompson',
-    photographer: 'Michael Chen',
-    assistantPhotographer: 'Emily Rodriguez',
-    totalAmount: 3999,
-    paidAmount: 1999,
-    paymentSchedule: [
-      { date: '2026-02-03', amount: 1999, status: 'paid', description: 'Booking Deposit (50%)' },
-      { date: '2026-05-15', amount: 2000, status: 'pending', description: 'Final Payment (50%)' },
-    ],
-    services: [
-      'Full Day Coverage (10 hours)',
-      '800+ Edited Photos',
-      'Online Gallery',
-      'Engagement Session',
-      'Premium Photo Album',
-      '2 Photographers',
-      'USB Drive with all photos',
-    ],
-  };
+  const packageItems = useMemo(
+    () => booking?.packages?.map((item) => item.package || item).filter(Boolean) || [],
+    [booking?.packages]
+  );
 
-  const documents = [
-    { name: 'Wedding Photography Contract.pdf', size: '245 KB', uploaded: true },
-    { name: 'Timeline & Shot List.pdf', size: '182 KB', uploaded: true },
-    { name: 'Venue Information.pdf', size: '156 KB', uploaded: false },
-  ];
+  const serviceItems = useMemo(
+    () => booking?.services?.map((item) => item.service || item).filter(Boolean) || [],
+    [booking?.services]
+  );
+
+  const orderSummary = booking?.order?.summary;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 flex items-center justify-center py-12">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-rose-50 py-12">
         <div className="text-center">
-          <div className="size-12 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading booking details...</p>
+          <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-4 border-rose-200 border-t-rose-500" />
+          <p className="text-gray-500">Loading booking details…</p>
         </div>
       </div>
     );
   }
 
-  if (error || !displayBooking) {
+  if (error || !booking) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 flex items-center justify-center py-12">
-        <div className="text-center max-w-md">
-          <p className="text-red-600 mb-4">{error || 'No booking found'}</p>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-rose-50 py-12">
+        <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow-xl">
+          <h1 className="mb-3 text-2xl font-serif text-gray-900">Booking unavailable</h1>
+          <p className="mb-6 text-gray-600">{error || 'No booking was found for your account.'}</p>
           <button
             onClick={onBack}
-            className="px-6 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all"
+            className="rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
           >
-            Back to Dashboard
+            Back to dashboard
           </button>
         </div>
       </div>
@@ -121,320 +85,203 @@ export function BookingDetailPage({ bookingId: propBookingId, onBack }: BookingD
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <button
             onClick={onBack}
-            className="text-gray-600 hover:text-rose-500 mb-4 transition-colors"
+            className="mb-4 text-sm text-gray-600 transition-colors hover:text-rose-500"
           >
-            ← Back to Dashboard
+            ← Back to dashboard
           </button>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl md:text-4xl font-serif text-gray-800 mb-2">
+              <h1 className="mb-2 text-3xl font-serif text-gray-900 md:text-4xl">
                 Booking Details
               </h1>
-              <p className="text-gray-600">Booking ID: {displayBooking.id}</p>
+              <p className="text-gray-600">Booking ID: {booking.id}</p>
             </div>
-            <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full font-medium capitalize">
-              {displayBooking.status}
+            <span className="rounded-full bg-rose-100 px-4 py-2 text-sm font-medium text-rose-700">
+              {booking.status}
             </span>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Wedding Details */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-6">
+            <motion.section
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="rounded-3xl bg-white p-6 shadow-lg"
+            >
+              <h2 className="mb-5 text-xl font-medium text-gray-900">Event Information</h2>
+              <div className="space-y-4">
+                <div className="flex gap-4 rounded-2xl bg-rose-50 p-4">
+                  <Calendar className="mt-1 size-5 text-rose-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Event date</p>
+                    <p className="font-medium text-gray-900">
+                      {new Date(booking.eventDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4 rounded-2xl bg-rose-50 p-4">
+                  <MessageSquare className="mt-1 size-5 text-rose-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Notes</p>
+                    <p className="font-medium text-gray-900">
+                      {booking.notes || 'No notes added yet.'}
+                    </p>
+                  </div>
+                </div>
+                {booking.customer ? (
+                  <div className="flex gap-4 rounded-2xl bg-rose-50 p-4">
+                    <User className="mt-1 size-5 text-rose-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Customer profile</p>
+                      <p className="font-medium text-gray-900">
+                        {[booking.customer.firstName, booking.customer.lastName]
+                          .filter(Boolean)
+                          .join(' ') || booking.customer.phoneNumber}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </motion.section>
+
+            <motion.section
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-2xl shadow-lg p-6"
+              className="rounded-3xl bg-white p-6 shadow-lg"
             >
-              <h2 className="text-xl font-medium text-gray-800 mb-6">Wedding Information</h2>
-
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-rose-50 rounded-lg">
-                  <Calendar className="size-6 text-rose-500 mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-600">Date & Time</p>
-                    <p className="font-medium text-gray-800">
-                      {displayBooking.eventDate
-                        ? new Date(displayBooking.eventDate).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })
-                        : 'TBD'}
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      {displayBooking.weddingTime || 'Time TBD'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-rose-50 rounded-lg">
-                  <MapPin className="size-6 text-rose-500 mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-600">Location</p>
-                    <p className="font-medium text-gray-800">
-                      {displayBooking.location || 'Location TBD'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-rose-50 rounded-lg">
-                  <User className="size-6 text-rose-500 mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-600">Couple</p>
-                    <p className="font-medium text-gray-800">
-                      {displayBooking.brideName} & {displayBooking.groomName}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Package Details */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-lg p-6"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <Camera className="size-6 text-rose-500" />
-                <h2 className="text-xl font-medium text-gray-800">
-                  {displayBooking.package || 'Wedding Package'}
-                </h2>
+              <div className="mb-5 flex items-center gap-3">
+                <Camera className="size-5 text-rose-500" />
+                <h2 className="text-xl font-medium text-gray-900">Packages and Services</h2>
               </div>
 
-              <div className="space-y-3">
-                {displayBooking.services && displayBooking.services.length > 0 ? (
-                  displayBooking.services.map((service: string, index: number) => (
-                    <div key={index} className="flex items-center gap-3 text-gray-700">
-                      <div className="size-2 bg-rose-400 rounded-full" />
-                      <span>{service}</span>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="mb-3 text-sm font-medium uppercase tracking-[0.18em] text-gray-500">
+                    Packages
+                  </h3>
+                  {packageItems.length > 0 ? (
+                    <div className="space-y-3">
+                      {packageItems.map((pkg) => (
+                        <div key={pkg.id} className="rounded-2xl border border-gray-100 p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <p className="font-medium text-gray-900">{pkg.name}</p>
+                              {pkg.description ? (
+                                <p className="mt-1 text-sm text-gray-500">{pkg.description}</p>
+                              ) : null}
+                            </div>
+                            {typeof pkg.price === 'number' ? (
+                              <span className="text-sm font-medium text-rose-600">
+                                {formatMoneyVND(pkg.price)}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray-600">No services listed</p>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Team */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white rounded-2xl shadow-lg p-6"
-            >
-              <h2 className="text-xl font-medium text-gray-800 mb-6">Your Team</h2>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="size-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center text-white font-medium">
-                    MC
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">{booking.photographer}</p>
-                    <p className="text-sm text-gray-600">Lead Photographer</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="size-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center text-white font-medium">
-                    ER
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">{booking.assistantPhotographer}</p>
-                    <p className="text-sm text-gray-600">Assistant Photographer</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Documents */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-white rounded-2xl shadow-lg p-6"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-medium text-gray-800">Documents</h2>
-                <button className="px-4 py-2 bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-100 transition-colors flex items-center gap-2">
-                  <Upload className="size-4" />
-                  Upload
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {documents.map((doc, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-rose-300 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FileText className="size-5 text-gray-400" />
-                      <div>
-                        <p className="font-medium text-gray-800">{doc.name}</p>
-                        <p className="text-sm text-gray-500">{doc.size}</p>
-                      </div>
-                    </div>
-                    {doc.uploaded ? (
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <Download className="size-5 text-gray-600" />
-                      </button>
-                    ) : (
-                      <span className="text-sm text-amber-600">Pending Upload</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Payment Summary */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-lg p-6 sticky top-24"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <CreditCard className="size-6 text-rose-500" />
-                <h2 className="text-xl font-medium text-gray-800">Payment</h2>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Total Amount</span>
-                  <span className="text-2xl font-medium text-gray-800">
-                    ${(order?.totalAmount || displayBooking.totalAmount || 0).toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="h-px bg-gray-200" />
-
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Amount Paid</span>
-                  <span className="font-medium text-green-600">
-                    $
-                    {(
-                      order?.paidAmount ||
-                      order?.summary?.totalPaid ||
-                      displayBooking.paidAmount ||
-                      0
-                    ).toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Balance Due</span>
-                  <span className="font-medium text-rose-500">
-                    $
-                    {(
-                      order?.balanceRemaining ||
-                      order?.summary?.balanceRemaining ||
-                      displayBooking.totalAmount - displayBooking.paidAmount ||
-                      0
-                    ).toLocaleString()}
-                  </span>
+                  ) : (
+                    <p className="text-sm text-gray-500">No packages attached to this booking.</p>
+                  )}
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs text-gray-600 mb-2">
-                    <span>Payment Progress</span>
-                    <span>
-                      {order?.totalAmount > 0
-                        ? Math.round(
-                            ((order.paidAmount || order.summary?.totalPaid || 0) /
-                              order.totalAmount) *
-                              100
-                          )
-                        : displayBooking.totalAmount > 0
-                          ? Math.round(
-                              (displayBooking.paidAmount / displayBooking.totalAmount) * 100
-                            )
-                          : 0}
-                      %
-                    </span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-rose-400 to-pink-500"
-                      style={{
-                        width: `${
-                          order?.totalAmount > 0
-                            ? Math.round(
-                                ((order.paidAmount || order.summary?.totalPaid || 0) /
-                                  order.totalAmount) *
-                                  100
-                              )
-                            : displayBooking.totalAmount > 0
-                              ? Math.round(
-                                  (displayBooking.paidAmount / displayBooking.totalAmount) * 100
-                                )
-                              : 0
-                        }%`,
-                      }}
-                    />
-                  </div>
+                  <h3 className="mb-3 text-sm font-medium uppercase tracking-[0.18em] text-gray-500">
+                    Services
+                  </h3>
+                  {serviceItems.length > 0 ? (
+                    <div className="space-y-3">
+                      {serviceItems.map((service) => (
+                        <div key={service.id} className="rounded-2xl border border-gray-100 p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <p className="font-medium text-gray-900">{service.name}</p>
+                              {service.description ? (
+                                <p className="mt-1 text-sm text-gray-500">{service.description}</p>
+                              ) : null}
+                            </div>
+                            {typeof service.price === 'number' ? (
+                              <span className="text-sm font-medium text-rose-600">
+                                {formatMoneyVND(service.price)}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">No services attached to this booking.</p>
+                  )}
                 </div>
               </div>
+            </motion.section>
+          </div>
 
-              {/* Payment Schedule */}
-              <div className="space-y-3">
-                <h3 className="font-medium text-gray-800 text-sm">Payment Information</h3>
-                {displayBooking.paymentSchedule && displayBooking.paymentSchedule.length > 0 ? (
-                  (displayBooking.paymentSchedule as Record<string, unknown>[]).map(
-                    (payment: Record<string, unknown>, index: number) => (
-                      <div
-                        key={index}
-                        className={`p-3 rounded-lg ${
-                          payment.status === 'paid' ? 'bg-green-50' : 'bg-amber-50'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="text-sm font-medium text-gray-800">
-                            ${payment.amount.toLocaleString()}
-                          </span>
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${
-                              payment.status === 'paid'
-                                ? 'bg-green-200 text-green-800'
-                                : 'bg-amber-200 text-amber-800'
-                            }`}
-                          >
-                            {payment.status}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-600">{payment.description}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Due: {new Date(payment.date).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )
-                  )
-                ) : (
-                  <p className="text-sm text-gray-600">No payment schedule available</p>
-                )}
+          <div className="space-y-6">
+            <motion.section
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="rounded-3xl bg-white p-6 shadow-lg"
+            >
+              <div className="mb-5 flex items-center gap-3">
+                <CreditCard className="size-5 text-rose-500" />
+                <h2 className="text-xl font-medium text-gray-900">Payment Summary</h2>
               </div>
 
-              {(order?.balanceRemaining || displayBooking.totalAmount - displayBooking.paidAmount) >
-                0 && (
-                <button className="w-full mt-6 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium">
-                  Make Payment
-                </button>
+              {orderSummary ? (
+                <div className="space-y-4">
+                  <div className="rounded-2xl bg-gray-50 p-4">
+                    <p className="text-sm text-gray-500">Total</p>
+                    <p className="mt-1 text-lg font-medium text-gray-900">
+                      {formatMoneyVND(orderSummary.totalPrice)}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-gray-50 p-4">
+                    <p className="text-sm text-gray-500">Paid</p>
+                    <p className="mt-1 text-lg font-medium text-green-600">
+                      {formatMoneyVND(orderSummary.totalPaid)}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-gray-50 p-4">
+                    <p className="text-sm text-gray-500">Remaining</p>
+                    <p className="mt-1 text-lg font-medium text-rose-600">
+                      {formatMoneyVND(orderSummary.balanceRemaining)}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  No payment summary is attached to this booking yet. The studio team will update
+                  you through Messages.
+                </p>
               )}
-            </motion.div>
+            </motion.section>
+
+            <motion.section
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="rounded-3xl bg-[#fff8f7] p-6 shadow-lg"
+            >
+              <h2 className="mb-3 text-xl font-medium text-gray-900">Next Step</h2>
+              <p className="mb-5 text-sm text-gray-600">
+                The customer portal uses chat as the studio-safe follow-up channel for schedule,
+                payment, and delivery updates.
+              </p>
+              <button
+                onClick={onMessages}
+                className="w-full rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
+              >
+                Open Messages
+              </button>
+            </motion.section>
           </div>
         </div>
       </div>

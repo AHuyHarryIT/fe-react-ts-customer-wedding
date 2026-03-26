@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { FiCamera, FiVideo, FiImage, FiCheckCircle, FiSliders } from 'react-icons/fi';
 import { motion } from 'motion/react';
@@ -7,144 +8,30 @@ import { usePackages } from '@/hooks/usePackages';
 
 const DEFAULT_PACKAGE_IMAGE = 'https://images.unsplash.com/photo-1692167900605-e02666cadb6d';
 
-interface PackagesPageProps {
-  onNavigate: (page: string, data?: Record<string, unknown>) => void;
-}
-
-export function PackagesPage({ onNavigate }: PackagesPageProps) {
+export function PackagesPage() {
   const { packages: apiPackages, loading } = usePackages();
   const [selectedBudget, setSelectedBudget] = useState('all');
   const [selectedService, setSelectedService] = useState('all');
-
-  // Fallback hardcoded packages if API is not available
-  const fallbackPackages = [
-    {
-      id: 1,
-      name: 'Essential',
-      price: 2499,
-      category: 'photography',
-      description: 'Perfect for intimate weddings',
-      features: [
-        '6 Hours Coverage',
-        '400+ Edited Photos',
-        'Online Gallery',
-        'Digital Downloads',
-        '1 Photographer',
-      ],
-      image:
-        'https://images.unsplash.com/photo-1692167900605-e02666cadb6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwYm91cXVldCUyMGZsb3dlcnN8ZW58MXx8fHwxNzcwMDA5MDU0fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    },
-    {
-      id: 2,
-      name: 'Premium Photography',
-      price: 3999,
-      category: 'photography',
-      description: 'Complete wedding day coverage',
-      features: [
-        'Full Day Coverage (10 hours)',
-        '800+ Edited Photos',
-        'Engagement Session',
-        'Premium Album',
-        '2 Photographers',
-        'USB Drive',
-      ],
-      image:
-        'https://images.unsplash.com/photo-1765615197770-a46baa12db63?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwY2VyZW1vbnklMjByb21hbnRpY3xlbnwxfHx8fDE3NzAxMDkxODJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: true,
-    },
-    {
-      id: 3,
-      name: 'Premium Video',
-      price: 4499,
-      category: 'video',
-      description: 'Cinematic wedding films',
-      features: [
-        'Full Day Coverage',
-        '5-7 Minute Highlight Film',
-        'Full Ceremony Video',
-        'Drone Footage',
-        '2 Videographers',
-        '4K Resolution',
-      ],
-      image:
-        'https://images.unsplash.com/photo-1720535594328-5e681403350a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwcGhvdG9ncmFwaHklMjBzdHVkaW98ZW58MXx8fHwxNzcwMTA5MTgzfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    },
-    {
-      id: 4,
-      name: 'Luxury Package',
-      price: 5999,
-      category: 'full-service',
-      description: 'The ultimate wedding experience',
-      features: [
-        'Unlimited Coverage',
-        'Photography + Videography',
-        'Engagement + Pre-wedding Session',
-        'Same Day Edit',
-        'Premium Album + USB',
-        'Drone Coverage',
-        'Full Team',
-      ],
-      image:
-        'https://images.unsplash.com/photo-1765350226723-a96ab0705403?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwd2VkZGluZyUyMGNvdXBsZSUyMG91dGRvb3J8ZW58MXx8fHwxNzcwMDU1NTMxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: true,
-    },
-    {
-      id: 5,
-      name: 'Destination Wedding',
-      price: 7999,
-      category: 'full-service',
-      description: 'For weddings away from home',
-      features: [
-        '3 Days Coverage',
-        'Photography + Videography',
-        'Travel Included',
-        'Multiple Sessions',
-        'Full Edit Suite',
-        'Premium Deliverables',
-      ],
-      image:
-        'https://images.unsplash.com/photo-1622580627463-b03d48e305d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxicmlkZSUyMGdyb29tJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzcwMTA5MTgyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    },
-    {
-      id: 6,
-      name: 'Engagement Session',
-      price: 599,
-      category: 'photography',
-      description: 'Pre-wedding photo session',
-      features: [
-        '2 Hour Session',
-        '100+ Edited Photos',
-        'Location of Choice',
-        'Online Gallery',
-        '1 Photographer',
-      ],
-      image:
-        'https://images.unsplash.com/photo-1677768062274-fdd45caac233?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwcmVjZXB0aW9uJTIwZGV0YWlsc3xlbnwxfHx8fDE3NzAxMDkxODN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    },
-  ];
-
-  // Use API packages if available, else use fallback
-  const displayPackages =
-    apiPackages && apiPackages.length > 0
-      ? apiPackages.map((pkg) => ({
-          id: pkg.id,
-          name: pkg.name,
-          price: pkg.price || 0,
-          category: 'photography',
-          description: pkg.description || 'Wedding service package',
-          features:
-            pkg.services && pkg.services.length > 0
-              ? pkg.services
-                  .map((serviceItem) => serviceItem.service?.name)
-                  .filter((name): name is string => Boolean(name))
-              : ['See details for full features'],
-          image: pkg.coverImageUrl || pkg.images?.[0]?.imageUrl || DEFAULT_PACKAGE_IMAGE,
-          images: pkg.images,
-          services: pkg.services,
-          isActive: pkg.isActive,
-          popular: false,
-        }))
-      : fallbackPackages;
+  const budgetFilterId = 'package-budget-filter';
+  const serviceFilterId = 'package-service-filter';
+  const displayPackages = apiPackages.map((pkg) => ({
+    id: pkg.id,
+    name: pkg.name,
+    price: pkg.price || 0,
+    category: 'photography',
+    description: pkg.description || 'Wedding service package',
+    features:
+      pkg.services && pkg.services.length > 0
+        ? pkg.services
+            .map((serviceItem) => serviceItem.service?.name)
+            .filter((name): name is string => Boolean(name))
+        : ['See details for full features'],
+    image: pkg.coverImageUrl || pkg.images?.[0]?.imageUrl || DEFAULT_PACKAGE_IMAGE,
+    images: pkg.images,
+    services: pkg.services,
+    isActive: pkg.isActive,
+    popular: false,
+  }));
 
   const filteredPackages = displayPackages.filter((pkg) => {
     const budgetMatch =
@@ -188,8 +75,15 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Budget Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Budget Range</label>
+              <label
+                htmlFor={budgetFilterId}
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Budget Range
+              </label>
               <select
+                id={budgetFilterId}
+                name="budgetRange"
                 value={selectedBudget}
                 onChange={(e) => setSelectedBudget(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
@@ -203,8 +97,15 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
 
             {/* Service Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+              <label
+                htmlFor={serviceFilterId}
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Service Type
+              </label>
               <select
+                id={serviceFilterId}
+                name="serviceType"
                 value={selectedService}
                 onChange={(e) => setSelectedService(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
@@ -245,66 +146,75 @@ export function PackagesPage({ onNavigate }: PackagesPageProps) {
                 className={`bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all cursor-pointer group ${
                   pkg.popular ? 'ring-2 ring-rose-400' : ''
                 }`}
-                onClick={() => onNavigate('package-detail', { package: pkg })}
               >
-                {pkg.popular && (
-                  <div className="bg-gradient-to-r from-rose-400 to-pink-500 text-white text-center py-2 text-sm font-medium">
-                    Most Popular
-                  </div>
-                )}
+                <Link
+                  to="/packages/$packageId"
+                  params={{ packageId: String(pkg.id) }}
+                  className="block"
+                >
+                  {pkg.popular && (
+                    <div className="bg-gradient-to-r from-rose-400 to-pink-500 text-white text-center py-2 text-sm font-medium">
+                      Most Popular
+                    </div>
+                  )}
 
-                <div className="relative h-56 overflow-hidden">
-                  <ImageWithFallback
-                    src={pkg.image}
-                    alt={pkg.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
-                    <div className="flex items-center gap-1">
-                      {pkg.category === 'photography' && (
-                        <FiCamera className="size-4 text-rose-500" />
-                      )}
-                      {pkg.category === 'video' && <FiVideo className="size-4 text-rose-500" />}
-                      {pkg.category === 'full-service' && (
-                        <FiImage className="size-4 text-rose-500" />
-                      )}
-                      <span className="text-xs font-medium text-gray-700 capitalize">
-                        {pkg.category === 'full-service' ? 'Photo + Video' : pkg.category}
-                      </span>
+                  <div className="relative h-56 overflow-hidden">
+                    <ImageWithFallback
+                      src={pkg.image}
+                      alt={pkg.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
+                      <div className="flex items-center gap-1">
+                        {pkg.category === 'photography' && (
+                          <FiCamera className="size-4 text-rose-500" />
+                        )}
+                        {pkg.category === 'video' && <FiVideo className="size-4 text-rose-500" />}
+                        {pkg.category === 'full-service' && (
+                          <FiImage className="size-4 text-rose-500" />
+                        )}
+                        <span className="text-xs font-medium text-gray-700 capitalize">
+                          {pkg.category === 'full-service' ? 'Photo + Video' : pkg.category}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="p-6">
-                  <h3 className="text-2xl font-serif text-gray-800 mb-2">{pkg.name}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{pkg.description}</p>
-                  <p className="text-3xl font-medium text-rose-500 mb-4">
-                    {formatMoneyVND(pkg.price)}
-                  </p>
+                  <div className="p-6">
+                    <h3 className="text-2xl font-serif text-gray-800 mb-2">{pkg.name}</h3>
+                    <p className="text-sm text-gray-600 mb-4">{pkg.description}</p>
+                    <p className="text-3xl font-medium text-rose-500 mb-4">
+                      {formatMoneyVND(pkg.price)}
+                    </p>
 
-                  <ul className="space-y-2 mb-6">
-                    {pkg.features.slice(0, 4).map((feature, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                        <FiCheckCircle className="size-4 text-rose-400 flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                    {pkg.features.length > 4 && (
-                      <li className="text-sm text-rose-500 font-medium">
-                        +{pkg.features.length - 4} more features
-                      </li>
-                    )}
-                  </ul>
+                    <ul className="space-y-2 mb-6">
+                      {pkg.features.slice(0, 4).map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                          <FiCheckCircle className="size-4 text-rose-400 flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                      {pkg.features.length > 4 && (
+                        <li className="text-sm text-rose-500 font-medium">
+                          +{pkg.features.length - 4} more features
+                        </li>
+                      )}
+                    </ul>
 
-                  <button className="w-full py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium">
-                    View Details
-                  </button>
-                </div>
+                    <span className="block w-full py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full text-center font-medium transition-all hover:shadow-lg">
+                      View Details
+                    </span>
+                  </div>
+                </Link>
               </motion.div>
             ))
           ) : (
             <div className="col-span-full text-center py-12">
-              <p className="text-gray-500">No packages found matching your criteria.</p>
+              <p className="text-gray-500">
+                {apiPackages.length === 0
+                  ? 'No published packages are available right now.'
+                  : 'No packages found matching your criteria.'}
+              </p>
             </div>
           )}
         </div>

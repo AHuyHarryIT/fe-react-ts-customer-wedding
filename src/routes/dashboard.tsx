@@ -1,20 +1,8 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { DashboardPage } from '@components/pages/DashboardPage';
-import { requireAuth, mapPageToPath, type AppPage } from '@/shared/routeConfig';
-
-function DashboardComponent() {
-  const navigate = useNavigate();
-
-  return (
-    <DashboardPage
-      onNavigate={(page: string) =>
-        navigate({ to: mapPageToPath((page as AppPage) || 'home') as '/' })
-      }
-    />
-  );
-}
+import { requireAuth } from '@/shared/routeConfig';
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: ({ location }) => requireAuth({ location }),
-  component: DashboardComponent,
+  component: DashboardPage,
 });

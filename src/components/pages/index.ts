@@ -9,4 +9,3 @@ export { GalleryPage } from './GalleryPage';
 export { MessagesPage } from './MessagesPage';
 export { ProfilePage } from './ProfilePage';
 export { ContactPage } from './ContactPage';
-export { ChatListPage } from './ChatListPage';

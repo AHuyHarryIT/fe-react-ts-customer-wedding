@@ -2,15 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Send, Paperclip, Image as ImageIcon, Smile, Check } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useChat } from '@/hooks/useChat';
-import type { Chat } from '@/services/chatService';
+import type { Chat } from '@/types/chat';
 import { useAuthStore } from '@/stores/authStore';
 
-interface MessagesPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export function MessagesPage({ onNavigate }: MessagesPageProps) {
-  void onNavigate;
+export function MessagesPage() {
   const {
     chats,
     currentChat,

@@ -1,7 +1,9 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { AuthPage } from '@components/pages/AuthPage';
 import { useAuthStore } from '@/stores/authStore';
 import { consumePostLoginRedirect } from '@/shared/routeConfig';
+import { initializeAuth } from '@/services/authService';
+import { hasAuthSessionHint } from '@/services/authSession';
 
 function AuthComponent() {
   const navigate = useNavigate();
@@ -17,11 +19,16 @@ function AuthComponent() {
 }
 
 export const Route = createFileRoute('/auth')({
-  beforeLoad: () => {
+  beforeLoad: async () => {
+    if (!hasAuthSessionHint()) {
+      return;
+    }
+
+    await initializeAuth();
     const { isAuthenticated } = useAuthStore.getState();
     if (isAuthenticated) {
       const redirectPath = consumePostLoginRedirect();
-      throw new Error(`Redirect to ${redirectPath}`);
+      throw redirect({ to: redirectPath as '/' });
     }
   },
   component: AuthComponent,

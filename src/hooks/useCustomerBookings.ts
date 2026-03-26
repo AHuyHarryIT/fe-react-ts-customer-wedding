@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { bookingService, type Booking } from '../services/bookingService';
+import { bookingService } from '../services/bookingService';
+import type { Booking } from '@/types';
 import { useAuthStore } from '../stores/authStore';
 
 export function useCustomerBookings() {

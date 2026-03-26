@@ -1,50 +1,15 @@
-import { api } from './authService';
+import { API_BASE_URL, api } from './apiClient';
 import io, { Socket } from 'socket.io-client';
+import type { Chat, Message, ConnectWebSocketHandlers } from '@/types/chat';
 
-const WS_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-
-export interface Chat {
-  id: string;
-  customerId: string;
-  staffId: string;
-  bookingId?: string;
-  createdAt: string;
-  updatedAt: string;
-  staffName?: string;
-  staffAvatar?: string;
-  lastMessage?: string;
-  unreadCount?: number;
-  customer?: {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-  };
-}
-
-export interface Message {
-  id: string;
-  chatId: string;
-  senderId: string;
-  senderName?: string;
-  content: string;
-  attachments?: string[];
-  createdAt: string;
-  updatedAt: string;
-  isRead: boolean;
-}
-
-export interface SendMessageRequest {
-  content: string;
-  chatId: string;
-  attachments?: string[];
-}
-
-interface ConnectWebSocketHandlers {
-  onMessageReceived?: (message: Message) => void;
-  onConnectionChange?: (connected: boolean) => void;
-  onError?: (error: unknown) => void;
-}
+const WS_URL = (() => {
+  try {
+    const baseOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
+    return new URL(API_BASE_URL, baseOrigin).origin;
+  } catch {
+    return API_BASE_URL;
+  }
+})();
 
 class ChatService {
   private socket: Socket | null = null;

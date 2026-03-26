@@ -1,37 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { api } from '../services/bookingService';
-
-export interface Package {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  isActive?: boolean;
-  coverImageUrl?: string | null;
-  images?: Array<{
-    id: string;
-    imageUrl: string;
-    sortOrder: number;
-  }>;
-  services?: Array<{
-    serviceId: string;
-    service?: {
-      id: string;
-      name: string;
-      description?: string | null;
-      price?: number;
-    };
-  }>;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-type PackageListPayload =
-  | Package[]
-  | {
-      data?: Package[];
-      pagination?: unknown;
-    };
+import { api } from '@/services/apiClient';
+import type { Package, PackageListPayload } from '@/types/package';
 
 export function usePackages() {
   const [packages, setPackages] = useState<Package[]>([]);

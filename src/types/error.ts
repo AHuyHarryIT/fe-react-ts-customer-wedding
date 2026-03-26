@@ -1,8 +1,10 @@
 export interface ApiErrorData {
-  success: false;
+  success: boolean;
+  statusCode?: number;
+  code?: string;
   message: string;
   error?: {
-    code: string;
+    code?: string;
     details?: unknown;
   };
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { api } from '../services/bookingService';
-import type { Package } from './usePackages';
+import { api } from '@/services/apiClient';
+import type { Package } from '@/types/package';
 
 export function usePackageDetail(packageId?: string) {
   const [packageData, setPackageData] = useState<Package | null>(null);

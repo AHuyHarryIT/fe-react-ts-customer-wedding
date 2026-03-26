@@ -1,28 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { chatService } from '../services/chatService';
-import type { Chat, Message } from '../services/chatService';
-import { api } from '../services/authService';
+import type { Chat, UseChatState, UseChatActions } from '@/types';
+import { api } from '@/services/apiClient';
 import { useAuthStore } from '../stores/authStore';
 import { toast } from 'sonner';
-
-interface UseChatState {
-  chats: Chat[];
-  currentChat: Chat | null;
-  messages: Message[];
-  loading: boolean;
-  error: string | null;
-  isConnected: boolean;
-}
-
-interface UseChatActions {
-  loadChats: () => Promise<void>;
-  selectChat: (chatId: string) => Promise<void>;
-  loadMessages: (chatId: string) => Promise<void>;
-  sendMessage: (text: string, chatId?: string) => Promise<void>;
-  markAsRead: (chatId: string) => Promise<void>;
-  createChat: (bookingId?: string) => Promise<Chat | null>;
-  disconnect: () => void;
-}
 
 export const useChat = (): UseChatState & UseChatActions => {
   const [state, setState] = useState<UseChatState>({
@@ -62,6 +43,25 @@ export const useChat = (): UseChatState & UseChatActions => {
         ...prev,
         error: (err as Error).message || 'Failed to load chats',
         loading: false,
+      }));
+    }
+  }, []);
+
+  const loadMessages = useCallback(async (chatId: string) => {
+    try {
+      const messages = await chatService.getMessages(chatId);
+      setState((prev) => ({
+        ...prev,
+        messages: messages || [],
+      }));
+
+      // Mark as read
+      await chatService.markAsRead(chatId);
+    } catch (err) {
+      console.error('Failed to load messages:', err);
+      setState((prev) => ({
+        ...prev,
+        error: (err as Error).message || 'Failed to load messages',
       }));
     }
   }, []);
@@ -142,27 +142,8 @@ export const useChat = (): UseChatState & UseChatActions => {
         setState((prev) => ({ ...prev, loading: false }));
       }
     },
-    [state.currentChat]
+    [loadMessages, state.currentChat]
   );
-
-  const loadMessages = useCallback(async (chatId: string) => {
-    try {
-      const messages = await chatService.getMessages(chatId);
-      setState((prev) => ({
-        ...prev,
-        messages: messages || [],
-      }));
-
-      // Mark as read
-      await chatService.markAsRead(chatId);
-    } catch (err) {
-      console.error('Failed to load messages:', err);
-      setState((prev) => ({
-        ...prev,
-        error: (err as Error).message || 'Failed to load messages',
-      }));
-    }
-  }, []);
 
   const sendMessage = useCallback(
     async (text: string, chatId?: string) => {

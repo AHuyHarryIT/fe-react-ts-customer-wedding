@@ -1,12 +1,12 @@
+import { Link } from '@tanstack/react-router';
 import { Camera, Award, Heart, Users, ArrowRight, Star, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '@components/figma/ImageWithFallback';
+import { usePackages } from '@/hooks/usePackages';
+import { formatMoneyVND } from '@/utils/money';
 
-interface HomePageProps {
-  onNavigate: (page: string, data?: Record<string, unknown>) => void;
-}
-
-export function HomePage({ onNavigate }: HomePageProps) {
+export function HomePage() {
+  const { packages } = usePackages();
   const features = [
     {
       icon: Camera,
@@ -63,30 +63,23 @@ export function HomePage({ onNavigate }: HomePageProps) {
     'https://images.unsplash.com/photo-1677768062274-fdd45caac233?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwcmVjZXB0aW9uJTIwZGV0YWlsc3xlbnwxfHx8fDE3NzAxMDkxODN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
   ];
 
-  const packages = [
-    {
-      name: 'Essential',
-      price: '$2,499',
-      features: ['6 Hours Coverage', 'Digital Gallery', 'Online Sharing'],
-      image:
-        'https://images.unsplash.com/photo-1692167900605-e02666cadb6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwYm91cXVldCUyMGZsb3dlcnN8ZW58MXx8fHwxNzcwMDA5MDU0fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    },
-    {
-      name: 'Premium',
-      price: '$3,999',
-      features: ['Full Day Coverage', 'Engagement Session', 'Premium Album'],
-      image:
-        'https://images.unsplash.com/photo-1765615197770-a46baa12db63?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwY2VyZW1vbnklMjByb21hbnRpY3xlbnwxfHx8fDE3NzAxMDkxODJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      popular: true,
-    },
-    {
-      name: 'Luxury',
-      price: '$5,999',
-      features: ['Unlimited Coverage', 'Videography', 'Same Day Edit'],
-      image:
-        'https://images.unsplash.com/photo-1765350226723-a96ab0705403?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwd2VkZGluZyUyMGNvdXBsZSUyMG91dGRvb3J8ZW58MXx8fHwxNzcwMDU1NTMxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    },
-  ];
+  const featuredPackages = packages.slice(0, 3).map((pkg, index) => ({
+    id: pkg.id,
+    name: pkg.name,
+    price: formatMoneyVND(pkg.price),
+    features:
+      pkg.services && pkg.services.length > 0
+        ? pkg.services
+            .map((serviceItem) => serviceItem.service?.name)
+            .filter((name): name is string => Boolean(name))
+            .slice(0, 3)
+        : ['See package detail for included services'],
+    image:
+      pkg.coverImageUrl ||
+      pkg.images?.[0]?.imageUrl ||
+      'https://images.unsplash.com/photo-1692167900605-e02666cadb6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWRkaW5nJTIwYm91cXVldCUyMGZsb3dlcnN8ZW58MXx8fHwxNzcwMDA5MDU0fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    popular: index === 1,
+  }));
 
   return (
     <div className="min-h-screen">
@@ -116,18 +109,18 @@ export function HomePage({ onNavigate }: HomePageProps) {
               Elegant wedding photography and videography to treasure forever
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => onNavigate('packages')}
+              <Link
+                to="/packages"
                 className="px-8 py-4 bg-white text-rose-600 rounded-full hover:shadow-xl transition-all font-medium"
               >
                 View Packages
-              </button>
-              <button
-                onClick={() => onNavigate('booking')}
+              </Link>
+              <Link
+                to="/booking"
                 className="px-8 py-4 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-xl transition-all font-medium"
               >
                 Book Consultation
-              </button>
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -165,10 +158,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {packages.map((pkg, index) => (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            {featuredPackages.map((pkg, index) => (
               <motion.div
-                key={index}
+                key={pkg.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -200,16 +193,28 @@ export function HomePage({ onNavigate }: HomePageProps) {
                       </li>
                     ))}
                   </ul>
-                  <button
-                    onClick={() => onNavigate('package-detail', { package: pkg })}
+                  <Link
+                    to="/packages/$packageId"
+                    params={{ packageId: String(pkg.id) }}
                     className="w-full py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all"
                   >
                     View Details
-                  </button>
+                  </Link>
                 </div>
               </motion.div>
             ))}
           </div>
+          {featuredPackages.length === 0 && (
+            <div className="mt-8 rounded-2xl bg-white p-8 text-center shadow-md">
+              <p className="text-gray-600">No published packages are available yet.</p>
+              <Link
+                to="/packages"
+                className="mt-4 rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 text-white"
+              >
+                Browse Packages
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
@@ -259,32 +264,32 @@ export function HomePage({ onNavigate }: HomePageProps) {
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {galleryImages.map((image, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                className="aspect-square overflow-hidden rounded-lg cursor-pointer group"
-                onClick={() => onNavigate('gallery')}
-              >
-                <ImageWithFallback
-                  src={image}
-                  alt={`Gallery ${index + 1}`}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-              </motion.div>
+              <Link key={index} to="/gallery" className="block">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  className="aspect-square overflow-hidden rounded-lg cursor-pointer group"
+                >
+                  <ImageWithFallback
+                    src={image}
+                    alt={`Gallery ${index + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                </motion.div>
+              </Link>
             ))}
           </div>
 
           <div className="text-center mt-8">
-            <button
-              onClick={() => onNavigate('gallery')}
+            <Link
+              to="/gallery"
               className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all"
             >
               View Full Gallery
               <ArrowRight className="size-4" />
-            </button>
+            </Link>
           </div>
         </div>
       </section>

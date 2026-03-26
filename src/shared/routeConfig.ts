@@ -1,28 +1,9 @@
 import { redirect } from '@tanstack/react-router';
+import { initializeAuth } from '@/services/authService';
 import { useAuthStore } from '@/stores/authStore';
+import type { AppPage } from '@/types/routes';
 
 const POST_LOGIN_REDIRECT_KEY = 'post_login_redirect';
-
-export type AppPage =
-  | 'home'
-  | 'auth'
-  | 'packages'
-  | 'package-detail'
-  | 'booking'
-  | 'dashboard'
-  | 'booking-detail'
-  | 'gallery'
-  | 'messages'
-  | 'profile'
-  | 'contact';
-
-export type PageNavigationData = {
-  package?: {
-    id: string | number;
-    name?: string;
-    price?: number;
-  };
-};
 
 export const normalizeRedirectPath = (value?: string | null): string => {
   if (!value || typeof value !== 'string') {
@@ -83,9 +64,15 @@ export const consumePostLoginRedirect = (): string => {
   return normalizeRedirectPath(stored);
 };
 
-export const requireAuth = (opts?: {
+export const requireAuth = async (opts?: {
   location?: { href?: string; pathname?: string; searchStr?: string };
 }) => {
+  const authStore = useAuthStore.getState();
+
+  if (!authStore.isAuthenticated) {
+    await initializeAuth(true);
+  }
+
   const { isAuthenticated } = useAuthStore.getState();
   if (isAuthenticated) {
     return;
@@ -101,7 +88,7 @@ export const mapPathToPage = (pathname: string): AppPage => {
   if (pathname === '/') return 'home';
   if (pathname === '/auth') return 'auth';
   if (pathname === '/packages') return 'packages';
-  if (pathname.startsWith('/package/')) return 'package-detail';
+  if (pathname.startsWith('/packages/')) return 'package-detail';
   if (pathname === '/booking') return 'booking';
   if (pathname === '/dashboard') return 'dashboard';
   if (pathname === '/booking-detail') return 'booking-detail';
