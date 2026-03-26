@@ -1,3 +1,4 @@
+import importPlugin from 'eslint-plugin-import'
 import tanstackRouter from '@tanstack/eslint-plugin-router'
 import js from '@eslint/js'
 import globals from 'globals'
@@ -15,9 +16,25 @@ export default tseslint.config(
   ...tanstackRouter.configs['flat/recommended'],
   {
     files: ['**/*.{ts,tsx}'],
+    plugins: {
+      import: importPlugin,
+    },
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+    },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          project: './tsconfig.app.json',
+        },
+        node: {
+          extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        },
+      },
+    },
+    rules: {
+      'import/no-unresolved': 'error',
     },
   },
   {
