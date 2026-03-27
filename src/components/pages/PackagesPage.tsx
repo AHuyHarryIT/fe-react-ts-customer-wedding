@@ -168,27 +168,27 @@ export function PackagesPage() {
           transition={{ delay: 0.1 }}
           className="mb-8 rounded-xl border border-rose-100 bg-white p-4 shadow-md md:p-5"
         >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <FiSliders className="size-4 text-rose-500" />
-              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-700">
-                Filters
-              </h2>
-            </div>
+          <h2>
             <button
               type="button"
               aria-expanded={isFiltersVisible}
               aria-controls={filterPanelId}
-              aria-label={isFiltersVisible ? 'Hide filters' : 'Show filters'}
               onClick={() => setIsFiltersVisible((visible) => !visible)}
-              className="inline-flex size-9 items-center justify-center rounded-full border border-rose-200 bg-white text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-md"
+              className="flex w-full items-center justify-between gap-3 text-left"
             >
-              <span className="sr-only">{isFiltersVisible ? 'Hide filters' : 'Show filters'}</span>
-              <FiChevronDown
-                className={`size-3.5 transition-transform ${isFiltersVisible ? 'rotate-180' : ''}`}
-              />
+              <span className="flex items-center gap-2">
+                <FiSliders className="size-4 text-rose-500" />
+                <span className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-700">
+                  Filters
+                </span>
+              </span>
+              <span className="inline-flex size-9 items-center justify-center rounded-full border border-rose-200 bg-white text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-md">
+                <FiChevronDown
+                  className={`size-3.5 transition-transform ${isFiltersVisible ? 'rotate-180' : ''}`}
+                />
+              </span>
             </button>
-          </div>
+          </h2>
 
           <div
             id={filterPanelId}
@@ -339,14 +339,14 @@ export function PackagesPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
-                className={`bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all cursor-pointer group ${
+                className={`flex h-full bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all cursor-pointer group ${
                   pkg.popular ? 'ring-2 ring-rose-400' : ''
                 }`}
               >
                 <Link
                   to="/packages/$packageId"
                   params={{ packageId: String(pkg.id) }}
-                  className="block"
+                  className="flex h-full w-full flex-col"
                 >
                   {pkg.popular && (
                     <div className="bg-gradient-to-r from-rose-400 to-pink-500 text-white text-center py-2 text-sm font-medium">
@@ -368,14 +368,14 @@ export function PackagesPage() {
                     </div>
                   </div>
 
-                  <div className="p-6">
+                  <div className="flex flex-1 flex-col p-6">
                     <h3 className="text-2xl font-serif text-gray-800 mb-2">{pkg.name}</h3>
                     <p className="text-sm text-gray-600 mb-4">{pkg.description}</p>
                     <p className="text-3xl font-medium text-rose-500 mb-4">
                       {formatMoneyVND(pkg.price)}
                     </p>
 
-                    <ul className="space-y-2 mb-6">
+                    <ul className="space-y-2 mb-6 flex-1">
                       {pkg.features.slice(0, 4).map((feature, featureIndex) => (
                         <li
                           key={featureIndex}
@@ -392,7 +392,7 @@ export function PackagesPage() {
                       )}
                     </ul>
 
-                    <span className="block w-full py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full text-center font-medium transition-all hover:shadow-lg">
+                    <span className="mt-auto block w-full py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full text-center font-medium transition-all hover:shadow-lg">
                       View Details
                     </span>
                   </div>
