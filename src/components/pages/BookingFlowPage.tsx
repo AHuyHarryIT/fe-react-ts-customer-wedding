@@ -1,5 +1,5 @@
-import { Link } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { Link, useSearch } from '@tanstack/react-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Calendar, CheckCircle, ChevronLeft, MapPin, MessageSquare, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
@@ -7,18 +7,22 @@ import { usePackages } from '@/hooks/usePackages';
 import { chatService } from '@/services/chatService';
 import { useAuthStore } from '@/stores/authStore';
 import { formatMoneyVND } from '@/utils/money';
-import type { BookingFlowPageProps } from '@/types/components';
 
-export function BookingFlowPage({ initialPackageId = '', onBack }: BookingFlowPageProps) {
+export function BookingFlowPage() {
+  const search = useSearch({ from: '/bookings/' });
   const { user } = useAuthStore();
   const { packages, loading: packagesLoading } = usePackages();
-  const [selectedPackageId, setSelectedPackageId] = useState(initialPackageId);
+  const [selectedPackageId, setSelectedPackageId] = useState(search.packageId ?? '');
   const [eventDate, setEventDate] = useState('');
   const [eventLocation, setEventLocation] = useState('');
   const [guestCount, setGuestCount] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    setSelectedPackageId(search.packageId ?? '');
+  }, [search.packageId]);
 
   const selectedPackage = useMemo(
     () => packages.find((pkg) => pkg.id === selectedPackageId) || null,
@@ -110,13 +114,13 @@ export function BookingFlowPage({ initialPackageId = '', onBack }: BookingFlowPa
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-10">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <button
-          onClick={onBack}
+        <Link
+          to="/packages"
           className="mb-8 flex items-center gap-2 text-sm text-gray-600 transition-colors hover:text-rose-500"
         >
           <ChevronLeft className="size-4" />
           Back to packages
-        </button>
+        </Link>
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <motion.div

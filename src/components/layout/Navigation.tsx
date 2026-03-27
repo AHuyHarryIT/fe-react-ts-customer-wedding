@@ -11,15 +11,13 @@ export function Navigation({ isLoggedIn, onLogout }: NavigationProps) {
   const menuItems: { id: LinkComponentProps['to']; label: string }[] = [
     { id: '/', label: 'Home' },
     { id: '/packages', label: 'Packages' },
-    { id: '/gallery', label: 'Gallery' },
     { id: '/contact', label: 'Contact' },
   ];
 
   const menuItemsLoggedIn: { id: LinkComponentProps['to']; label: string }[] = [
-    { id: '/', label: 'Home' },
+    { id: '/dashboard', label: 'Home' },
     { id: '/packages', label: 'Packages' },
     { id: '/gallery', label: 'Gallery' },
-    { id: '/profile', label: 'My Account' },
     { id: '/messages', label: 'Messages' },
     { id: '/contact', label: 'Contact' },
   ];

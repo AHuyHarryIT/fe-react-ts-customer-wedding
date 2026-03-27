@@ -2,11 +2,8 @@ import { useEffect, useState } from 'react';
 import { FiUser, FiMail, FiPhone, FiLock, FiSave } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
-import {
-  authApi,
-  type UpdateProfileRequest,
-  type ChangePasswordRequest,
-} from '@/services/authService';
+import { authApi } from '@/services/authService';
+import type { UpdateProfileRequest, ChangePasswordRequest } from '@/types/auth';
 import { useCustomerProfile } from '@/hooks/useCustomerProfile';
 
 export function ProfilePage() {

@@ -59,8 +59,8 @@ export function DashboardPage() {
           className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4"
         >
           <Link
-            to="/booking"
-            search={{}}
+            to="/bookings"
+            search={{ packageId: undefined }}
             className="rounded-2xl bg-white p-5 text-left shadow-md transition-all hover:-translate-y-0.5 hover:shadow-xl"
           >
             <div className="mb-3 inline-flex rounded-full bg-rose-50 p-3">
@@ -93,7 +93,8 @@ export function DashboardPage() {
               <h2 className="text-xl font-medium text-gray-900">Latest Booking</h2>
               {latestBooking && (
                 <Link
-                  to="/booking-detail"
+                  to="/bookings/$id"
+                  params={{ id: latestBooking.id }}
                   className="text-sm font-medium text-rose-500 transition-colors hover:text-rose-600"
                 >
                   View details
@@ -128,8 +129,13 @@ export function DashboardPage() {
                     <p className="mb-3 text-sm text-gray-500">Selected packages</p>
                     <div className="space-y-2">
                       {latestBooking.packages.map((pkg) => (
-                        <div key={pkg.id} className="flex items-center justify-between text-sm">
-                          <span className="font-medium text-gray-800">{pkg.name}</span>
+                        <div
+                          key={pkg.package?.id || pkg.packageId}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="font-medium text-gray-800">
+                            {pkg.package?.name || 'Selected Package'}
+                          </span>
                           <span className="text-gray-500">Package</span>
                         </div>
                       ))}
@@ -145,8 +151,8 @@ export function DashboardPage() {
                   portal starts with a consultation request through chat.
                 </p>
                 <Link
-                  to="/booking"
-                  search={{}}
+                  to="/bookings"
+                  search={{ packageId: undefined }}
                   className="rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
                 >
                   Start Consultation

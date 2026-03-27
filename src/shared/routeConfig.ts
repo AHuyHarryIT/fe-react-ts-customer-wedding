@@ -89,9 +89,10 @@ export const mapPathToPage = (pathname: string): AppPage => {
   if (pathname === '/auth') return 'auth';
   if (pathname === '/packages') return 'packages';
   if (pathname.startsWith('/packages/')) return 'package-detail';
+  if (pathname === '/bookings' || pathname === '/bookings/') return 'booking';
+  if (pathname.startsWith('/bookings/')) return 'booking-detail';
   if (pathname === '/booking') return 'booking';
   if (pathname === '/dashboard') return 'dashboard';
-  if (pathname === '/booking-detail') return 'booking-detail';
   if (pathname === '/gallery') return 'gallery';
   if (pathname === '/messages') return 'messages';
   if (pathname === '/profile') return 'profile';
@@ -108,11 +109,11 @@ export const mapPageToPath = (page: AppPage): string => {
     case 'packages':
       return '/packages';
     case 'booking':
-      return '/booking';
+      return '/bookings';
     case 'dashboard':
       return '/dashboard';
     case 'booking-detail':
-      return '/booking-detail';
+      return '/bookings';
     case 'gallery':
       return '/gallery';
     case 'messages':

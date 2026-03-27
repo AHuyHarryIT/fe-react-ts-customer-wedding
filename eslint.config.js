@@ -1,4 +1,5 @@
 import importPlugin from 'eslint-plugin-import'
+import tscPlugin from 'eslint-plugin-tsc'
 import tanstackRouter from '@tanstack/eslint-plugin-router'
 import js from '@eslint/js'
 import globals from 'globals'
@@ -18,6 +19,7 @@ export default tseslint.config(
     files: ['**/*.{ts,tsx}'],
     plugins: {
       import: importPlugin,
+      tsc: tscPlugin,
     },
     languageOptions: {
       ecmaVersion: 2020,
@@ -35,6 +37,7 @@ export default tseslint.config(
     },
     rules: {
       'import/no-unresolved': 'error',
+      'tsc/config': ['error', { configFile: 'tsconfig.app.json' }],
     },
   },
   {

@@ -1,23 +1,21 @@
 import { Calendar, Camera, CreditCard, MessageSquare, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { bookingService } from '@/services/bookingService';
 import type { Booking } from '@/types/booking';
 import { useCustomerBookings } from '@/hooks/useCustomerBookings';
 import { formatMoneyVND } from '@/utils/money';
-import type { BookingDetailPageProps } from '@/types/components';
 
-export function BookingDetailPage({
-  bookingId: propBookingId,
-  onBack,
-  onMessages,
-}: BookingDetailPageProps) {
+export function BookingDetailPage() {
+  const navigate = useNavigate();
+  const { id } = useParams({ from: '/bookings/$id' });
   const { bookings } = useCustomerBookings();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const currentBookingId = propBookingId || bookings[0]?.id;
+  const currentBookingId = id || bookings[0]?.id;
 
   useEffect(() => {
     const loadBookingDetails = async () => {
@@ -44,12 +42,24 @@ export function BookingDetailPage({
   }, [currentBookingId]);
 
   const packageItems = useMemo(
-    () => booking?.packages?.map((item) => item.package || item).filter(Boolean) || [],
+    () =>
+      booking?.packages?.map((item) => ({
+        id: item.package?.id || item.packageId,
+        name: item.package?.name || 'Selected Package',
+        description: item.package?.description || undefined,
+        price: item.package?.price ?? item.price,
+      })) || [],
     [booking?.packages]
   );
 
   const serviceItems = useMemo(
-    () => booking?.services?.map((item) => item.service || item).filter(Boolean) || [],
+    () =>
+      booking?.services?.map((item) => ({
+        id: item.service?.id || item.serviceId,
+        name: item.service?.name || 'Selected Service',
+        description: item.service?.description || undefined,
+        price: item.service?.price ?? item.price,
+      })) || [],
     [booking?.services]
   );
 
@@ -73,7 +83,7 @@ export function BookingDetailPage({
           <h1 className="mb-3 text-2xl font-serif text-gray-900">Booking unavailable</h1>
           <p className="mb-6 text-gray-600">{error || 'No booking was found for your account.'}</p>
           <button
-            onClick={onBack}
+            onClick={() => navigate({ to: '/dashboard' })}
             className="rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
           >
             Back to dashboard
@@ -88,7 +98,7 @@ export function BookingDetailPage({
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <button
-            onClick={onBack}
+            onClick={() => navigate({ to: '/dashboard' })}
             className="mb-4 text-sm text-gray-600 transition-colors hover:text-rose-500"
           >
             ← Back to dashboard
@@ -276,7 +286,7 @@ export function BookingDetailPage({
                 payment, and delivery updates.
               </p>
               <button
-                onClick={onMessages}
+                onClick={() => navigate({ to: '/messages' })}
                 className="w-full rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
               >
                 Open Messages

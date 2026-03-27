@@ -116,7 +116,8 @@ export function HomePage() {
                 View Packages
               </Link>
               <Link
-                to="/booking"
+                to="/bookings"
+                search={{ packageId: undefined }}
                 className="px-8 py-4 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-xl transition-all font-medium"
               >
                 Book Consultation

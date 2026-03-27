@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { FiHeart, FiLock, FiUser, FiPhone } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/services/authService';
-import type { AuthPageProps } from '@/types/components';
+import { consumePostLoginRedirect } from '@/shared/routeConfig';
 
-export function AuthPage({ onLogin }: AuthPageProps) {
+export function AuthPage() {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -62,7 +64,8 @@ export function AuthPage({ onLogin }: AuthPageProps) {
         lastName: data.user.lastName ?? undefined,
         email: data.user.email ?? undefined,
       });
-      onLogin(phoneNumber);
+      const redirectPath = consumePostLoginRedirect();
+      navigate({ to: redirectPath as '/' });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setServerError(errorMessage);
