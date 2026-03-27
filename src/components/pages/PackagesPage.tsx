@@ -1,23 +1,126 @@
 import { Link } from '@tanstack/react-router';
-import { useState } from 'react';
-import { FiCamera, FiVideo, FiImage, FiCheckCircle, FiSliders } from 'react-icons/fi';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  FiArrowLeft,
+  FiArrowRight,
+  FiCamera,
+  FiCheckCircle,
+  FiChevronDown,
+  FiSearch,
+  FiSliders,
+} from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '@components/figma/ImageWithFallback';
 import { formatMoneyVND } from '@/utils/money';
 import { usePackages } from '@/hooks/usePackages';
 import defaultImage from '@assets/default-image.svg';
 
+const PACKAGES_PER_PAGE = 6;
+const PAGINATION_SIBLING_COUNT = 1;
+
+type PaginationItem = number | 'ellipsis-start' | 'ellipsis-end';
+
+function buildPaginationItems(currentPage: number, totalPages: number): PaginationItem[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const startPage = Math.max(2, currentPage - PAGINATION_SIBLING_COUNT);
+  const endPage = Math.min(totalPages - 1, currentPage + PAGINATION_SIBLING_COUNT);
+  const items: PaginationItem[] = [1];
+
+  if (startPage > 2) {
+    items.push('ellipsis-start');
+  }
+
+  for (let page = startPage; page <= endPage; page += 1) {
+    items.push(page);
+  }
+
+  if (endPage < totalPages - 1) {
+    items.push('ellipsis-end');
+  }
+
+  items.push(totalPages);
+
+  return items;
+}
+
 export function PackagesPage() {
-  const { packages: apiPackages, loading } = usePackages();
-  const [selectedBudget, setSelectedBudget] = useState('all');
-  const [selectedService, setSelectedService] = useState('all');
-  const budgetFilterId = 'package-budget-filter';
-  const serviceFilterId = 'package-service-filter';
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOption, setSortOption] = useState('newest');
+  const [minPriceInput, setMinPriceInput] = useState('');
+  const [maxPriceInput, setMaxPriceInput] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [debouncedMinPriceInput, setDebouncedMinPriceInput] = useState('');
+  const [debouncedMaxPriceInput, setDebouncedMaxPriceInput] = useState('');
+  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  const searchInputId = 'package-search-filter';
+  const minPriceInputId = 'package-min-price-filter';
+  const maxPriceInputId = 'package-max-price-filter';
+  const sortSelectId = 'package-sort-filter';
+  const filterPanelId = 'package-filter-panel';
+
+  const sortConfig = useMemo(() => {
+    switch (sortOption) {
+      case 'oldest':
+        return { sortBy: 'createdAt', sortOrder: 'asc' as const };
+      case 'price-low':
+        return { sortBy: 'price', sortOrder: 'asc' as const };
+      case 'price-high':
+        return { sortBy: 'price', sortOrder: 'desc' as const };
+      case 'name-az':
+        return { sortBy: 'name', sortOrder: 'asc' as const };
+      case 'name-za':
+        return { sortBy: 'name', sortOrder: 'desc' as const };
+      default:
+        return { sortBy: 'createdAt', sortOrder: 'desc' as const };
+    }
+  }, [sortOption]);
+
+  const customMinPrice = debouncedMinPriceInput.trim() ? Number(debouncedMinPriceInput) : undefined;
+  const customMaxPrice = debouncedMaxPriceInput.trim() ? Number(debouncedMaxPriceInput) : undefined;
+  const effectiveMinPrice =
+    customMinPrice !== undefined && Number.isFinite(customMinPrice) ? customMinPrice : undefined;
+  const effectiveMaxPrice =
+    customMaxPrice !== undefined && Number.isFinite(customMaxPrice) ? customMaxPrice : undefined;
+
+  const {
+    packages: apiPackages,
+    loading,
+    pagination,
+  } = usePackages({
+    page: currentPage,
+    limit: PACKAGES_PER_PAGE,
+    search: debouncedSearchQuery,
+    minPrice: effectiveMinPrice,
+    maxPrice: effectiveMaxPrice,
+    sortBy: sortConfig.sortBy,
+    sortOrder: sortConfig.sortOrder,
+  });
+
+  useEffect(() => {
+    const debounceTimer = window.setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => window.clearTimeout(debounceTimer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const debounceTimer = window.setTimeout(() => {
+      setDebouncedMinPriceInput(minPriceInput);
+      setDebouncedMaxPriceInput(maxPriceInput);
+    }, 300);
+
+    return () => window.clearTimeout(debounceTimer);
+  }, [maxPriceInput, minPriceInput]);
+
   const displayPackages = apiPackages.map((pkg) => ({
     id: pkg.id,
     name: pkg.name,
     price: pkg.price || 0,
-    category: 'photography',
     description: pkg.description || 'Wedding service package',
     features:
       pkg.services && pkg.services.length > 0
@@ -32,22 +135,22 @@ export function PackagesPage() {
     popular: false,
   }));
 
-  const filteredPackages = displayPackages.filter((pkg) => {
-    const budgetMatch =
-      selectedBudget === 'all' ||
-      (selectedBudget === 'under3000' && pkg.price < 3000) ||
-      (selectedBudget === '3000-5000' && pkg.price >= 3000 && pkg.price <= 5000) ||
-      (selectedBudget === 'over5000' && pkg.price > 5000);
+  const normalizedSearchQuery = debouncedSearchQuery.trim().toLowerCase();
+  const totalPackages = pagination?.total ?? displayPackages.length;
+  const totalPages = pagination?.totalPages ?? (totalPackages > 0 ? 1 : 0);
+  const activePage = pagination?.page ?? currentPage;
+  const pageSize = pagination?.limit ?? PACKAGES_PER_PAGE;
+  const paginationItems = useMemo(
+    () => buildPaginationItems(activePage, Math.max(totalPages, 1)),
+    [activePage, totalPages]
+  );
 
-    const serviceMatch = selectedService === 'all' || pkg.category === selectedService;
-
-    return budgetMatch && serviceMatch;
-  });
+  const visibleRangeStart = totalPackages === 0 ? 0 : (activePage - 1) * pageSize + 1;
+  const visibleRangeEnd = totalPackages === 0 ? 0 : visibleRangeStart + displayPackages.length - 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -59,70 +162,164 @@ export function PackagesPage() {
           </p>
         </motion.div>
 
-        {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-md p-6 mb-8"
+          className="mb-8 rounded-xl border border-rose-100 bg-white p-4 shadow-md md:p-5"
         >
-          <div className="flex items-center gap-2 mb-4">
-            <FiSliders className="size-5 text-rose-500" />
-            <h2 className="font-medium text-gray-800">Filters</h2>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <FiSliders className="size-4 text-rose-500" />
+              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-700">
+                Filters
+              </h2>
+            </div>
+            <button
+              type="button"
+              aria-expanded={isFiltersVisible}
+              aria-controls={filterPanelId}
+              aria-label={isFiltersVisible ? 'Hide filters' : 'Show filters'}
+              onClick={() => setIsFiltersVisible((visible) => !visible)}
+              className="inline-flex size-9 items-center justify-center rounded-full border border-rose-200 bg-white text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-md"
+            >
+              <span className="sr-only">{isFiltersVisible ? 'Hide filters' : 'Show filters'}</span>
+              <FiChevronDown
+                className={`size-3.5 transition-transform ${isFiltersVisible ? 'rotate-180' : ''}`}
+              />
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Budget Filter */}
-            <div>
-              <label
-                htmlFor={budgetFilterId}
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Budget Range
+          <div
+            id={filterPanelId}
+            className={`${isFiltersVisible ? 'mt-3 grid' : 'hidden'} grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6 xl:items-end`}
+          >
+            <div className="sm:col-span-2 xl:col-span-2">
+              <label htmlFor={searchInputId} className="sr-only">
+                Search
               </label>
-              <select
-                id={budgetFilterId}
-                name="budgetRange"
-                value={selectedBudget}
-                onChange={(e) => setSelectedBudget(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
-              >
-                <option value="all">All Budgets</option>
-                <option value="under3000">Under $3,000</option>
-                <option value="3000-5000">$3,000 - $5,000</option>
-                <option value="over5000">Over $5,000</option>
-              </select>
+              <div className="relative">
+                <FiSearch className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-rose-400" />
+                <span className="pointer-events-none absolute left-8 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                  Search
+                </span>
+                <input
+                  id={searchInputId}
+                  name="packageSearch"
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="Name, service"
+                  className="h-9 w-full rounded-md border border-gray-200 py-0 pl-[5.7rem] pr-3 text-xs text-gray-700 transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                />
+              </div>
             </div>
 
-            {/* Service Filter */}
-            <div>
-              <label
-                htmlFor={serviceFilterId}
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Service Type
+            <div className="xl:max-w-[150px]">
+              <label htmlFor={minPriceInputId} className="sr-only">
+                Min
               </label>
-              <select
-                id={serviceFilterId}
-                name="serviceType"
-                value={selectedService}
-                onChange={(e) => setSelectedService(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                  Min
+                </span>
+                <input
+                  id={minPriceInputId}
+                  name="minPrice"
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={minPriceInput}
+                  onChange={(e) => {
+                    setMinPriceInput(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="0"
+                  className="h-9 w-full rounded-md border border-gray-200 py-0 pl-12 pr-3 text-xs text-gray-700 transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                />
+              </div>
+            </div>
+
+            <div className="xl:max-w-[150px]">
+              <label htmlFor={maxPriceInputId} className="sr-only">
+                Max
+              </label>
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                  Max
+                </span>
+                <input
+                  id={maxPriceInputId}
+                  name="maxPrice"
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={maxPriceInput}
+                  onChange={(e) => {
+                    setMaxPriceInput(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="300000"
+                  className="h-9 w-full rounded-md border border-gray-200 py-0 pl-12 pr-3 text-xs text-gray-700 transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                />
+              </div>
+            </div>
+
+            <div className="xl:max-w-[170px]">
+              <label htmlFor={sortSelectId} className="sr-only">
+                Sort
+              </label>
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                  Sort
+                </span>
+                <select
+                  id={sortSelectId}
+                  name="sortBy"
+                  value={sortOption}
+                  onChange={(e) => {
+                    setSortOption(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="h-9 w-full rounded-md border border-gray-200 py-0 pl-12 pr-8 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="name-az">Name: A to Z</option>
+                  <option value="name-za">Name: Z to A</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="sm:col-span-2 xl:col-span-6 flex justify-start pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setDebouncedSearchQuery('');
+                  setMinPriceInput('');
+                  setMaxPriceInput('');
+                  setDebouncedMinPriceInput('');
+                  setDebouncedMaxPriceInput('');
+                  setSortOption('newest');
+                  setCurrentPage(1);
+                }}
+                className="inline-flex h-9 items-center rounded-full border border-rose-200 bg-white px-3.5 text-xs font-semibold text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-md"
               >
-                <option value="all">All Services</option>
-                <option value="photography">Photography Only</option>
-                <option value="video">Videography Only</option>
-                <option value="full-service">Photography + Video</option>
-              </select>
+                Clear
+              </button>
             </div>
           </div>
         </motion.div>
 
-        {/* Package Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
-            // Loading skeleton
-            Array.from({ length: 6 }).map((_, idx) => (
+            Array.from({ length: PACKAGES_PER_PAGE }).map((_, idx) => (
               <div
                 key={idx}
                 className="bg-white rounded-2xl overflow-hidden shadow-lg animate-pulse"
@@ -135,8 +332,8 @@ export function PackagesPage() {
                 </div>
               </div>
             ))
-          ) : filteredPackages.length > 0 ? (
-            filteredPackages.map((pkg, index) => (
+          ) : displayPackages.length > 0 ? (
+            displayPackages.map((pkg, index) => (
               <motion.div
                 key={pkg.id}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -163,18 +360,10 @@ export function PackagesPage() {
                       alt={pkg.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
-                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
+                    <div className="absolute top-4 left-4 rounded-full bg-white/90 px-3 py-1 backdrop-blur-sm">
                       <div className="flex items-center gap-1">
-                        {pkg.category === 'photography' && (
-                          <FiCamera className="size-4 text-rose-500" />
-                        )}
-                        {pkg.category === 'video' && <FiVideo className="size-4 text-rose-500" />}
-                        {pkg.category === 'full-service' && (
-                          <FiImage className="size-4 text-rose-500" />
-                        )}
-                        <span className="text-xs font-medium text-gray-700 capitalize">
-                          {pkg.category === 'full-service' ? 'Photo + Video' : pkg.category}
-                        </span>
+                        <FiCamera className="size-4 text-rose-500" />
+                        <span className="text-xs font-medium text-gray-700">Package</span>
                       </div>
                     </div>
                   </div>
@@ -187,8 +376,11 @@ export function PackagesPage() {
                     </p>
 
                     <ul className="space-y-2 mb-6">
-                      {pkg.features.slice(0, 4).map((feature, i) => (
-                        <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                      {pkg.features.slice(0, 4).map((feature, featureIndex) => (
+                        <li
+                          key={featureIndex}
+                          className="flex items-center gap-2 text-sm text-gray-600"
+                        >
                           <FiCheckCircle className="size-4 text-rose-400 flex-shrink-0" />
                           {feature}
                         </li>
@@ -210,13 +402,90 @@ export function PackagesPage() {
           ) : (
             <div className="col-span-full text-center py-12">
               <p className="text-gray-500">
-                {apiPackages.length === 0
+                {totalPackages === 0 &&
+                !normalizedSearchQuery &&
+                effectiveMinPrice === undefined &&
+                effectiveMaxPrice === undefined
                   ? 'No published packages are available right now.'
-                  : 'No packages found matching your criteria.'}
+                  : normalizedSearchQuery.length > 0
+                    ? 'No packages found matching your search.'
+                    : 'No packages found matching your criteria.'}
               </p>
             </div>
           )}
         </div>
+
+        {!loading && totalPackages > 0 && (
+          <div className="mt-10 flex justify-center">
+            <div className="flex w-full max-w-3xl flex-col gap-4 rounded-[28px] border border-rose-100 bg-white/90 px-4 py-4 shadow-[0_24px_60px_-32px_rgba(244,114,182,0.45)] backdrop-blur sm:px-6">
+              <div className="flex w-full flex-col gap-2 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+                <p>
+                  Showing <span className="font-semibold text-gray-800">{visibleRangeStart}</span>-
+                  <span className="font-semibold text-gray-800">{visibleRangeEnd}</span> of{' '}
+                  <span className="font-semibold text-gray-800">{totalPackages}</span> packages
+                </p>
+                <p className="text-rose-500">
+                  Page <span className="font-semibold">{activePage}</span> of{' '}
+                  <span className="font-semibold">{Math.max(totalPages, 1)}</span>
+                </p>
+              </div>
+
+              {totalPages > 1 && (
+                <nav aria-label="Package list pagination" className="flex w-full justify-center">
+                  <div className="flex w-full flex-wrap items-center justify-center gap-3 sm:justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                      disabled={activePage === 1}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-rose-200 bg-white px-5 text-sm font-semibold text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-md disabled:cursor-not-allowed disabled:border-rose-100 disabled:text-rose-300 disabled:shadow-none"
+                    >
+                      <FiArrowLeft className="size-4" />
+                      <span>Previous</span>
+                    </button>
+
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      {paginationItems.map((item) =>
+                        typeof item === 'number' ? (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => setCurrentPage(item)}
+                            aria-current={item === activePage ? 'page' : undefined}
+                            className={`flex size-11 items-center justify-center rounded-full border text-sm font-semibold transition ${
+                              item === activePage
+                                ? 'border-transparent bg-gradient-to-r from-rose-400 to-pink-500 text-white shadow-[0_18px_30px_-20px_rgba(236,72,153,0.85)]'
+                                : 'border-rose-200 bg-white text-gray-700 shadow-sm hover:-translate-y-0.5 hover:border-rose-300 hover:text-rose-600 hover:shadow-md'
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        ) : (
+                          <span
+                            key={item}
+                            aria-hidden="true"
+                            className="flex size-11 items-center justify-center text-sm font-semibold text-rose-300"
+                          >
+                            ...
+                          </span>
+                        )
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                      disabled={activePage === totalPages}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-rose-200 bg-white px-5 text-sm font-semibold text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-md disabled:cursor-not-allowed disabled:border-rose-100 disabled:text-rose-300 disabled:shadow-none"
+                    >
+                      <span>Next</span>
+                      <FiArrowRight className="size-4" />
+                    </button>
+                  </div>
+                </nav>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

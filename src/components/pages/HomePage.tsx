@@ -6,7 +6,7 @@ import { usePackages } from '@/hooks/usePackages';
 import { formatMoneyVND } from '@/utils/money';
 
 export function HomePage() {
-  const { packages } = usePackages();
+  const { packages } = usePackages({ limit: 3 });
   const features = [
     {
       icon: Camera,

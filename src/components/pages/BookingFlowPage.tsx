@@ -11,7 +11,10 @@ import { formatMoneyVND } from '@/utils/money';
 export function BookingFlowPage() {
   const search = useSearch({ from: '/bookings/' });
   const { user } = useAuthStore();
-  const { packages, loading: packagesLoading } = usePackages();
+  const { packages, loading: packagesLoading } = usePackages({
+    limit: 100,
+    includeServices: false,
+  });
   const [selectedPackageId, setSelectedPackageId] = useState(search.packageId ?? '');
   const [eventDate, setEventDate] = useState('');
   const [eventLocation, setEventLocation] = useState('');

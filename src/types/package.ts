@@ -33,12 +33,16 @@ export interface Package {
   category?: string;
 }
 
-export type PackageListPayload =
-  | Package[]
-  | {
-      data?: Package[];
-      pagination?: unknown;
-    };
+export interface PackagePagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export type PackageListPayload = Package[];
 
 export interface PackageParams {
   packageId: string;
