@@ -5,8 +5,7 @@ import { motion } from 'motion/react';
 import { ImageWithFallback } from '@components/figma/ImageWithFallback';
 import { formatMoneyVND } from '@/utils/money';
 import { usePackages } from '@/hooks/usePackages';
-
-const DEFAULT_PACKAGE_IMAGE = 'https://images.unsplash.com/photo-1692167900605-e02666cadb6d';
+import defaultImage from '@assets/default-image.svg';
 
 export function PackagesPage() {
   const { packages: apiPackages, loading } = usePackages();
@@ -26,7 +25,7 @@ export function PackagesPage() {
             .map((serviceItem) => serviceItem.service?.name)
             .filter((name): name is string => Boolean(name))
         : ['See details for full features'],
-    image: pkg.coverImageUrl || pkg.images?.[0]?.imageUrl || DEFAULT_PACKAGE_IMAGE,
+    image: pkg.coverImageUrl || pkg.images?.[0]?.imageUrl || defaultImage,
     images: pkg.images,
     services: pkg.services,
     isActive: pkg.isActive,

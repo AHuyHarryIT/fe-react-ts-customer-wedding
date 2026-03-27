@@ -5,8 +5,7 @@ import { ProductImageGallery } from '@components/ui';
 import { usePackageDetail } from '@/hooks/usePackageDetail';
 import { formatMoneyVND } from '@/utils/money';
 import type { Package } from '@/types/package';
-
-const DEFAULT_PACKAGE_IMAGE = 'https://images.unsplash.com/photo-1692167900605-e02666cadb6d';
+import defaultImage from '@assets/default-image.svg';
 
 export function PackageDetailPage() {
   const navigate = useNavigate();
@@ -51,9 +50,9 @@ export function PackageDetailPage() {
     .filter(Boolean);
 
   const galleryImages = [
+    apiGalleryImages[0] || defaultImage,
     packageData.coverImageUrl || packageData.image || apiGalleryImages[0],
     ...apiGalleryImages,
-    DEFAULT_PACKAGE_IMAGE,
   ]
     .filter((img, idx, arr): img is string => Boolean(img) && arr.indexOf(img) === idx)
     .map((image, index) => ({
@@ -180,7 +179,7 @@ export function PackageDetailPage() {
               </Link>
               <Link
                 to="/contact"
-                className="flex-1 py-4 border-2 border-rose-400 text-rose-500 rounded-full hover:bg-rose-50 transition-all font-medium"
+                className="flex-1 py-4 border-2 border-rose-400 text-rose-500 rounded-full hover:bg-rose-50 transition-all font-medium flex items-center justify-center"
               >
                 Request Consultation
               </Link>
