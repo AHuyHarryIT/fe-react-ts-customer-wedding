@@ -4,7 +4,6 @@ import { FiHeart, FiLock, FiUser, FiPhone } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/services/authService';
-import { consumePostLoginRedirect } from '@/shared/routeConfig';
 
 export function AuthPage() {
   const navigate = useNavigate();
@@ -64,8 +63,7 @@ export function AuthPage() {
         lastName: data.user.lastName ?? undefined,
         email: data.user.email ?? undefined,
       });
-      const redirectPath = consumePostLoginRedirect();
-      navigate({ to: redirectPath as '/' });
+      navigate({ to: '/dashboard' });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setServerError(errorMessage);
