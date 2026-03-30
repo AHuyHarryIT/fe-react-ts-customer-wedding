@@ -6,13 +6,13 @@ import { hasAuthSessionHint } from '@/services/authSession';
 
 export const Route = createFileRoute('/auth')({
   beforeLoad: async () => {
-    if (!hasAuthSessionHint()) {
-      return;
+    const { isAuthenticated, isInitialized } = useAuthStore.getState();
+
+    if (!isInitialized || isAuthenticated || hasAuthSessionHint()) {
+      await initializeAuth(true);
     }
 
-    await initializeAuth();
-    const { isAuthenticated } = useAuthStore.getState();
-    if (isAuthenticated) {
+    if (useAuthStore.getState().isAuthenticated) {
       throw redirect({ to: '/dashboard' });
     }
   },

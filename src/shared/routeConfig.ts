@@ -69,7 +69,7 @@ export const requireAuth = async (opts?: {
 }) => {
   const authStore = useAuthStore.getState();
 
-  if (!authStore.isAuthenticated) {
+  if (!authStore.isInitialized) {
     await initializeAuth(true);
   }
 

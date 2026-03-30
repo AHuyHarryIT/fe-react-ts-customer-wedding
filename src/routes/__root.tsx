@@ -15,8 +15,9 @@ function RootLayout() {
   const { isAuthenticated, isInitialized, loading, user } = useAuthStore();
 
   useEffect(() => {
-    if (hasAuthSessionHint()) {
-      void initializeAuth();
+    const authState = useAuthStore.getState();
+    if (!authState.isInitialized && (authState.isAuthenticated || hasAuthSessionHint())) {
+      void initializeAuth(true);
     }
   }, []);
 
