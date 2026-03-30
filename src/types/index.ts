@@ -19,6 +19,13 @@ export type {
   StandardResponse,
   BookingListPayload,
 } from './booking';
+export type {
+  CustomerOrder,
+  CustomerOrderPayment,
+  CustomerOrderSummary,
+  CustomerMomoPayment,
+  CustomerDepositCheckoutResponse,
+} from './order';
 export type { Chat, Message, SendMessageRequest } from './chat';
 export type { NavigationProps } from './components';
 export type { UseChatState, UseChatActions } from './hooks';

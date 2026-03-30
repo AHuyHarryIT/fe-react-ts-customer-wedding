@@ -1,15 +1,22 @@
 import { Link } from '@tanstack/react-router';
 import { Calendar, Camera, MessageSquare, UserCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCustomerBookings } from '@/hooks/useCustomerBookings';
 import { chatService } from '@/services/chatService';
 import type { Chat } from '@/types/chat';
+import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 
 export function DashboardPage() {
-  const { bookings, loading: bookingsLoading } = useCustomerBookings();
+  const {
+    bookings,
+    loading: bookingsLoading,
+    error: bookingsError,
+    refetch: refetchBookings,
+  } = useCustomerBookings();
   const [recentChats, setRecentChats] = useState<Chat[]>([]);
   const [chatsLoading, setChatsLoading] = useState(false);
+  const [chatsError, setChatsError] = useState<string | null>(null);
 
   const latestBooking = bookings[0] || null;
 
@@ -22,19 +29,23 @@ export function DashboardPage() {
     return Math.ceil((eventTime - Date.now()) / (1000 * 60 * 60 * 24));
   }, [latestBooking?.eventDate]);
 
-  useEffect(() => {
-    const loadChats = async () => {
-      try {
-        setChatsLoading(true);
-        const chats = await chatService.getChats();
-        setRecentChats(chats.slice(0, 3));
-      } finally {
-        setChatsLoading(false);
-      }
-    };
-
-    void loadChats();
+  const loadChats = useCallback(async () => {
+    try {
+      setChatsLoading(true);
+      setChatsError(null);
+      const chats = await chatService.getChats();
+      setRecentChats(chats.slice(0, 3));
+    } catch (error) {
+      console.error('Failed to load recent chats:', error);
+      setChatsError('We could not load your recent conversations right now.');
+    } finally {
+      setChatsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadChats();
+  }, [loadChats]);
 
   const quickActions = [
     { icon: MessageSquare, label: 'Messages', to: '/messages' as const },
@@ -66,7 +77,7 @@ export function DashboardPage() {
             <div className="mb-3 inline-flex rounded-full bg-rose-50 p-3">
               <Calendar className="size-5 text-rose-500" />
             </div>
-            <p className="text-sm font-medium text-gray-800">Start Consultation</p>
+            <p className="text-sm font-medium text-gray-800">Create Booking</p>
           </Link>
           {quickActions.map((action) => (
             <Link
@@ -103,7 +114,26 @@ export function DashboardPage() {
             </div>
 
             {bookingsLoading ? (
-              <div className="py-12 text-center text-gray-500">Loading booking details…</div>
+              <CustomerStatePanel
+                tone="loading"
+                title="Loading your latest booking"
+                description="We are pulling your booking, event date, and deposit details."
+              />
+            ) : bookingsError ? (
+              <CustomerStatePanel
+                tone="error"
+                title="Could not load booking details"
+                description={bookingsError}
+                actions={
+                  <button
+                    type="button"
+                    onClick={() => void refetchBookings()}
+                    className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-5 py-3 font-medium text-white transition-all hover:shadow-lg"
+                  >
+                    Retry
+                  </button>
+                }
+              />
             ) : latestBooking ? (
               <div className="space-y-4">
                 <div className="rounded-2xl bg-rose-50 p-4">
@@ -144,20 +174,20 @@ export function DashboardPage() {
                 )}
               </div>
             ) : (
-              <div className="rounded-3xl border border-dashed border-rose-200 bg-rose-50/70 p-8 text-center">
-                <h3 className="mb-2 text-lg font-medium text-gray-900">No booking yet</h3>
-                <p className="mx-auto mb-5 max-w-lg text-sm text-gray-600">
-                  The backend does not expose customer booking creation directly, so the current
-                  portal starts with a consultation request through chat.
-                </p>
-                <Link
-                  to="/bookings"
-                  search={{ packageId: undefined }}
-                  className="rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
-                >
-                  Start Consultation
-                </Link>
-              </div>
+              <CustomerStatePanel
+                tone="empty"
+                title="No booking yet"
+                description="Create your first booking from the packages flow and the studio team can review, confirm, and continue follow-up afterward."
+                actions={
+                  <Link
+                    to="/bookings"
+                    search={{ packageId: undefined }}
+                    className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
+                  >
+                    Create Booking
+                  </Link>
+                }
+              />
             )}
           </motion.section>
 
@@ -178,7 +208,26 @@ export function DashboardPage() {
             </div>
 
             {chatsLoading ? (
-              <div className="py-12 text-center text-gray-500">Loading chats…</div>
+              <CustomerStatePanel
+                tone="loading"
+                title="Loading recent conversations"
+                description="We are checking for your latest updates from the studio team."
+              />
+            ) : chatsError ? (
+              <CustomerStatePanel
+                tone="error"
+                title="Could not load conversations"
+                description={chatsError}
+                actions={
+                  <button
+                    type="button"
+                    onClick={() => void loadChats()}
+                    className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-5 py-3 font-medium text-white transition-all hover:shadow-lg"
+                  >
+                    Retry
+                  </button>
+                }
+              />
             ) : recentChats.length > 0 ? (
               <div className="space-y-3">
                 {recentChats.map((chat) => (
@@ -202,10 +251,19 @@ export function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl bg-gray-50 p-6 text-sm text-gray-600">
-                You have no conversations yet. Start from Packages or the consultation page and the
-                studio team will reply in Messages.
-              </div>
+              <CustomerStatePanel
+                tone="empty"
+                title="No conversations yet"
+                description="Create a booking first or open Messages directly when you need to follow up with the studio team."
+                actions={
+                  <Link
+                    to="/packages"
+                    className="inline-flex items-center justify-center rounded-full border border-rose-200 px-5 py-3 font-medium text-rose-600 transition hover:bg-rose-50"
+                  >
+                    Browse Packages
+                  </Link>
+                }
+              />
             )}
           </motion.section>
         </div>

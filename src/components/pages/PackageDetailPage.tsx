@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { FiChevronLeft, FiCheckCircle, FiCalendar, FiPhone, FiCamera } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { ProductImageGallery } from '@components/ui';
+import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 import { usePackageDetail } from '@/hooks/usePackageDetail';
 import { formatMoneyVND } from '@/utils/money';
 import type { Package } from '@/types/package';
@@ -14,8 +15,15 @@ export function PackageDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="text-sm text-gray-500">Loading package details…</div>
+      <div className="flex min-h-[50vh] items-center justify-center px-4">
+        <div className="w-full max-w-2xl">
+          <CustomerStatePanel
+            tone="loading"
+            eyebrow="Packages"
+            title="Loading package details"
+            description="We are pulling the package images, included services, and pricing."
+          />
+        </div>
       </div>
     );
   }
@@ -23,14 +31,21 @@ export function PackageDetailPage() {
   if (error || !packageData) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-4">
-        <div className="rounded-3xl bg-white p-8 text-center shadow-lg">
-          <p className="mb-4 text-gray-600">{error || 'Package not found.'}</p>
-          <button
-            onClick={() => navigate({ to: '/packages' })}
-            className="rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white"
-          >
-            Back to packages
-          </button>
+        <div className="w-full max-w-2xl">
+          <CustomerStatePanel
+            tone="error"
+            eyebrow="Packages"
+            title="Package unavailable"
+            description={error || 'Package not found.'}
+            actions={
+              <button
+                onClick={() => navigate({ to: '/packages' })}
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white"
+              >
+                Back to packages
+              </button>
+            }
+          />
         </div>
       </div>
     );
@@ -175,13 +190,13 @@ export function PackageDetailPage() {
                 className="flex-1 py-4 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-xl transition-all font-medium flex items-center justify-center gap-2"
               >
                 <FiCalendar className="size-5" />
-                Start Consultation
+                Book This Package
               </Link>
               <Link
                 to="/contact"
                 className="flex-1 py-4 border-2 border-rose-400 text-rose-500 rounded-full hover:bg-rose-50 transition-all font-medium flex items-center justify-center"
               >
-                Request Consultation
+                Contact Studio
               </Link>
             </div>
           </motion.div>

@@ -75,7 +75,6 @@ export const authApi = {
     } finally {
       delete api.defaults.headers.common['Authorization'];
       setAuthSessionHint(false);
-      const { useAuthStore } = await import('../stores/authStore');
       useAuthStore.getState().clearAuth();
     }
   },

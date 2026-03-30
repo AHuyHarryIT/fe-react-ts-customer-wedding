@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Send, Paperclip, Image as ImageIcon, Smile, Check } from 'lucide-react';
 import { motion } from 'motion/react';
+import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 import { useChat } from '@/hooks/useChat';
 import type { Chat } from '@/types/chat';
 import { useAuthStore } from '@/stores/authStore';
@@ -106,12 +107,20 @@ export function MessagesPage() {
             {/* Chat List */}
             <div className="divide-y divide-gray-200">
               {loading ? (
-                <div className="p-6 text-center text-gray-500">
-                  <p>Loading chats...</p>
+                <div className="p-6">
+                  <CustomerStatePanel
+                    tone="loading"
+                    title="Loading chats"
+                    description="We are pulling your latest conversations and unread updates."
+                  />
                 </div>
               ) : error ? (
-                <div className="p-6 text-center text-red-500">
-                  <p>{error}</p>
+                <div className="p-6">
+                  <CustomerStatePanel
+                    tone="error"
+                    title="Could not load chats"
+                    description={error}
+                  />
                 </div>
               ) : chats && chats.length > 0 ? (
                 chats.map((chat, index) => (
@@ -140,42 +149,52 @@ export function MessagesPage() {
                 ))
               ) : (
                 <div className="p-12 text-center">
-                  <p className="text-gray-500 mb-4">No chats yet</p>
-                  <p className="text-sm text-gray-400 mb-6">
-                    Send a message to start chatting with the Studio HaMy team
-                  </p>
-
-                  {/* Message Input Area */}
-                  <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                    <div className="flex items-end gap-3">
-                      <div className="flex-1 relative">
-                        <textarea
-                          value={initialInputMessage}
-                          onChange={(e) => setInitialInputMessage(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleSendInitialMessage();
-                            }
-                          }}
-                          placeholder="Type your first message..."
-                          rows={1}
-                          disabled={isCreatingChat || loading}
-                          className="w-full px-4 py-3 pr-24 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-400 resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        />
+                  <CustomerStatePanel
+                    tone="empty"
+                    title="No chats yet"
+                    description="Send a message to start chatting with the Studio HaMy team."
+                    actions={
+                      <div className="w-full">
+                        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                          <div className="flex items-end gap-3">
+                            <div className="flex-1 relative">
+                              <label htmlFor="initial-message-composer" className="sr-only">
+                                Type your first message
+                              </label>
+                              <textarea
+                                id="initial-message-composer"
+                                name="initialMessage"
+                                value={initialInputMessage}
+                                onChange={(e) => setInitialInputMessage(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSendInitialMessage();
+                                  }
+                                }}
+                                placeholder="Type your first message..."
+                                rows={1}
+                                disabled={isCreatingChat || loading}
+                                className="w-full px-4 py-3 pr-24 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-400 resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              aria-label="Send first message"
+                              onClick={handleSendInitialMessage}
+                              disabled={!initialInputMessage.trim() || isCreatingChat || loading}
+                              className="size-12 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Send className="size-5" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2 px-2">
+                            Press Enter to send, Shift + Enter for new line
+                          </p>
+                        </div>
                       </div>
-                      <button
-                        onClick={handleSendInitialMessage}
-                        disabled={!initialInputMessage.trim() || isCreatingChat || loading}
-                        className="size-12 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Send className="size-5" />
-                      </button>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 px-2">
-                      Press Enter to send, Shift + Enter for new line
-                    </p>
-                  </div>
+                    }
+                  />
                 </div>
               )}
             </div>
@@ -286,7 +305,12 @@ export function MessagesPage() {
               )}
               <div className="flex items-end gap-3">
                 <div className="flex-1 relative">
+                  <label htmlFor="message-composer" className="sr-only">
+                    Type your message
+                  </label>
                   <textarea
+                    id="message-composer"
+                    name="message"
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={(e) => {
@@ -301,18 +325,32 @@ export function MessagesPage() {
                     className="w-full px-4 py-3 pr-24 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-400 resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
                   />
                   <div className="absolute right-2 bottom-2 flex items-center gap-1">
-                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50">
+                    <button
+                      type="button"
+                      aria-label="Attach a file"
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                    >
                       <Paperclip className="size-4 text-gray-400" />
                     </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50">
+                    <button
+                      type="button"
+                      aria-label="Attach an image"
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                    >
                       <ImageIcon className="size-4 text-gray-400" />
                     </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50">
+                    <button
+                      type="button"
+                      aria-label="Insert an emoji"
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                    >
                       <Smile className="size-4 text-gray-400" />
                     </button>
                   </div>
                 </div>
                 <button
+                  type="button"
+                  aria-label="Send message"
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || !isConnected}
                   className="size-12 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"

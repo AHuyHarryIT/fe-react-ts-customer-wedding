@@ -16,7 +16,7 @@ export function useCustomerBookings() {
     try {
       setLoading(true);
       setError(null);
-      const data = await bookingService.getCustomerBookings(user.id);
+      const data = await bookingService.getCustomerBookings();
       setBookings(data);
     } catch (err) {
       console.error('Failed to fetch customer bookings:', err);
@@ -29,8 +29,13 @@ export function useCustomerBookings() {
   // Fetch bookings on mount or when user changes
   useEffect(() => {
     if (user?.id) {
-      fetchBookings();
+      void fetchBookings();
+      return;
     }
+
+    setBookings([]);
+    setLoading(false);
+    setError(null);
   }, [user?.id, fetchBookings]);
 
   return {

@@ -1,5 +1,10 @@
 import { api } from './apiClient';
-import type { Booking, BookingListPayload, StandardResponse } from '@/types/booking';
+import type {
+  Booking,
+  BookingListPayload,
+  CreateBookingRequest,
+  StandardResponse,
+} from '@/types/booking';
 
 const unwrapBookingList = (payload: BookingListPayload | undefined): Booking[] => {
   if (!payload) {
@@ -18,10 +23,14 @@ const unwrapBookingList = (payload: BookingListPayload | undefined): Booking[] =
 };
 
 export const bookingService = {
-  getCustomerBookings: async (customerId: string): Promise<Booking[]> => {
+  createBooking: async (payload: CreateBookingRequest): Promise<Booking> => {
+    const response = await api.post<StandardResponse<Booking>>('/customer/bookings', payload);
+    return response.data.data as Booking;
+  },
+
+  getCustomerBookings: async (): Promise<Booking[]> => {
     const response = await api.get<StandardResponse<BookingListPayload>>('/bookings', {
       params: {
-        customerId,
         includePackages: true,
       },
     });

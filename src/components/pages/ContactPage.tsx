@@ -18,6 +18,13 @@ export function ContactPage() {
     setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
   };
 
+  const nameId = 'contact-name';
+  const emailId = 'contact-email';
+  const phoneId = 'contact-phone';
+  const subjectId = 'contact-subject';
+  const messageId = 'contact-message';
+  const consentId = 'contact-consent';
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -115,10 +122,15 @@ export function ContactPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor={nameId}
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Your Name *
                     </label>
                     <input
+                      id={nameId}
+                      name="name"
                       type="text"
                       required
                       value={formData.name}
@@ -129,10 +141,15 @@ export function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor={emailId}
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Email Address *
                     </label>
                     <input
+                      id={emailId}
+                      name="email"
                       type="email"
                       required
                       value={formData.email}
@@ -145,10 +162,15 @@ export function ContactPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor={phoneId}
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Phone Number
                     </label>
                     <input
+                      id={phoneId}
+                      name="phone"
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -158,8 +180,15 @@ export function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                    <label
+                      htmlFor={subjectId}
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Subject
+                    </label>
                     <select
+                      id={subjectId}
+                      name="subject"
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
@@ -174,8 +203,15 @@ export function ContactPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Message *</label>
+                  <label
+                    htmlFor={messageId}
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Message *
+                  </label>
                   <textarea
+                    id={messageId}
+                    name="message"
                     required
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -187,12 +223,13 @@ export function ContactPage() {
 
                 <div className="flex items-start gap-3">
                   <input
+                    id={consentId}
+                    name="consent"
                     type="checkbox"
-                    id="consent"
                     required
                     className="mt-1 size-4 text-rose-500 rounded focus:ring-rose-400"
                   />
-                  <label htmlFor="consent" className="text-sm text-gray-600">
+                  <label htmlFor={consentId} className="text-sm text-gray-600">
                     I agree to receive communication from Studio HaMy regarding my inquiry. We
                     respect your privacy and will never share your information.
                   </label>

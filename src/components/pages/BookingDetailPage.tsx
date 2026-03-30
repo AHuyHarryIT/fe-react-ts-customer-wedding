@@ -1,45 +1,55 @@
 import { Calendar, Camera, CreditCard, MessageSquare, User } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from '@tanstack/react-router';
+import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 import { bookingService } from '@/services/bookingService';
-import type { Booking } from '@/types/booking';
-import { useCustomerBookings } from '@/hooks/useCustomerBookings';
+import { customerOrderService } from '@/services/customerOrderService';
+import type { Booking } from '@/types';
 import { formatMoneyVND } from '@/utils/money';
 
+const CUSTOMER_APP_BASE_URL = import.meta.env.DEV
+  ? 'http://localhost:5174'
+  : window.location.origin;
+
+const getCustomerPaymentResultUrl = (bookingId: string) =>
+  `${CUSTOMER_APP_BASE_URL}/bookings/payment-result?bookingId=${bookingId}`;
+
+const CUSTOMER_PAYMENT_BOOKING_KEY = 'customer_payment_booking_id';
+const CUSTOMER_PAYMENT_MOMO_ORDER_KEY = 'customer_payment_momo_order_id';
+
 export function BookingDetailPage() {
-  const navigate = useNavigate();
   const { id } = useParams({ from: '/bookings/$id' });
-  const { bookings } = useCustomerBookings();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [depositLoading, setDepositLoading] = useState(false);
+  const [depositError, setDepositError] = useState<string | null>(null);
 
-  const currentBookingId = id || bookings[0]?.id;
+  const loadBookingDetails = useCallback(async () => {
+    if (!id) {
+      setLoading(false);
+      setBooking(null);
+      setError('Invalid booking link. This booking could not be found.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const bookingData = await bookingService.getBookingDetails(id);
+      setBooking(bookingData);
+    } catch (err) {
+      console.error('Failed to load booking details:', err);
+      setError('Failed to load booking details.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
-    const loadBookingDetails = async () => {
-      if (!currentBookingId) {
-        setLoading(false);
-        setBooking(null);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        const bookingData = await bookingService.getBookingDetails(currentBookingId);
-        setBooking(bookingData);
-      } catch (err) {
-        console.error('Failed to load booking details:', err);
-        setError('Failed to load booking details.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     void loadBookingDetails();
-  }, [currentBookingId]);
+  }, [loadBookingDetails]);
 
   const packageItems = useMemo(
     () =>
@@ -64,13 +74,59 @@ export function BookingDetailPage() {
   );
 
   const orderSummary = booking?.order?.summary;
+  const bookingTotalPrice = booking?.totalPrice ?? orderSummary?.totalPrice ?? 0;
+  const depositAmount = bookingTotalPrice > 0 ? Math.ceil((bookingTotalPrice * 30) / 100) : 0;
+  const totalPaid = orderSummary?.totalPaid ?? 0;
+  const remainingAmount = orderSummary?.balanceRemaining ?? bookingTotalPrice;
+  const depositPaid = totalPaid > 0;
+  const canPayDeposit =
+    Boolean(booking) &&
+    bookingTotalPrice > 0 &&
+    !depositPaid &&
+    booking?.status !== 'CANCELLED' &&
+    booking?.status !== 'COMPLETED';
+
+  const handleDepositCheckout = async () => {
+    if (!booking?.id) {
+      return;
+    }
+
+    try {
+      setDepositLoading(true);
+      setDepositError(null);
+      const redirectUrl = getCustomerPaymentResultUrl(booking.id);
+      const result = await customerOrderService.checkoutDeposit(booking.id, redirectUrl);
+      if (result.momo.payUrl) {
+        sessionStorage.setItem(CUSTOMER_PAYMENT_BOOKING_KEY, booking.id);
+        if (result.momo.orderId) {
+          sessionStorage.setItem(CUSTOMER_PAYMENT_MOMO_ORDER_KEY, result.momo.orderId);
+        }
+        window.location.assign(result.momo.payUrl);
+        return;
+      }
+      throw new Error('MoMo payment link was not returned.');
+    } catch (err) {
+      console.error('Failed to initiate deposit payment:', err);
+      setDepositError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to start the deposit payment. Please contact the studio in Messages.'
+      );
+    } finally {
+      setDepositLoading(false);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-rose-50 py-12">
-        <div className="text-center">
-          <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-4 border-rose-200 border-t-rose-500" />
-          <p className="text-gray-500">Loading booking details…</p>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-rose-50 py-12 px-4">
+        <div className="w-full max-w-2xl">
+          <CustomerStatePanel
+            tone="loading"
+            eyebrow="Booking Details"
+            title="Loading your booking"
+            description="We are retrieving your event date, package selection, and payment summary."
+          />
         </div>
       </div>
     );
@@ -78,16 +134,30 @@ export function BookingDetailPage() {
 
   if (error || !booking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-rose-50 py-12">
-        <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow-xl">
-          <h1 className="mb-3 text-2xl font-serif text-gray-900">Booking unavailable</h1>
-          <p className="mb-6 text-gray-600">{error || 'No booking was found for your account.'}</p>
-          <button
-            onClick={() => navigate({ to: '/dashboard' })}
-            className="rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
-          >
-            Back to dashboard
-          </button>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-rose-50 py-12 px-4">
+        <div className="w-full max-w-2xl">
+          <CustomerStatePanel
+            tone="error"
+            eyebrow="Booking Details"
+            title="Booking unavailable"
+            description={error || 'No booking was found for your account.'}
+            actions={
+              <>
+                <Link
+                  to="/dashboard"
+                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
+                >
+                  Back to dashboard
+                </Link>
+                <Link
+                  to="/messages"
+                  className="inline-flex items-center justify-center rounded-full border border-rose-200 px-6 py-3 font-medium text-rose-600 transition hover:bg-rose-50"
+                >
+                  Open Messages
+                </Link>
+              </>
+            }
+          />
         </div>
       </div>
     );
@@ -97,12 +167,12 @@ export function BookingDetailPage() {
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <button
-            onClick={() => navigate({ to: '/dashboard' })}
-            className="mb-4 text-sm text-gray-600 transition-colors hover:text-rose-500"
+          <Link
+            to="/dashboard"
+            className="mb-4 inline-flex text-sm text-gray-600 transition-colors hover:text-rose-500"
           >
             ← Back to dashboard
-          </button>
+          </Link>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="mb-2 text-3xl font-serif text-gray-900 md:text-4xl">
@@ -272,6 +342,73 @@ export function BookingDetailPage() {
                   you through Messages.
                 </p>
               )}
+
+              <div className="mt-6 rounded-3xl border border-rose-100 bg-rose-50/70 p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">
+                      Customer Deposit
+                    </p>
+                    <h3 className="mt-2 text-lg font-medium text-gray-900">Pay 30% deposit</h3>
+                    <p className="mt-2 text-sm text-gray-600">
+                      The customer portal only supports the first deposit payment. Remaining
+                      balance, adjustments, and payment management stay with the studio team.
+                    </p>
+                  </div>
+                  {depositAmount > 0 ? (
+                    <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">
+                      <p className="text-xs uppercase tracking-[0.16em] text-gray-500">
+                        Deposit Due
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-gray-900">
+                        {formatMoneyVND(depositAmount)}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+
+                {depositPaid ? (
+                  <div className="mt-5 rounded-2xl border border-green-100 bg-white p-4">
+                    <p className="text-sm font-medium text-green-700">Deposit received</p>
+                    <p className="mt-1 text-sm text-gray-600">
+                      The studio has recorded your deposit. Remaining balance of{' '}
+                      <span className="font-medium text-gray-900">
+                        {formatMoneyVND(remainingAmount)}
+                      </span>{' '}
+                      will be handled by the staff team.
+                    </p>
+                  </div>
+                ) : canPayDeposit ? (
+                  <div className="mt-5 space-y-4">
+                    <button
+                      type="button"
+                      onClick={handleDepositCheckout}
+                      disabled={depositLoading}
+                      className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {depositLoading ? 'Starting MoMo deposit...' : 'Pay 30% deposit with MoMo'}
+                    </button>
+
+                    {depositError ? (
+                      <CustomerStatePanel
+                        tone="error"
+                        title="Payment request could not start"
+                        description={depositError}
+                        className="mt-2"
+                      />
+                    ) : null}
+                    <p className="text-xs text-gray-500">
+                      MoMo opens right after the payment request is created. When payment finishes,
+                      MoMo redirects back to your customer payment result page automatically.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-5 rounded-2xl border border-dashed border-rose-200 bg-white p-4 text-sm text-gray-600">
+                    Deposit payment is not available yet. The studio may still be preparing the
+                    final quote, or this booking is already closed.
+                  </div>
+                )}
+              </div>
             </motion.section>
 
             <motion.section
@@ -285,12 +422,12 @@ export function BookingDetailPage() {
                 The customer portal uses chat as the studio-safe follow-up channel for schedule,
                 payment, and delivery updates.
               </p>
-              <button
-                onClick={() => navigate({ to: '/messages' })}
-                className="w-full rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
+              <Link
+                to="/messages"
+                className="inline-flex w-full justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
               >
                 Open Messages
-              </button>
+              </Link>
             </motion.section>
           </div>
         </div>

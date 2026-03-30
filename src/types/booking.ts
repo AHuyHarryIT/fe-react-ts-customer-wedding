@@ -44,6 +44,7 @@ export interface Booking {
   id: string;
   customerId: string;
   status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+  totalPrice?: number;
   eventDate: string;
   createdAt: string;
   updatedAt: string;
@@ -70,6 +71,15 @@ export interface Booking {
       isPartiallyPaid: boolean;
     };
   };
+}
+
+export interface CreateBookingRequest {
+  customerId?: string;
+  packageIds?: string[];
+  serviceIds?: string[];
+  notes?: string;
+  eventDate: string;
+  totalPrice?: number;
 }
 
 export interface StandardResponse<T> {
