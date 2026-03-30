@@ -51,34 +51,9 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (
-      statusCode === 401 &&
-      !url?.includes('/auth/login') &&
-      !url?.includes('/auth/register') &&
-      !url?.includes('/auth/refresh')
-    ) {
-      const tokenExpired = axiosError.response?.headers?.['x-token-expired'];
-      if (tokenExpired === 'true') {
-        forceLogoutAndRedirectToAuth();
-        return Promise.reject(error);
-      }
-
-      if (!originalRequest._retry) {
-        originalRequest._retry = true;
-
-        try {
-          await api.post('/auth/refresh');
-
-          if (originalRequest.headers?.Authorization) {
-            delete originalRequest.headers.Authorization;
-          }
-
-          return api(originalRequest);
-        } catch (retryError) {
-          forceLogoutAndRedirectToAuth();
-          return Promise.reject(retryError);
-        }
-      }
+    if (statusCode === 401 && !url?.includes('/auth/login') && !url?.includes('/auth/register')) {
+      forceLogoutAndRedirectToAuth();
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);

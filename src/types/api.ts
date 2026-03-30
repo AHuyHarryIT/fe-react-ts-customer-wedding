@@ -5,7 +5,6 @@ export interface ApiEnvelope<T> {
 }
 
 export type RequestConfigWithRetry = {
-  _retry?: boolean;
   headers?: Record<string, string>;
   skipAuthRedirect?: boolean;
 };
