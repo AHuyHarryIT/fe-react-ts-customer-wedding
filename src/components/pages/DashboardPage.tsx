@@ -5,7 +5,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCustomerBookings } from '@/hooks/useCustomerBookings';
 import { chatService } from '@/services/chatService';
 import type { Chat } from '@/types/chat';
+import type { Booking } from '@/types/booking';
 import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
+
+const formatBookingStatus = (status: Booking['status']) => status.replace(/_/g, ' ');
 
 export function DashboardPage() {
   const {
@@ -138,7 +141,9 @@ export function DashboardPage() {
               <div className="space-y-4">
                 <div className="rounded-2xl bg-rose-50 p-4">
                   <p className="text-sm text-gray-500">Status</p>
-                  <p className="mt-1 text-lg font-medium text-gray-900">{latestBooking.status}</p>
+                  <p className="mt-1 text-lg font-medium text-gray-900">
+                    {formatBookingStatus(latestBooking.status)}
+                  </p>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="rounded-2xl bg-gray-50 p-4">

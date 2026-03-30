@@ -17,6 +17,7 @@ const getCustomerPaymentResultUrl = (bookingId: string) =>
 
 const CUSTOMER_PAYMENT_BOOKING_KEY = 'customer_payment_booking_id';
 const CUSTOMER_PAYMENT_MOMO_ORDER_KEY = 'customer_payment_momo_order_id';
+const formatBookingStatus = (status: Booking['status']) => status.replace(/_/g, ' ');
 
 export function BookingDetailPage() {
   const { id } = useParams({ from: '/bookings/$id' });
@@ -181,7 +182,7 @@ export function BookingDetailPage() {
               <p className="text-gray-600">Booking ID: {booking.id}</p>
             </div>
             <span className="rounded-full bg-rose-100 px-4 py-2 text-sm font-medium text-rose-700">
-              {booking.status}
+              {formatBookingStatus(booking.status)}
             </span>
           </div>
         </motion.div>

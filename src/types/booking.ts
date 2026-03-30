@@ -43,7 +43,7 @@ export interface BookingSession {
 export interface Booking {
   id: string;
   customerId: string;
-  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+  status: 'PENDING' | 'DEPOSIT_PAID' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
   totalPrice?: number;
   eventDate: string;
   createdAt: string;
