@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/services/authService';
 import { consumePostLoginRedirect } from '@/shared/routeConfig';
+import { isVietnamesePhoneNumber } from '@/utils/phone';
 
 export function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,8 +23,8 @@ export function AuthPage() {
 
     if (!phoneNumber) {
       newErrors.phoneNumber = 'Phone is required';
-    } else if (!/^\+?[\d\s\-()\]]{10,}$/.test(phoneNumber)) {
-      newErrors.phoneNumber = 'Phone is invalid';
+    } else if (!isVietnamesePhoneNumber(phoneNumber)) {
+      newErrors.phoneNumber = 'Please enter a valid Vietnamese phone number';
     }
 
     if (!password) {
@@ -180,7 +181,7 @@ export function AuthPage() {
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
-                  placeholder="+84 (555) 123-4567"
+                  placeholder="0981234567 or +84981234567"
                   disabled={isLoading}
                 />
               </div>
