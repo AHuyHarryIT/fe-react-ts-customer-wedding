@@ -20,8 +20,8 @@ export function GalleryPage() {
         >
           <h1 className="mb-3 text-4xl font-serif text-gray-900 md:text-5xl">Public Gallery</h1>
           <p className="max-w-3xl text-gray-600">
-            This page is now driven by the backend public albums endpoint. It shows the albums the
-            studio has explicitly made public for customer viewing.
+            Explore the studio&apos;s public portfolio highlights here. Private client delivery
+            albums are protected and can only be accessed after login.
           </p>
         </motion.div>
 
@@ -102,14 +102,14 @@ export function GalleryPage() {
             Need your private delivery gallery?
           </p>
           <p className="text-sm text-gray-600">
-            Private delivery and booking-specific gallery access still happens through the studio
-            team. Use Messages for share links or delivery updates.
+            This page only shows public portfolio work. For your private wedding album delivery,
+            please log in to continue securely.
           </p>
           <Link
-            to="/messages"
+            to="/auth"
             className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-rose-500 transition-colors hover:text-rose-600"
           >
-            Open Messages
+            Access My Private Album
             <ExternalLink className="size-4" />
           </Link>
         </div>
