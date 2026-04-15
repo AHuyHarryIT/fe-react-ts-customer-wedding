@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
-import { Outlet, useNavigate, useRouterState, createRootRoute } from '@tanstack/react-router';
+import {
+  HeadContent,
+  Outlet,
+  useNavigate,
+  useRouterState,
+  createRootRoute,
+} from '@tanstack/react-router';
 import { Toaster } from 'sonner';
 import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
@@ -41,6 +47,7 @@ function RootLayout() {
 
   return (
     <div className="min-h-screen bg-white">
+      <HeadContent />
       <Navigation isLoggedIn={isAuthenticated && !!user} onLogout={handleLogout} />
 
       <main>
