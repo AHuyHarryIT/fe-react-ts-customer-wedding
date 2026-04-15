@@ -30,6 +30,8 @@ export function HomePage() {
     },
   ];
 
+  const trustProof = ['15+ Years Experience', '1000+ Happy Couples', 'Award-Winning Team'];
+
   const testimonials = [
     {
       name: 'Sarah & Michael',
@@ -110,18 +112,28 @@ export function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/packages"
-                className="px-8 py-4 bg-white text-rose-600 rounded-full hover:shadow-xl transition-all font-medium"
-              >
-                View Packages
-              </Link>
-              <Link
-                to="/bookings"
-                search={{ packageId: undefined }}
+                to="/contact"
                 className="px-8 py-4 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-xl transition-all font-medium"
               >
-                Create Booking
+                Book Now
               </Link>
+              <Link
+                to="/auth"
+                className="px-8 py-4 bg-white text-rose-600 rounded-full hover:shadow-xl transition-all font-medium"
+              >
+                Login
+              </Link>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              {trustProof.map((proof) => (
+                <span
+                  key={proof}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium text-white"
+                >
+                  <CheckCircle className="size-4 text-rose-300" />
+                  {proof}
+                </span>
+              ))}
             </div>
           </motion.div>
         </div>
