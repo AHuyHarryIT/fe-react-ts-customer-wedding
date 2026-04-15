@@ -3,6 +3,7 @@ export interface ApiErrorData {
   statusCode?: number;
   code?: string;
   message: string;
+  details?: unknown;
   error?: {
     code?: string;
     details?: unknown;

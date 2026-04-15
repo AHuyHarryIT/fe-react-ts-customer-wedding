@@ -1,34 +1,51 @@
 import axios, { type AxiosError } from 'axios';
-import { useAuthStore } from '@/stores/authStore';
 import type { RequestConfigWithRetry } from '@/types/api';
 import type { ApiErrorData } from '@/types/error';
-import { setAuthSessionHint } from '@/services/authSession';
-
-const POST_LOGIN_REDIRECT_KEY = 'post_login_redirect';
+import {
+  forceRelogin,
+  isSessionExpiredResponse,
+  mapForbiddenContext,
+  type ForbiddenContext,
+} from '@/auth/sessionPolicy';
 
 const DEFAULT_API_BASE_URL = 'http://localhost:3000';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL;
 
-const saveCurrentPathForRelogin = () => {
-  if (typeof window === 'undefined') {
+type ApiErrorWithForbiddenContext = AxiosError<ApiErrorData> & {
+  forbiddenContext?: ForbiddenContext;
+};
+
+const LOGIN_ENDPOINTS = ['/auth/login', '/auth/register'];
+
+const shouldBypassAuthRedirect = (url?: string): boolean =>
+  LOGIN_ENDPOINTS.some((endpoint) => url?.includes(endpoint));
+
+const normalizeForbiddenPayload = (
+  axiosError: ApiErrorWithForbiddenContext,
+  forbiddenContext: ForbiddenContext
+) => {
+  if (!axiosError.response?.data || typeof axiosError.response.data !== 'object') {
     return;
   }
 
-  const fullPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-  if (fullPath && fullPath !== '/auth') {
-    sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, fullPath);
-  }
-};
+  const responseData = axiosError.response.data as ApiErrorData & { details?: unknown };
 
-const forceLogoutAndRedirectToAuth = () => {
-  useAuthStore.getState().clearAuth();
-  setAuthSessionHint(false);
-  saveCurrentPathForRelogin();
+  const existingDetails =
+    responseData.details &&
+    typeof responseData.details === 'object' &&
+    !Array.isArray(responseData.details)
+      ? (responseData.details as Record<string, unknown>)
+      : {};
 
-  if (typeof window !== 'undefined' && window.location.pathname !== '/auth') {
-    window.location.href = '/auth';
-  }
+  axiosError.response.data = {
+    ...responseData,
+    details: {
+      ...existingDetails,
+      requiredPermissions: forbiddenContext.requiredPermissions,
+      missingPermissions: forbiddenContext.missingPermissions,
+    },
+  } as ApiErrorData;
 };
 
 export const api = axios.create({
@@ -42,20 +59,34 @@ export const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const axiosError = error as AxiosError<ApiErrorData>;
+    const axiosError = error as ApiErrorWithForbiddenContext;
     const statusCode = axiosError.response?.status;
     const url = axiosError.config?.url;
     const originalRequest = axiosError.config as RequestConfigWithRetry;
 
     if (originalRequest?.skipAuthRedirect) {
-      return Promise.reject(error);
+      return Promise.reject(axiosError);
     }
 
-    if (statusCode === 401 && !url?.includes('/auth/login') && !url?.includes('/auth/register')) {
-      forceLogoutAndRedirectToAuth();
-      return Promise.reject(error);
+    if (statusCode === 403) {
+      const forbiddenContext = mapForbiddenContext(axiosError);
+      if (forbiddenContext) {
+        axiosError.forbiddenContext = forbiddenContext;
+        normalizeForbiddenPayload(axiosError, forbiddenContext);
+      }
+
+      return Promise.reject(axiosError);
     }
 
-    return Promise.reject(error);
+    if (shouldBypassAuthRedirect(url)) {
+      return Promise.reject(axiosError);
+    }
+
+    if (isSessionExpiredResponse(axiosError)) {
+      forceRelogin('session-expired');
+      return Promise.reject(axiosError);
+    }
+
+    return Promise.reject(axiosError);
   }
 );
