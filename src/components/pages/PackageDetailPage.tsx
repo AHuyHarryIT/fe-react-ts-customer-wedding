@@ -183,20 +183,18 @@ export function PackageDetailPage() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                to="/bookings"
-                search={{ packageId: String(packageData.id) }}
-                className="flex-1 py-4 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-xl transition-all font-medium flex items-center justify-center gap-2"
-              >
-                <FiCalendar className="size-5" />
-                Book This Package
-              </Link>
+            <div className="flex flex-col gap-3 sm:items-start">
               <Link
                 to="/contact"
-                className="flex-1 py-4 border-2 border-rose-400 text-rose-500 rounded-full hover:bg-rose-50 transition-all font-medium flex items-center justify-center"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-8 py-4 font-medium text-white transition-all hover:shadow-xl sm:w-auto"
               >
-                Contact Studio
+                Book Now
+              </Link>
+              <Link
+                to="/packages"
+                className="inline-flex w-full items-center justify-center rounded-full border border-rose-300 px-8 py-3 text-sm font-medium text-rose-500 transition-colors hover:bg-rose-50 sm:w-auto"
+              >
+                Compare all packages
               </Link>
             </div>
           </motion.div>

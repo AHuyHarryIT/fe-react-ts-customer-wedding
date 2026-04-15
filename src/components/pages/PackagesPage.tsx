@@ -127,7 +127,8 @@ export function PackagesPage() {
         ? pkg.services
             .map((serviceItem) => serviceItem.service?.name)
             .filter((name): name is string => Boolean(name))
-        : ['See details for full features'],
+            .slice(0, 3)
+        : ['See details for included services'],
     image: pkg.coverImageUrl || pkg.images?.[0]?.imageUrl || defaultImage,
     images: pkg.images,
     services: pkg.services,
