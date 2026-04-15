@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContactPage } from './ContactPage';
 
-const submitPublicInquiryMock = vi.fn();
+const { submitPublicInquiryMock } = vi.hoisted(() => ({
+  submitPublicInquiryMock: vi.fn(),
+}));
 
 vi.mock('@/services/contactService', () => ({
   submitPublicInquiry: submitPublicInquiryMock,
@@ -27,16 +29,15 @@ describe('ContactPage', () => {
   });
 
   it('transitions idle -> submitting -> success only after persistence and resets form', async () => {
-    submitPublicInquiryMock.mockResolvedValue({
-      id: 'inquiry-1',
-      name: 'Jane Doe',
-      email: 'jane@example.com',
-      message: 'Need package details',
-      phone: '+84 123',
-      packageInterest: 'Premium',
-      createdAt: '2026-04-15T00:00:00.000Z',
-      updatedAt: '2026-04-15T00:00:00.000Z',
-    });
+    let resolveSubmission: (value: unknown) => void = () => {
+      throw new Error('Submission resolver was not initialized.');
+    };
+
+    submitPublicInquiryMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSubmission = resolve;
+      })
+    );
 
     render(<ContactPage />);
     const user = userEvent.setup();
@@ -58,6 +59,23 @@ describe('ContactPage', () => {
     });
 
     expect(screen.getByRole('button', { name: /sending/i })).toBeDisabled();
+
+    const submissionResolver = resolveSubmission;
+
+    if (!submissionResolver) {
+      throw new Error('Submission resolver was not initialized.');
+    }
+
+    submissionResolver({
+      id: 'inquiry-1',
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      message: 'Need package details',
+      phone: '+84 123',
+      packageInterest: 'Premium',
+      createdAt: '2026-04-15T00:00:00.000Z',
+      updatedAt: '2026-04-15T00:00:00.000Z',
+    });
 
     await waitFor(() => {
       expect(
