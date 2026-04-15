@@ -2,8 +2,11 @@ import { redirect } from '@tanstack/react-router';
 import { initializeAuth } from '@/services/authService';
 import { useAuthStore } from '@/stores/authStore';
 import type { AppPage } from '@/types/routes';
-
-const POST_LOGIN_REDIRECT_KEY = 'post_login_redirect';
+import {
+  captureRedirectPath,
+  consumeRedirectPath,
+  setAuthFeedbackReason,
+} from '@/auth/sessionPolicy';
 
 export const normalizeRedirectPath = (value?: string | null): string => {
   if (!value || typeof value !== 'string') {
@@ -45,24 +48,10 @@ export const buildPathFromLocation = (location?: {
 };
 
 export const savePostLoginRedirect = (path: string) => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, normalizeRedirectPath(path));
+  captureRedirectPath(normalizeRedirectPath(path));
 };
 
-export const consumePostLoginRedirect = (): string => {
-  if (typeof window === 'undefined') {
-    return '/dashboard';
-  }
-
-  const stored = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY);
-  if (stored) {
-    sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
-  }
-
-  return normalizeRedirectPath(stored);
-};
+export const consumePostLoginRedirect = (): string => consumeRedirectPath();
 
 export const requireAuth = async (opts?: {
   location?: { href?: string; pathname?: string; searchStr?: string };
@@ -80,6 +69,7 @@ export const requireAuth = async (opts?: {
 
   const redirectPath = buildPathFromLocation(opts?.location);
   savePostLoginRedirect(redirectPath);
+  setAuthFeedbackReason('login-required');
 
   throw redirect({ to: '/auth' });
 };

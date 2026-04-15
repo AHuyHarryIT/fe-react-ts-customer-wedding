@@ -5,18 +5,17 @@ import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi, initializeAuth } from '@/services/authService';
-import { hasAuthSessionHint } from '@/services/authSession';
 import { savePostLoginRedirect } from '@/shared/routeConfig';
 
 function RootLayout() {
   const navigate = useNavigate();
   const location = useRouterState({ select: (s) => s.location });
   const pathname = location.pathname;
-  const { isAuthenticated, isInitialized, loading, user } = useAuthStore();
+  const { isAuthenticated, isInitialized, user } = useAuthStore();
 
   useEffect(() => {
     const authState = useAuthStore.getState();
-    if (!authState.isInitialized && (authState.isAuthenticated || hasAuthSessionHint())) {
+    if (!authState.isInitialized) {
       void initializeAuth(true);
     }
   }, []);
@@ -45,7 +44,7 @@ function RootLayout() {
       <Navigation isLoggedIn={isAuthenticated && !!user} onLogout={handleLogout} />
 
       <main>
-        {loading && !isInitialized ? (
+        {!isInitialized ? (
           <div className="flex min-h-[50vh] items-center justify-center">
             <div className="text-center">
               <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-4 border-rose-200 border-t-rose-500" />

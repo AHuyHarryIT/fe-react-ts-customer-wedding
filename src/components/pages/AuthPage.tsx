@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FiHeart, FiLock, FiUser, FiPhone } from 'react-icons/fi';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/services/authService';
 import { consumePostLoginRedirect } from '@/shared/routeConfig';
+import type { AuthFeedbackReason } from '@/auth/sessionPolicy';
 import { isVietnamesePhoneNumber } from '@/utils/phone';
 
-export function AuthPage() {
+type AuthPageProps = {
+  feedbackReason?: AuthFeedbackReason | null;
+};
+
+export function AuthPage({ feedbackReason = null }: AuthPageProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -17,6 +23,28 @@ export function AuthPage() {
   const [serverError, setServerError] = useState('');
 
   const { setAuth } = useAuthStore();
+  const hasShownFeedbackToastRef = useRef(false);
+
+  const feedbackMessage = useMemo(() => {
+    if (feedbackReason === 'session-expired') {
+      return 'Your session expired. Please sign in again to continue.';
+    }
+
+    if (feedbackReason === 'login-required') {
+      return 'Please sign in to continue to that page.';
+    }
+
+    return null;
+  }, [feedbackReason]);
+
+  useEffect(() => {
+    if (!feedbackMessage || hasShownFeedbackToastRef.current) {
+      return;
+    }
+
+    toast.warning(feedbackMessage);
+    hasShownFeedbackToastRef.current = true;
+  }, [feedbackMessage]);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
