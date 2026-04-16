@@ -139,4 +139,85 @@ describe('ProfilePage update behavior', () => {
     expect(screen.getByText('Email already exists')).toBeInTheDocument();
     expect(screen.getByText('Phone number already exists')).toBeInTheDocument();
   });
+
+  it('shows deterministic fallback banner and preserves input when backend omits details.fields', async () => {
+    updateProfileMock.mockRejectedValue({
+      response: {
+        data: {
+          message: 'Validation failed',
+        },
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<ProfilePage />);
+
+    const firstNameInput = screen.getByLabelText(/first name/i);
+    await user.clear(firstNameInput);
+    await user.type(firstNameInput, 'Janette');
+
+    await user.click(screen.getByRole('button', { name: /save profile changes/i }));
+
+    await waitFor(() => {
+      expect(updateProfileMock).toHaveBeenCalledTimes(1);
+    });
+
+    expect(
+      screen.getByText(
+        /we could not save your profile updates\. please review your information and try again\./i
+      )
+    ).toBeInTheDocument();
+    expect(firstNameInput).toHaveValue('Janette');
+  });
+
+  it('emits profile success toast only after refetch resolves', async () => {
+    let resolveRefetch: (() => void) | undefined;
+    refetchMock.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveRefetch = resolve;
+        })
+    );
+
+    const user = userEvent.setup();
+    render(<ProfilePage />);
+
+    await user.click(screen.getByRole('button', { name: /save profile changes/i }));
+
+    await waitFor(() => {
+      expect(updateProfileMock).toHaveBeenCalledTimes(1);
+    });
+
+    expect(toastSuccessMock).not.toHaveBeenCalledWith('Profile updated successfully');
+
+    if (!resolveRefetch) {
+      throw new Error('Refetch resolver was not initialized.');
+    }
+
+    resolveRefetch();
+
+    await waitFor(() => {
+      expect(toastSuccessMock).toHaveBeenCalledWith('Profile updated successfully');
+    });
+  });
+
+  it('keeps security tab password submit behavior unchanged', async () => {
+    const user = userEvent.setup();
+    render(<ProfilePage />);
+
+    await user.click(screen.getByRole('button', { name: /security/i }));
+
+    await user.type(screen.getByLabelText(/current password/i), 'current-secret');
+    await user.type(screen.getByLabelText(/^new password/i), 'new-secret');
+    await user.type(screen.getByLabelText(/confirm new password/i), 'new-secret');
+
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(changePasswordMock).toHaveBeenCalledWith({
+        currentPassword: 'current-secret',
+        newPassword: 'new-secret',
+      });
+    });
+  });
 });
