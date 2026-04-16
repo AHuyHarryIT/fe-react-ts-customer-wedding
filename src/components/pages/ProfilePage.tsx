@@ -206,10 +206,11 @@ export function ProfilePage() {
         if (hasAnyFieldErrors(backendFieldErrors)) {
           setFieldErrors(backendFieldErrors);
         } else {
-          setFormError(
-            errorData?.message ||
-              'Unable to save profile changes. Please review your information and try again.'
-          );
+          const fallbackMessage =
+            'We could not save your profile updates. Please review your information and try again.';
+          setFormError(fallbackMessage);
+          toast.error(fallbackMessage);
+          return;
         }
 
         toast.error(errorData?.message || 'Failed to save profile changes');
