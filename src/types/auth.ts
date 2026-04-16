@@ -26,6 +26,7 @@ export interface UpdateProfileRequest {
   firstName?: string;
   lastName?: string;
   email?: string;
+  phoneNumber?: string;
 }
 
 export interface ChangePasswordRequest {
