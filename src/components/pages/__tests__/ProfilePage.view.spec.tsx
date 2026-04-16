@@ -74,7 +74,7 @@ describe('ProfilePage view states', () => {
 
     render(<ProfilePage />);
 
-    expect(screen.getByText(/no profile data/i)).toBeInTheDocument();
+    expect(screen.getByText(/profile unavailable/i)).toBeInTheDocument();
     expect(screen.getByText(/we could not find your profile data/i)).toBeInTheDocument();
   });
 
