@@ -77,6 +77,37 @@ describe('BookingsPage', () => {
     useSearchMock.mockReturnValue({ packageId: undefined });
   });
 
+  it('shows loading state while bookings are being fetched', () => {
+    useCustomerBookingsMock.mockReturnValue({
+      bookings: [],
+      loading: true,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<BookingsPage />);
+
+    expect(screen.getByTestId('state-loading')).toBeInTheDocument();
+    expect(screen.getByText(/loading your bookings/i)).toBeInTheDocument();
+  });
+
+  it('shows error state with retry action when booking fetch fails', () => {
+    const refetchMock = vi.fn();
+
+    useCustomerBookingsMock.mockReturnValue({
+      bookings: [],
+      loading: false,
+      error: 'Failed to load bookings',
+      refetch: refetchMock,
+    });
+
+    render(<BookingsPage />);
+
+    expect(screen.getByTestId('state-error')).toBeInTheDocument();
+    expect(screen.getByText(/we could not load your bookings/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+  });
+
   it('shows empty state with secondary create action', () => {
     useCustomerBookingsMock.mockReturnValue({
       bookings: [],
