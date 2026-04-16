@@ -35,15 +35,27 @@ export interface Photographer {
 export interface BookingSession {
   id: string;
   title: string;
-  startDate: string;
+  startsAt: string;
+  endsAt?: string;
+  locationName?: string;
+  startDate?: string;
   endDate?: string;
   location?: string;
 }
 
+export type KnownBookingStatus =
+  | 'PENDING'
+  | 'DEPOSIT_PAID'
+  | 'CONFIRMED'
+  | 'COMPLETED'
+  | 'CANCELLED';
+
+export type BookingStatus = KnownBookingStatus | (string & {});
+
 export interface Booking {
   id: string;
   customerId: string;
-  status: 'PENDING' | 'DEPOSIT_PAID' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+  status: BookingStatus;
   totalPrice?: number;
   eventDate: string;
   createdAt: string;

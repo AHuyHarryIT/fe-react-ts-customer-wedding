@@ -2,9 +2,39 @@ import { api } from './apiClient';
 import type {
   Booking,
   BookingListPayload,
+  BookingSession,
   CreateBookingRequest,
   StandardResponse,
 } from '@/types/booking';
+const normalizeBookingSession = (session: BookingSession): BookingSession => {
+  const startsAt = session.startsAt ?? session.startDate ?? '';
+  const endsAt = session.endsAt ?? session.endDate;
+  const locationName = session.locationName ?? session.location;
+
+  return {
+    ...session,
+    startsAt,
+    endsAt,
+    locationName,
+    startDate: startsAt || undefined,
+    endDate: endsAt,
+    location: locationName,
+  };
+};
+
+const normalizeBookingDetail = (booking: Booking | null | undefined): Booking | null => {
+  if (!booking) {
+    return null;
+  }
+
+  return {
+    ...booking,
+    status: booking.status,
+    sessions: Array.isArray(booking.sessions)
+      ? booking.sessions.map((session) => normalizeBookingSession(session))
+      : [],
+  };
+};
 
 const unwrapBookingList = (payload: BookingListPayload | undefined): Booking[] => {
   if (!payload) {
@@ -42,6 +72,6 @@ export const bookingService = {
 
   getBookingDetails: async (bookingId: string): Promise<Booking | null> => {
     const response = await api.get<StandardResponse<Booking>>(`/bookings/${bookingId}`);
-    return response.data.data || null;
+    return normalizeBookingDetail(response.data.data);
   },
 };
