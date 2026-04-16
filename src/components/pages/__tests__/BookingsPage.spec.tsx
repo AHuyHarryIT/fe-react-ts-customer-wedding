@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BookingsPage } from '../BookingsPage';
 import type { Booking } from '@/types/booking';
@@ -44,15 +44,18 @@ vi.mock('@/components/pages/CustomerStatePanel', () => ({
     title,
     description,
     actions,
+    children,
   }: {
     tone: string;
     title: string;
     description?: ReactNode;
     actions?: ReactNode;
+    children?: ReactNode;
   }) => (
     <section data-testid={`state-${tone}`}>
       <h2>{title}</h2>
       {description ? <p>{description}</p> : null}
+      {children}
       {actions}
     </section>
   ),
@@ -86,10 +89,9 @@ describe('BookingsPage', () => {
 
     expect(screen.getByTestId('state-empty')).toBeInTheDocument();
     expect(screen.getByText(/no bookings yet/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /create booking/i })).toHaveAttribute(
-      'href',
-      '/booking'
-    );
+
+    const createLinks = screen.getAllByRole('link', { name: /create booking/i });
+    expect(createLinks.some((link) => link.getAttribute('href') === '/booking')).toBe(true);
   });
 
   it('shows populated bookings with status, event date, and detail links', () => {
@@ -107,7 +109,12 @@ describe('BookingsPage', () => {
 
     expect(screen.getByText(/deposit paid/i)).toBeInTheDocument();
     expect(screen.getByText(/confirmed/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/event date/i)).toHaveLength(2);
+
+    const bookingRows = screen.getAllByRole('article');
+    expect(bookingRows).toHaveLength(2);
+    bookingRows.forEach((row) => {
+      expect(within(row).getByText(/event date:/i)).toBeInTheDocument();
+    });
 
     const detailLinks = screen.getAllByRole('link', { name: /view booking details/i });
     expect(detailLinks).toHaveLength(2);

@@ -32,6 +32,8 @@ export const bookingService = {
     const response = await api.get<StandardResponse<BookingListPayload>>('/bookings', {
       params: {
         includePackages: true,
+        sortBy: 'updatedAt',
+        sortOrder: 'desc',
       },
     });
 
