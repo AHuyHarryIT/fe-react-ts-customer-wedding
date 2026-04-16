@@ -53,10 +53,19 @@ const createBooking = (overrides: Partial<Booking> = {}): Booking => ({
 });
 
 const getMilestoneState = (label: string) => {
-  const labelNode = screen.getByText(label);
-  const item = labelNode.closest('li');
-  expect(item).not.toBeNull();
+  const timeline = screen.getByLabelText('Booking milestone timeline');
+  const items = Array.from(timeline.querySelectorAll('li'));
 
+  const item = items.find((entry) => {
+    const labelNode = within(entry).queryByText(
+      (content, node) =>
+        content === label && node?.getAttribute('data-testid') !== 'milestone-state'
+    );
+
+    return Boolean(labelNode);
+  });
+
+  expect(item).toBeDefined();
   const stateNode = within(item as HTMLElement).getByTestId('milestone-state');
   return stateNode.textContent;
 };
@@ -64,6 +73,24 @@ const getMilestoneState = (label: string) => {
 describe('BookingDetailPage timeline behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('projects pending status with booking requested as current milestone', async () => {
+    getBookingDetailsMock.mockResolvedValue(
+      createBooking({
+        status: 'PENDING',
+      })
+    );
+
+    render(<BookingDetailPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/booking progress/i)).toBeInTheDocument();
+    });
+
+    expect(getMilestoneState('Booking requested')).toBe('Current');
+    expect(getMilestoneState('Deposit paid')).toBe('Upcoming');
+    expect(getMilestoneState('Booking confirmed')).toBe('Upcoming');
   });
 
   it('projects confirmed status so earlier milestones are completed and confirmed is current', async () => {
@@ -155,5 +182,37 @@ describe('BookingDetailPage timeline behavior', () => {
 
     expect(screen.getByTestId('timeline-session-title')).toHaveTextContent('Future Session 1');
     expect(screen.getByTestId('timeline-session-location')).toHaveTextContent('City Hall');
+  });
+
+  it('keeps the timeline visible when sessions are absent', async () => {
+    getBookingDetailsMock.mockResolvedValue(
+      createBooking({
+        status: 'CONFIRMED',
+        sessions: [],
+      })
+    );
+
+    render(<BookingDetailPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/booking progress/i)).toBeInTheDocument();
+    });
+
+    expect(getMilestoneState('Booking confirmed')).toBe('Current');
+    expect(
+      screen.getByText(/session details will appear here when the studio confirms the schedule/i)
+    ).toBeInTheDocument();
+  });
+
+  it('preserves loading and error customer state panel behavior', async () => {
+    getBookingDetailsMock.mockRejectedValueOnce(new Error('network down'));
+
+    render(<BookingDetailPage />);
+
+    expect(screen.getByText(/loading your booking/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText(/booking unavailable/i)).toBeInTheDocument();
+    });
   });
 });
