@@ -5,8 +5,148 @@ import { Link, useParams } from '@tanstack/react-router';
 import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 import { bookingService } from '@/services/bookingService';
 import { customerOrderService } from '@/services/customerOrderService';
-import type { Booking } from '@/types';
+import type { Booking, BookingSession } from '@/types';
 import { formatMoneyVND } from '@/utils/money';
+
+const KNOWN_STATUS_ORDER = ['PENDING', 'DEPOSIT_PAID', 'CONFIRMED', 'COMPLETED'] as const;
+
+type KnownTimelineStatus = (typeof KNOWN_STATUS_ORDER)[number] | 'CANCELLED';
+
+type MilestoneState = 'Completed' | 'Current' | 'Upcoming' | 'Neutral';
+
+interface BookingMilestone {
+  key: string;
+  label: string;
+  state: MilestoneState;
+}
+
+const formatTimelineDate = (value?: string): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toLocaleDateString();
+};
+
+const toKnownStatus = (status: Booking['status']): KnownTimelineStatus | null => {
+  if (status === 'CANCELLED') {
+    return 'CANCELLED';
+  }
+
+  if (KNOWN_STATUS_ORDER.includes(status as (typeof KNOWN_STATUS_ORDER)[number])) {
+    return status as (typeof KNOWN_STATUS_ORDER)[number];
+  }
+
+  return null;
+};
+
+const projectBookingMilestones = (status: Booking['status']): BookingMilestone[] => {
+  const knownStatus = toKnownStatus(status);
+
+  if (!knownStatus) {
+    return [
+      {
+        key: 'fallback',
+        label: 'Status update pending',
+        state: 'Neutral',
+      },
+    ];
+  }
+
+  const currentIndex =
+    knownStatus === 'CANCELLED'
+      ? KNOWN_STATUS_ORDER.indexOf('CONFIRMED')
+      : KNOWN_STATUS_ORDER.indexOf(knownStatus);
+
+  const milestones = [
+    { key: 'PENDING', label: 'Booking requested' },
+    { key: 'DEPOSIT_PAID', label: 'Deposit paid' },
+    { key: 'CONFIRMED', label: 'Booking confirmed' },
+    { key: 'COMPLETED', label: 'Completed' },
+  ].map((milestone, index) => ({
+    ...milestone,
+    state:
+      index < currentIndex
+        ? ('Completed' as const)
+        : index === currentIndex
+          ? ('Current' as const)
+          : ('Upcoming' as const),
+  }));
+
+  if (knownStatus === 'CANCELLED') {
+    milestones.push({
+      key: 'CANCELLED',
+      label: 'Cancelled',
+      state: 'Current',
+    });
+  }
+
+  return milestones;
+};
+
+const selectTimelineSession = (sessions: Booking['sessions']): BookingSession | null => {
+  if (!Array.isArray(sessions) || sessions.length === 0) {
+    return null;
+  }
+
+  const now = Date.now();
+  const sorted = [...sessions].sort((left, right) => {
+    const leftTime = new Date(left.startsAt).getTime();
+    const rightTime = new Date(right.startsAt).getTime();
+
+    if (Number.isNaN(leftTime) && Number.isNaN(rightTime)) {
+      return 0;
+    }
+
+    if (Number.isNaN(leftTime)) {
+      return 1;
+    }
+
+    if (Number.isNaN(rightTime)) {
+      return -1;
+    }
+
+    return leftTime - rightTime;
+  });
+
+  const earliestUpcoming = sorted.find((session) => {
+    const startsAtTime = new Date(session.startsAt).getTime();
+    return !Number.isNaN(startsAtTime) && startsAtTime >= now;
+  });
+
+  return earliestUpcoming ?? sorted[0] ?? null;
+};
+
+const buildSessionContextLine = (session: BookingSession | null): string | null => {
+  if (!session) {
+    return null;
+  }
+
+  const startDate = formatTimelineDate(session.startsAt);
+  const endDate = formatTimelineDate(session.endsAt);
+
+  if (!startDate) {
+    return null;
+  }
+
+  if (endDate && endDate !== startDate) {
+    return `${startDate} - ${endDate}`;
+  }
+
+  return startDate;
+};
+
+const stateTone: Record<MilestoneState, string> = {
+  Completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Current: 'bg-rose-50 text-rose-700 border-rose-200',
+  Upcoming: 'bg-slate-50 text-slate-600 border-slate-200',
+  Neutral: 'bg-amber-50 text-amber-700 border-amber-200',
+};
 
 const CUSTOMER_APP_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:5174'
@@ -72,6 +212,21 @@ export function BookingDetailPage() {
         price: item.service?.price ?? item.price,
       })) || [],
     [booking?.services]
+  );
+
+  const bookingMilestones = useMemo(
+    () => projectBookingMilestones(booking?.status ?? 'PENDING'),
+    [booking?.status]
+  );
+  const isFallbackTimeline =
+    bookingMilestones.length === 1 && bookingMilestones[0]?.state === 'Neutral';
+  const highlightedSession = useMemo(
+    () => selectTimelineSession(booking?.sessions),
+    [booking?.sessions]
+  );
+  const sessionContextLine = useMemo(
+    () => buildSessionContextLine(highlightedSession),
+    [highlightedSession]
   );
 
   const orderSummary = booking?.order?.summary;
@@ -229,6 +384,72 @@ export function BookingDetailPage() {
                   </div>
                 ) : null}
               </div>
+            </motion.section>
+
+            <motion.section
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
+              className="rounded-3xl bg-white p-6 shadow-lg"
+            >
+              <h2 className="mb-5 text-xl font-medium text-gray-900">Booking progress</h2>
+
+              {isFallbackTimeline ? (
+                <div
+                  data-testid="timeline-fallback-state"
+                  className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700"
+                >
+                  Neutral
+                </div>
+              ) : null}
+
+              <ol className="space-y-3" aria-label="Booking milestone timeline">
+                {bookingMilestones.map((milestone) => (
+                  <li
+                    key={milestone.key}
+                    className="rounded-2xl border border-gray-100 bg-white px-4 py-3"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="font-medium text-gray-900">{milestone.label}</span>
+                      <span
+                        data-testid="milestone-state"
+                        className={`rounded-full border px-3 py-1 text-xs font-medium ${stateTone[milestone.state]}`}
+                      >
+                        {milestone.state}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+
+              {highlightedSession ? (
+                <div className="mt-4 rounded-2xl bg-rose-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">
+                    Session highlight
+                  </p>
+                  <p
+                    data-testid="timeline-session-title"
+                    className="mt-1 font-medium text-gray-900"
+                  >
+                    {highlightedSession.title}
+                  </p>
+                  {sessionContextLine ? (
+                    <p className="mt-1 text-sm text-gray-600">{sessionContextLine}</p>
+                  ) : null}
+                  {highlightedSession.locationName ? (
+                    <p
+                      data-testid="timeline-session-location"
+                      className="mt-1 text-sm text-gray-600"
+                    >
+                      {highlightedSession.locationName}
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-gray-600">
+                  Session details will appear here when the studio confirms the schedule.
+                </p>
+              )}
             </motion.section>
 
             <motion.section
