@@ -73,7 +73,7 @@ export function DashboardPage() {
           className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4"
         >
           <Link
-            to="/bookings"
+            to="/booking"
             search={{ packageId: undefined }}
             className="rounded-2xl bg-white p-5 text-left shadow-md transition-all hover:-translate-y-0.5 hover:shadow-xl"
           >
@@ -185,7 +185,7 @@ export function DashboardPage() {
                 description="Create your first booking from the packages flow and the studio team can review, confirm, and continue follow-up afterward."
                 actions={
                   <Link
-                    to="/bookings"
+                    to="/booking"
                     search={{ packageId: undefined }}
                     className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
                   >

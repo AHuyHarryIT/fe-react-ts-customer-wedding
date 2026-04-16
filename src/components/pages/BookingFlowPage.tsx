@@ -10,7 +10,7 @@ import { formatMoneyVND } from '@/utils/money';
 
 export function BookingFlowPage() {
   const navigate = useNavigate();
-  const search = useSearch({ from: '/bookings/' });
+  const search = useSearch({ from: '/booking' });
   const packageSelectId = useId();
   const eventDateId = useId();
   const guestCountId = useId();
