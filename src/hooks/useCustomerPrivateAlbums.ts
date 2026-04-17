@@ -1,18 +1,37 @@
 import { useCallback, useEffect, useState } from 'react';
 import { albumService } from '@/services/albumService';
-import type { CustomerPrivateAlbum } from '@/types/album';
+import { useAuthStore } from '@/stores/authStore';
+import type { CustomerPrivateAlbumCard } from '@/types/album';
+
+const normalizePrivateAlbumCards = (
+  albums: Awaited<ReturnType<typeof albumService.getCustomerPrivateAlbums>>
+): CustomerPrivateAlbumCard[] =>
+  albums.map((album) => ({
+    ...album,
+    protectedMedia: album.coverFile?.id
+      ? albumService.getCustomerPrivateAlbumMediaLinks(album.coverFile.id)
+      : null,
+  }));
 
 export function useCustomerPrivateAlbums() {
-  const [albums, setAlbums] = useState<CustomerPrivateAlbum[]>([]);
+  const { user, isAuthenticated } = useAuthStore();
+  const [albums, setAlbums] = useState<CustomerPrivateAlbumCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAlbums = useCallback(async () => {
+    if (!isAuthenticated || !user?.id) {
+      setAlbums([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       const privateAlbums = await albumService.getCustomerPrivateAlbums();
-      setAlbums(privateAlbums);
+      setAlbums(normalizePrivateAlbumCards(privateAlbums));
     } catch (err) {
       console.error('Failed to fetch customer private albums:', err);
       setError('Failed to load private albums');
@@ -20,11 +39,18 @@ export function useCustomerPrivateAlbums() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated, user?.id]);
 
   useEffect(() => {
+    if (!isAuthenticated || !user?.id) {
+      setAlbums([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     void fetchAlbums();
-  }, [fetchAlbums]);
+  }, [isAuthenticated, user?.id, fetchAlbums]);
 
   return {
     albums,

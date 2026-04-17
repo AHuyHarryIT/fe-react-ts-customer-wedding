@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const getMock = vi.fn();
 
 vi.mock('@/services/apiClient', () => ({
+  API_BASE_URL: 'http://localhost:3000',
   api: {
     get: getMock,
   },
@@ -55,6 +56,7 @@ describe('albumService private endpoint contracts', () => {
         id: 'album-1',
         title: 'The Wedding Day',
         bookingId: 'booking-1',
+        bookingReference: 'booking-1',
         eventDate: '2026-03-01T00:00:00.000Z',
         deliveredAssetCount: 42,
         coverFile: { id: 'file-1', name: 'cover.jpg', mimeType: 'image/jpeg', byteSize: 1000 },
@@ -74,6 +76,7 @@ describe('albumService private endpoint contracts', () => {
               id: 'album-2',
               title: 'Nested payload album',
               bookingId: null,
+              bookingReference: null,
               eventDate: null,
               deliveredAssetCount: 0,
               coverFile: null,
@@ -91,6 +94,7 @@ describe('albumService private endpoint contracts', () => {
         id: 'album-2',
         title: 'Nested payload album',
         bookingId: null,
+        bookingReference: null,
         eventDate: null,
         deliveredAssetCount: 0,
         coverFile: null,
@@ -111,5 +115,16 @@ describe('albumService private endpoint contracts', () => {
     const result = await albumService.getCustomerPrivateAlbums();
 
     expect(result).toEqual([]);
+  });
+
+  it('builds protected thumbnail/content URLs for customer album file endpoints', async () => {
+    const { albumService } = await import('./albumService');
+
+    const result = albumService.getCustomerPrivateAlbumMediaLinks('file-123');
+
+    expect(result).toEqual({
+      thumbnailUrl: 'http://localhost:3000/customer/albums/file/file-123/thumbnail',
+      contentUrl: 'http://localhost:3000/customer/albums/file/file-123/content',
+    });
   });
 });
