@@ -12,16 +12,42 @@ type PaymentResultSearch = {
   message?: string;
 };
 
+type PaymentResultState =
+  | 'checking'
+  | 'success'
+  | 'gateway-confirmed-syncing'
+  | 'terminal-failure-needs-action'
+  | 'payment-reference-missing';
+
 const CUSTOMER_PAYMENT_BOOKING_KEY = 'customer_payment_booking_id';
 const CUSTOMER_PAYMENT_MOMO_ORDER_KEY = 'customer_payment_momo_order_id';
 
+const POLLING_CADENCE_MS = 2000;
+const POLLING_ATTEMPTS_CAP = 14;
+const MOMO_PENDING_RESULT_CODE = 1000;
+const MOMO_SUCCESS_HINT_CODES = new Set<number>([0, 9000]);
+
+const PAYMENT_RESULT_COPY = {
+  success: 'Your deposit has been recorded successfully.',
+  syncing: 'MoMo confirmed your payment, but the booking record is still syncing.',
+  checking: 'We are confirming your MoMo payment and syncing the booking record.',
+  terminalFailure:
+    'We couldn’t confirm this payment after the final verification checks. Return to booking to review status, or open Messages and share your booking ID + payment time so the studio can help.',
+  missingReference:
+    'We couldn’t verify this payment because the booking reference is missing. Return to your booking and restart payment from the deposit section.',
+} as const;
+
+const parseResultCode = (resultCode: string | undefined): number | null => {
+  if (resultCode === undefined) {
+    return null;
+  }
+
+  const value = Number(resultCode);
+  return Number.isNaN(value) ? null : value;
+};
+
 function CustomerPaymentResultPage() {
   const search = useSearch({ from: '/bookings/payment-result' }) as PaymentResultSearch;
-  const resultCode = search.resultCode !== undefined ? Number(search.resultCode) : undefined;
-  const immediateError =
-    resultCode !== undefined && !Number.isNaN(resultCode) && resultCode !== 0
-      ? search.message || 'MoMo did not confirm the payment.'
-      : null;
   const bookingId = useMemo(
     () => search.bookingId || sessionStorage.getItem(CUSTOMER_PAYMENT_BOOKING_KEY) || undefined,
     [search.bookingId]
@@ -30,43 +56,27 @@ function CustomerPaymentResultPage() {
     () => search.orderId || sessionStorage.getItem(CUSTOMER_PAYMENT_MOMO_ORDER_KEY) || undefined,
     [search.orderId]
   );
-  const [loading, setLoading] = useState(() => Boolean(bookingId) && !immediateError);
-  const [paid, setPaid] = useState<number | null>(null);
-  const [remaining, setRemaining] = useState<number | null>(null);
-  const [gatewayConfirmed, setGatewayConfirmed] = useState(false);
-  const stateTone = loading
-    ? 'loading'
-    : paid && paid > 0
-      ? 'success'
-      : immediateError || !bookingId
-        ? 'error'
-        : 'info';
-  const stateTitle = 'Deposit payment status';
-  const stateDescription = loading
-    ? 'We are confirming your MoMo payment and syncing the booking record.'
-    : immediateError
-      ? immediateError
-      : !bookingId
-        ? 'Missing booking reference.'
-        : paid && paid > 0
-          ? 'Your deposit has been recorded successfully.'
-          : gatewayConfirmed
-            ? 'MoMo confirmed your payment, but the booking record is still syncing.'
-            : 'Payment is still being verified.';
+  const queryResultCode = parseResultCode(search.resultCode);
+
+  const [state, setState] = useState<PaymentResultState>(() =>
+    bookingId ? 'checking' : 'payment-reference-missing'
+  );
+  const [paid, setPaid] = useState<number>(0);
+  const [remaining, setRemaining] = useState<number>(0);
 
   useEffect(() => {
-    if (immediateError) {
-      return;
-    }
-
     if (!bookingId) {
+      setState('payment-reference-missing');
       return;
     }
 
     let stopped = false;
     let attempts = 0;
+    let gatewaySuccessHint = MOMO_SUCCESS_HINT_CODES.has(queryResultCode ?? Number.NaN);
 
     const poll = async () => {
+      attempts += 1;
+
       try {
         const booking = await bookingService.getBookingDetails(bookingId);
         const summary = booking?.order?.summary;
@@ -80,12 +90,10 @@ function CustomerPaymentResultPage() {
         setPaid(totalPaid);
         setRemaining(balanceRemaining);
 
-        if (totalPaid > 0 || attempts >= 14) {
-          if (totalPaid > 0) {
-            sessionStorage.removeItem(CUSTOMER_PAYMENT_BOOKING_KEY);
-            sessionStorage.removeItem(CUSTOMER_PAYMENT_MOMO_ORDER_KEY);
-          }
-          setLoading(false);
+        if (totalPaid > 0) {
+          sessionStorage.removeItem(CUSTOMER_PAYMENT_BOOKING_KEY);
+          sessionStorage.removeItem(CUSTOMER_PAYMENT_MOMO_ORDER_KEY);
+          setState('success');
           return;
         }
 
@@ -96,23 +104,33 @@ function CustomerPaymentResultPage() {
             return;
           }
 
-          if (momoStatus.resultCode === 0) {
-            setGatewayConfirmed(true);
-          } else if (momoStatus.resultCode !== 1000) {
-            setLoading(false);
+          if (MOMO_SUCCESS_HINT_CODES.has(momoStatus.resultCode)) {
+            gatewaySuccessHint = true;
+          } else if (momoStatus.resultCode !== MOMO_PENDING_RESULT_CODE) {
+            setState('terminal-failure-needs-action');
             return;
           }
         }
-      } catch (pollError) {
-        if (!stopped) {
-          console.error('Failed to poll customer payment result:', pollError);
-          setLoading(false);
-        }
-        return;
-      }
 
-      attempts += 1;
-      window.setTimeout(poll, 2000);
+        if (attempts >= POLLING_ATTEMPTS_CAP) {
+          setState(
+            gatewaySuccessHint
+              ? 'gateway-confirmed-syncing'
+              : 'terminal-failure-needs-action'
+          );
+          return;
+        }
+
+        setState(gatewaySuccessHint ? 'gateway-confirmed-syncing' : 'checking');
+        window.setTimeout(poll, POLLING_CADENCE_MS);
+      } catch (pollError) {
+        if (stopped) {
+          return;
+        }
+
+        console.error('Failed to poll customer payment result:', pollError);
+        setState('terminal-failure-needs-action');
+      }
     };
 
     void poll();
@@ -120,7 +138,47 @@ function CustomerPaymentResultPage() {
     return () => {
       stopped = true;
     };
-  }, [bookingId, immediateError, momoOrderId]);
+  }, [bookingId, momoOrderId, queryResultCode]);
+
+  const stateTone =
+    state === 'checking'
+      ? 'loading'
+      : state === 'success'
+        ? 'success'
+        : state === 'gateway-confirmed-syncing'
+          ? 'info'
+          : 'error';
+
+  const stateTitle =
+    state === 'payment-reference-missing' ? 'Payment reference missing' : 'Deposit payment status';
+
+  const stateDescription =
+    state === 'success'
+      ? PAYMENT_RESULT_COPY.success
+      : state === 'gateway-confirmed-syncing'
+        ? PAYMENT_RESULT_COPY.syncing
+        : state === 'terminal-failure-needs-action'
+          ? PAYMENT_RESULT_COPY.terminalFailure
+          : state === 'payment-reference-missing'
+            ? PAYMENT_RESULT_COPY.missingReference
+            : PAYMENT_RESULT_COPY.checking;
+
+  const backToBookingAction = bookingId ? (
+    <Link
+      to="/bookings/$id"
+      params={{ id: bookingId }}
+      className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
+    >
+      Back to booking
+    </Link>
+  ) : (
+    <Link
+      to="/bookings"
+      className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
+    >
+      Back to booking
+    </Link>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
@@ -132,15 +190,7 @@ function CustomerPaymentResultPage() {
           description={stateDescription}
           actions={
             <>
-              {bookingId ? (
-                <Link
-                  to="/bookings/$id"
-                  params={{ id: bookingId }}
-                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
-                >
-                  Back to booking
-                </Link>
-              ) : null}
+              {backToBookingAction}
               <Link
                 to="/messages"
                 className="inline-flex items-center justify-center rounded-full border border-gray-200 px-6 py-3 font-medium text-gray-700 transition hover:bg-gray-50"
@@ -150,16 +200,16 @@ function CustomerPaymentResultPage() {
             </>
           }
         >
-          {loading ? (
+          {state === 'gateway-confirmed-syncing' ? (
             <div className="space-y-4">
-              {gatewayConfirmed ? (
-                <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
-                  MoMo has confirmed the payment request. We are waiting for the studio system to
-                  finish syncing the final booking payment status.
-                </div>
-              ) : null}
+              <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
+                MoMo has confirmed the payment request. We are waiting for the studio system to
+                finish syncing the final booking payment status.
+              </div>
             </div>
-          ) : paid && paid > 0 ? (
+          ) : null}
+
+          {state === 'success' ? (
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-2xl bg-white/80 p-4">
@@ -168,9 +218,7 @@ function CustomerPaymentResultPage() {
                 </div>
                 <div className="rounded-2xl bg-white/80 p-4">
                   <p className="text-sm text-gray-500">Remaining</p>
-                  <p className="mt-1 text-lg font-medium text-gray-900">
-                    {formatMoneyVND(remaining ?? 0)}
-                  </p>
+                  <p className="mt-1 text-lg font-medium text-gray-900">{formatMoneyVND(remaining)}</p>
                 </div>
               </div>
             </div>
