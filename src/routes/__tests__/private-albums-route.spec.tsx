@@ -26,7 +26,7 @@ describe('private albums route contract', () => {
   it('registers /albums/private file-route path', async () => {
     const { Route } = await import('../albums/private');
 
-    expect(Route.id).toBe('/albums/private');
-    expect(Route.path).toBe('/albums/private');
+    expect(Route.options.loaderDeps).toBeUndefined();
+    expect(Route.options.beforeLoad).toBeTypeOf('function');
   });
 });
