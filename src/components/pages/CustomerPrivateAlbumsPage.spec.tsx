@@ -47,10 +47,20 @@ const makeAlbum = (overrides: Partial<CustomerPrivateAlbum>): CustomerPrivateAlb
   id: 'album-1',
   title: 'Private Wedding Album',
   bookingId: 'booking-1',
+  bookingReference: 'BOOK-001',
   eventDate: '2026-10-20T00:00:00.000Z',
   deliveredAssetCount: 24,
   coverFile: null,
   ...overrides,
+});
+
+const withProtectedMedia = (album: CustomerPrivateAlbum, fileId = 'file-1') => ({
+  ...album,
+  coverFile: album.coverFile ?? { id: fileId },
+  protectedMedia: {
+    thumbnailUrl: `http://localhost:3000/customer/albums/file/${fileId}/thumbnail`,
+    contentUrl: `http://localhost:3000/customer/albums/file/${fileId}/content`,
+  },
 });
 
 describe('CustomerPrivateAlbumsPage', () => {
@@ -89,7 +99,7 @@ describe('CustomerPrivateAlbumsPage', () => {
     expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
   });
 
-  it('renders empty state copy when no private albums are available', () => {
+  it('renders empty state copy with required heading and messages follow-up guidance', () => {
     useCustomerPrivateAlbumsMock.mockReturnValue({
       albums: [],
       loading: false,
@@ -100,20 +110,40 @@ describe('CustomerPrivateAlbumsPage', () => {
     render(<CustomerPrivateAlbumsPage />);
 
     expect(screen.getByTestId('state-empty')).toBeInTheDocument();
-    expect(screen.getByText(/no private albums yet/i)).toBeInTheDocument();
-    expect(screen.getByText(/your photographer will publish your private delivery album here/i)).toBeInTheDocument();
+    expect(screen.getByText('No private albums available yet')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /your delivered photos and videos will appear here once the studio publishes your private album/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open messages/i })).toHaveAttribute(
+      'href',
+      '/messages'
+    );
   });
 
-  it('renders responsive private album delivery cards with required details', () => {
+  it('renders responsive private album delivery cards with booking metadata and protected actions', () => {
     useCustomerPrivateAlbumsMock.mockReturnValue({
       albums: [
-        makeAlbum({ id: 'album-1', title: 'Ceremony Highlights', deliveredAssetCount: 18 }),
-        makeAlbum({
-          id: 'album-2',
-          title: 'Reception Moments',
-          eventDate: null,
-          deliveredAssetCount: 9,
-        }),
+        withProtectedMedia(
+          makeAlbum({
+            id: 'album-1',
+            title: 'Ceremony Highlights',
+            bookingReference: 'BOOK-101',
+            deliveredAssetCount: 18,
+          }),
+          'file-101'
+        ),
+        withProtectedMedia(
+          makeAlbum({
+            id: 'album-2',
+            title: 'Reception Moments',
+            bookingReference: 'BOOK-102',
+            eventDate: null,
+            deliveredAssetCount: 9,
+          }),
+          'file-102'
+        ),
       ],
       loading: false,
       error: null,
@@ -129,10 +159,39 @@ describe('CustomerPrivateAlbumsPage', () => {
 
     const firstCard = cards[0];
     expect(within(firstCard).getByText(/ceremony highlights/i)).toBeInTheDocument();
+    expect(within(firstCard).getByText(/booking: BOOK-101/i)).toBeInTheDocument();
     expect(within(firstCard).getByText(/18 assets/i)).toBeInTheDocument();
+    expect(within(firstCard).getByRole('link', { name: /preview/i })).toHaveAttribute(
+      'href',
+      'http://localhost:3000/customer/albums/file/file-101/thumbnail'
+    );
+    expect(within(firstCard).getByRole('link', { name: /download/i })).toHaveAttribute(
+      'href',
+      'http://localhost:3000/customer/albums/file/file-101/content'
+    );
 
     const secondCard = cards[1];
     expect(within(secondCard).getByText(/reception moments/i)).toBeInTheDocument();
+    expect(within(secondCard).getByText(/booking: BOOK-102/i)).toBeInTheDocument();
     expect(within(secondCard).getByText(/event date pending/i)).toBeInTheDocument();
+  });
+
+  it('renders denied/error guidance without leaking foreign metadata', () => {
+    useCustomerPrivateAlbumsMock.mockReturnValue({
+      albums: [],
+      loading: false,
+      error: 'Album not found or you do not have access.',
+      refetch: vi.fn(),
+    });
+
+    render(<CustomerPrivateAlbumsPage />);
+
+    expect(screen.getByTestId('state-error')).toBeInTheDocument();
+    expect(screen.getByText(/album not found or you do not have access/i)).toBeInTheDocument();
+    expect(screen.queryByText(/booking-\w+/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open messages/i })).toHaveAttribute(
+      'href',
+      '/messages'
+    );
   });
 });

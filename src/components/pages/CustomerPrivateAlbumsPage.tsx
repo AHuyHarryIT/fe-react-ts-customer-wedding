@@ -1,9 +1,19 @@
 import { Link } from '@tanstack/react-router';
-import { Calendar, FolderHeart, Image as ImageIcon } from 'lucide-react';
+import { Calendar, Download, FolderHeart, Image as ImageIcon, Eye } from 'lucide-react';
 import { motion } from 'motion/react';
 import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 import { useCustomerPrivateAlbums } from '@/hooks/useCustomerPrivateAlbums';
-import type { CustomerPrivateAlbum } from '@/types/album';
+import {
+  PRIVATE_ALBUM_DENIED_MESSAGE,
+  PRIVATE_ALBUM_EMPTY_STATE_TITLE,
+  type CustomerPrivateAlbum,
+} from '@/types/album';
+
+const EMPTY_STATE_BODY =
+  'Your delivered photos and videos will appear here once the studio publishes your private album. Open Messages if you need a delivery status update.';
+
+const ERROR_STATE_BODY =
+  "We couldn't verify this payment or album request yet. Refresh and try again. If it still fails, open Messages and include your booking ID for support.";
 
 const formatEventDate = (eventDate: CustomerPrivateAlbum['eventDate']) => {
   if (!eventDate) {
@@ -20,6 +30,11 @@ const formatEventDate = (eventDate: CustomerPrivateAlbum['eventDate']) => {
 
 export function CustomerPrivateAlbumsPage() {
   const { albums, loading, error, refetch } = useCustomerPrivateAlbums();
+  const normalizedError = error?.trim();
+  const safeErrorCopy =
+    normalizedError && normalizedError.toLowerCase().includes('do not have access')
+      ? PRIVATE_ALBUM_DENIED_MESSAGE
+      : ERROR_STATE_BODY;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
@@ -52,22 +67,38 @@ export function CustomerPrivateAlbumsPage() {
             <CustomerStatePanel
               tone="error"
               title="We could not load your private albums"
-              description={error}
+              description={safeErrorCopy}
               actions={
-                <button
-                  type="button"
-                  onClick={() => void refetch()}
-                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-5 py-3 font-medium text-white transition-all hover:shadow-lg"
-                >
-                  Retry
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void refetch()}
+                    className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-5 py-3 font-medium text-white transition-all hover:shadow-lg"
+                  >
+                    Retry
+                  </button>
+                  <Link
+                    to="/messages"
+                    className="inline-flex items-center justify-center rounded-full border border-rose-200 px-5 py-3 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                  >
+                    Open Messages
+                  </Link>
+                </>
               }
             />
           ) : albums.length === 0 ? (
             <CustomerStatePanel
               tone="empty"
-              title="No private albums yet"
-              description="Your photographer will publish your private delivery album here once files are ready."
+              title={PRIVATE_ALBUM_EMPTY_STATE_TITLE}
+              description={EMPTY_STATE_BODY}
+              actions={
+                <Link
+                  to="/messages"
+                  className="inline-flex items-center justify-center rounded-full border border-rose-200 px-5 py-3 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                >
+                  Open Messages
+                </Link>
+              }
             />
           ) : (
             <CustomerStatePanel
@@ -75,7 +106,7 @@ export function CustomerPrivateAlbumsPage() {
               title="Private album deliveries"
               description="Only authenticated owners can access these private delivery cards."
             >
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {albums.map((album) => (
                   <article
                     key={album.id}
@@ -86,13 +117,46 @@ export function CustomerPrivateAlbumsPage() {
                       Private Delivery
                     </div>
                     <h2 className="text-lg font-medium text-gray-900">{album.title}</h2>
-                    <p className="mt-3 inline-flex items-center gap-2 text-sm text-gray-600">
+                    <p className="mt-3 text-sm font-medium text-gray-700">
+                      Booking: {album.bookingReference ?? album.bookingId ?? 'Pending assignment'}
+                    </p>
+                    <p className="mt-2 inline-flex items-center gap-2 text-sm text-gray-600">
                       <Calendar className="size-4 text-rose-500" />
                       {formatEventDate(album.eventDate)}
                     </p>
                     <p className="mt-2 text-sm font-medium text-gray-700">
                       {album.deliveredAssetCount} assets
                     </p>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {album.protectedMedia ? (
+                        <>
+                          <a
+                            href={album.protectedMedia.thumbnailUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                            aria-label={`Preview ${album.title}`}
+                          >
+                            <Eye className="size-4" />
+                            Preview
+                          </a>
+                          <a
+                            href={album.protectedMedia.contentUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-4 py-2 text-sm font-medium text-white transition hover:shadow-lg"
+                            aria-label={`Download ${album.title}`}
+                          >
+                            <Download className="size-4" />
+                            Download
+                          </a>
+                        </>
+                      ) : (
+                        <span className="text-sm text-gray-600">
+                          {PRIVATE_ALBUM_DENIED_MESSAGE}
+                        </span>
+                      )}
+                    </div>
                   </article>
                 ))}
               </div>
