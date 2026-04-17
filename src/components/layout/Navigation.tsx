@@ -18,6 +18,7 @@ export function Navigation({ isLoggedIn, onLogout }: NavigationProps) {
     { id: '/dashboard', label: 'Home' },
     { id: '/packages', label: 'Packages' },
     { id: '/gallery', label: 'Gallery' },
+    { id: '/albums/private', label: 'Private Albums' },
     { id: '/messages', label: 'Messages' },
     { id: '/contact', label: 'Contact' },
   ];
