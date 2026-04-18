@@ -127,4 +127,62 @@ describe('albumService private endpoint contracts', () => {
       contentUrl: 'http://localhost:3000/customer/albums/file/file-123/content',
     });
   });
+
+  it('requests customer private album assets and normalizes per-asset preview/download links', async () => {
+    const { albumService } = await import('./albumService');
+
+    getMock.mockResolvedValue({
+      data: {
+        success: true,
+        data: [
+          {
+            id: 'asset-1',
+            name: 'highlight.jpg',
+            mimeType: 'image/jpeg',
+            byteSize: 1200,
+          },
+          {
+            id: 'asset-2',
+            name: 'dance.mov',
+            mimeType: 'video/quicktime',
+            byteSize: 2200,
+          },
+        ],
+      },
+    });
+
+    const result = await albumService.getCustomerPrivateAlbumAssets('album-123');
+
+    expect(getMock).toHaveBeenCalledWith('/customer/albums/album-123/assets');
+    expect(result).toEqual([
+      {
+        id: 'asset-1',
+        name: 'highlight.jpg',
+        mimeType: 'image/jpeg',
+        byteSize: 1200,
+        protectedMedia: {
+          thumbnailUrl: 'http://localhost:3000/customer/albums/file/asset-1/thumbnail',
+          contentUrl: 'http://localhost:3000/customer/albums/file/asset-1/content',
+        },
+      },
+      {
+        id: 'asset-2',
+        name: 'dance.mov',
+        mimeType: 'video/quicktime',
+        byteSize: 2200,
+        protectedMedia: {
+          thumbnailUrl: 'http://localhost:3000/customer/albums/file/asset-2/thumbnail',
+          contentUrl: 'http://localhost:3000/customer/albums/file/asset-2/content',
+        },
+      },
+    ]);
+  });
+
+  it('builds deterministic customer zip download endpoint for private albums', async () => {
+    const { albumService } = await import('./albumService');
+
+    expect(albumService.getCustomerPrivateAlbumZipDownloadLink('album-zip-id')).toBe(
+      'http://localhost:3000/customer/albums/album-zip-id/download.zip'
+    );
+  });
 });
