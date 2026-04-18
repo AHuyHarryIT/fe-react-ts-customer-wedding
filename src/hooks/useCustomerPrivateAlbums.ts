@@ -3,15 +3,16 @@ import { albumService } from '@/services/albumService';
 import { useAuthStore } from '@/stores/authStore';
 import type { CustomerPrivateAlbumCard } from '@/types/album';
 
-const normalizePrivateAlbumCards = (
+const normalizePrivateAlbumCards = async (
   albums: Awaited<ReturnType<typeof albumService.getCustomerPrivateAlbums>>
-): CustomerPrivateAlbumCard[] =>
-  albums.map((album) => ({
-    ...album,
-    protectedMedia: album.coverFile?.id
-      ? albumService.getCustomerPrivateAlbumMediaLinks(album.coverFile.id)
-      : null,
-  }));
+): Promise<CustomerPrivateAlbumCard[]> =>
+  Promise.all(
+    albums.map(async (album) => ({
+      ...album,
+      assets: await albumService.getCustomerPrivateAlbumAssets(album.id),
+      zipDownloadUrl: albumService.getCustomerPrivateAlbumZipDownloadLink(album.id),
+    }))
+  );
 
 export function useCustomerPrivateAlbums() {
   const { user, isAuthenticated } = useAuthStore();
@@ -31,7 +32,7 @@ export function useCustomerPrivateAlbums() {
       setLoading(true);
       setError(null);
       const privateAlbums = await albumService.getCustomerPrivateAlbums();
-      setAlbums(normalizePrivateAlbumCards(privateAlbums));
+      setAlbums(await normalizePrivateAlbumCards(privateAlbums));
     } catch (err) {
       console.error('Failed to fetch customer private albums:', err);
       setError('Failed to load private albums');

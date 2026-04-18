@@ -43,8 +43,17 @@ export interface CustomerPrivateAlbumMediaLinks {
   contentUrl: string;
 }
 
+export interface CustomerPrivateAlbumAsset {
+  id: string;
+  name?: string | null;
+  mimeType?: string | null;
+  byteSize?: number | null;
+  protectedMedia: CustomerPrivateAlbumMediaLinks;
+}
+
 export interface CustomerPrivateAlbumCard extends CustomerPrivateAlbum {
-  protectedMedia: CustomerPrivateAlbumMediaLinks | null;
+  zipDownloadUrl: string;
+  assets: CustomerPrivateAlbumAsset[];
 }
 
 export interface CustomerPrivateAlbumListEnvelope {
