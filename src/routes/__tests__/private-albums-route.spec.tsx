@@ -17,9 +17,15 @@ describe('private albums route contract', () => {
   it('remains auth-gated and forwards location to requireAuth', async () => {
     const { Route } = await import('../albums/private');
 
-    const location = { pathname: '/albums/private', searchStr: '' };
+    const location = {
+      pathname: '/albums/private',
+      searchStr: '?view=cards',
+      href: '/albums/private?view=cards',
+    };
+
     await Route.options.beforeLoad?.({ location } as never);
 
+    expect(requireAuthMock).toHaveBeenCalledTimes(1);
     expect(requireAuthMock).toHaveBeenCalledWith({ location });
   });
 
