@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Calendar, Download, FolderHeart, Image as ImageIcon, Eye } from 'lucide-react';
 import { motion } from 'motion/react';
 import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
+import { PrivateAlbumPreviewModal } from '@/components/pages/PrivateAlbumPreviewModal';
 import { useCustomerPrivateAlbums } from '@/hooks/useCustomerPrivateAlbums';
 import {
   PRIVATE_ALBUM_DENIED_MESSAGE,
   PRIVATE_ALBUM_EMPTY_STATE_TITLE,
-  type CustomerPrivateAlbum,
+  type CustomerPrivateAlbumCard,
 } from '@/types/album';
 
 const EMPTY_STATE_BODY =
@@ -15,7 +17,7 @@ const EMPTY_STATE_BODY =
 const ERROR_STATE_BODY =
   "We couldn't verify this payment or album request yet. Refresh and try again. If it still fails, open Messages and include your booking ID for support.";
 
-const formatEventDate = (eventDate: CustomerPrivateAlbum['eventDate']) => {
+const formatEventDate = (eventDate: CustomerPrivateAlbumCard['eventDate']) => {
   if (!eventDate) {
     return 'Event date pending';
   }
@@ -30,11 +32,27 @@ const formatEventDate = (eventDate: CustomerPrivateAlbum['eventDate']) => {
 
 export function CustomerPrivateAlbumsPage() {
   const { albums, loading, error, refetch } = useCustomerPrivateAlbums();
+  const [activeAlbumId, setActiveAlbumId] = useState<string | null>(null);
+  const [activeAssetIndex, setActiveAssetIndex] = useState(0);
+
   const normalizedError = error?.trim();
+  const lowerError = normalizedError?.toLowerCase() ?? '';
   const safeErrorCopy =
-    normalizedError && normalizedError.toLowerCase().includes('do not have access')
+    lowerError.includes('do not have access') || lowerError.includes('not found')
       ? PRIVATE_ALBUM_DENIED_MESSAGE
       : ERROR_STATE_BODY;
+
+  const activeAlbum = albums.find((album) => album.id === activeAlbumId) ?? null;
+
+  const openPreview = (albumId: string, initialIndex = 0) => {
+    setActiveAlbumId(albumId);
+    setActiveAssetIndex(initialIndex);
+  };
+
+  const closePreview = () => {
+    setActiveAlbumId(null);
+    setActiveAssetIndex(0);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
@@ -107,63 +125,79 @@ export function CustomerPrivateAlbumsPage() {
               description="Only authenticated owners can access these private delivery cards."
             >
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {albums.map((album) => (
-                  <article
-                    key={album.id}
-                    className="rounded-2xl border border-rose-100 bg-white/90 p-5 shadow-sm"
-                  >
-                    <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-rose-600">
-                      <FolderHeart className="size-3.5" />
-                      Private Delivery
-                    </div>
-                    <h2 className="text-lg font-medium text-gray-900">{album.title}</h2>
-                    <p className="mt-3 text-sm font-medium text-gray-700">
-                      Booking: {album.bookingReference ?? album.bookingId ?? 'Pending assignment'}
-                    </p>
-                    <p className="mt-2 inline-flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar className="size-4 text-rose-500" />
-                      {formatEventDate(album.eventDate)}
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-gray-700">
-                      {album.deliveredAssetCount} assets
-                    </p>
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      {album.protectedMedia ? (
-                        <>
-                          <a
-                            href={album.protectedMedia.thumbnailUrl}
-                            target="_blank"
-                            rel="noreferrer"
+                {albums.map((album) => {
+                  const hasAssets = album.assets.length > 0;
+
+                  return (
+                    <article
+                      key={album.id}
+                      className="rounded-2xl border border-rose-100 bg-white/90 p-5 shadow-sm"
+                    >
+                      <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-rose-600">
+                        <FolderHeart className="size-3.5" />
+                        Private Delivery
+                      </div>
+                      <h2 className="text-lg font-medium text-gray-900">{album.title}</h2>
+                      <p className="mt-3 text-sm font-medium text-gray-700">
+                        Booking: {album.bookingReference ?? album.bookingId ?? 'Pending assignment'}
+                      </p>
+                      <p className="mt-2 inline-flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="size-4 text-rose-500" />
+                        {formatEventDate(album.eventDate)}
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-gray-700">
+                        {album.deliveredAssetCount} assets
+                      </p>
+
+                      {hasAssets ? (
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openPreview(album.id, 0)}
                             className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                             aria-label={`Preview ${album.title}`}
                           >
                             <Eye className="size-4" />
                             Preview
-                          </a>
+                          </button>
                           <a
-                            href={album.protectedMedia.contentUrl}
-                            target="_blank"
-                            rel="noreferrer"
+                            href={album.zipDownloadUrl}
+                            download
                             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-4 py-2 text-sm font-medium text-white transition hover:shadow-lg"
-                            aria-label={`Download ${album.title}`}
+                            aria-label="Download Album ZIP"
                           >
                             <Download className="size-4" />
-                            Download
+                            Download Album ZIP
                           </a>
-                        </>
+                        </div>
                       ) : (
-                        <span className="text-sm text-gray-600">
-                          {PRIVATE_ALBUM_DENIED_MESSAGE}
-                        </span>
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          <span className="text-sm text-gray-600">{PRIVATE_ALBUM_DENIED_MESSAGE}</span>
+                          <Link
+                            to="/messages"
+                            className="inline-flex items-center justify-center rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                          >
+                            Open Messages
+                          </Link>
+                        </div>
                       )}
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
               </div>
             </CustomerStatePanel>
           )}
         </motion.div>
       </div>
+
+      <PrivateAlbumPreviewModal
+        open={Boolean(activeAlbum && activeAlbum.assets.length > 0)}
+        albumTitle={activeAlbum?.title ?? 'Private album'}
+        assets={activeAlbum?.assets ?? []}
+        activeIndex={activeAssetIndex}
+        onClose={closePreview}
+        onSelectIndex={setActiveAssetIndex}
+      />
     </div>
   );
 }
