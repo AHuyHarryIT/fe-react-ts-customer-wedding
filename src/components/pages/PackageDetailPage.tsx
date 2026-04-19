@@ -36,7 +36,7 @@ export function PackageDetailPage() {
             tone="error"
             eyebrow="Packages"
             title="Package unavailable"
-            description={error || 'Package not found.'}
+            description="Package not found."
             actions={
               <button
                 onClick={() => navigate({ to: '/packages' })}

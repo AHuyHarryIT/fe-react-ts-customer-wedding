@@ -21,7 +21,7 @@ export function usePackageDetail(packageId?: string) {
       setPackageData(data);
     } catch (err) {
       console.error('Failed to fetch package details:', err);
-      setError('Failed to load package details');
+      setError('Package not found.');
       setPackageData(null);
     } finally {
       setLoading(false);
