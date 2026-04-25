@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Calendar, ChevronLeft, MapPin, ReceiptText, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
@@ -26,6 +26,9 @@ export function BookingFlowPage() {
   const [eventLocation, setEventLocation] = useState('');
   const [guestCount, setGuestCount] = useState('');
   const [notes, setNotes] = useState('');
+  const eventDateInputRef = useRef<HTMLInputElement>(null);
+  const eventLocationInputRef = useRef<HTMLInputElement>(null);
+  const guestCountInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -49,16 +52,6 @@ export function BookingFlowPage() {
     return lines.join('\n');
   }, [eventDate, eventLocation, guestCount, notes, selectedPackage]);
 
-  const bookingNotes = useMemo(() => {
-    const noteLines = [
-      eventLocation ? `Event location: ${eventLocation}` : null,
-      guestCount ? `Estimated guests: ${guestCount}` : null,
-      notes ? `Additional notes: ${notes}` : null,
-    ].filter(Boolean);
-
-    return noteLines.join('\n');
-  }, [eventLocation, guestCount, notes]);
-
   const handleSubmit = async () => {
     if (!user?.id) {
       toast.error('You must be logged in to create a booking.');
@@ -70,7 +63,11 @@ export function BookingFlowPage() {
       return;
     }
 
-    if (!eventDate || !eventLocation || !guestCount) {
+    const eventDateValue = eventDateInputRef.current?.value.trim() || eventDate.trim();
+    const eventLocationValue = eventLocationInputRef.current?.value.trim() || eventLocation.trim();
+    const guestCountValue = guestCountInputRef.current?.value.trim() || guestCount.trim();
+
+    if (!eventDateValue || !eventLocationValue || !guestCountValue) {
       toast.error('Event date, location, and guest count are required.');
       return;
     }
@@ -80,8 +77,15 @@ export function BookingFlowPage() {
     try {
       const booking = await bookingService.createBooking({
         packageIds: [selectedPackageId],
-        eventDate: new Date(eventDate).toISOString(),
-        notes: bookingNotes || undefined,
+        eventDate: new Date(eventDateValue).toISOString(),
+        notes:
+          [
+            `Event location: ${eventLocationValue}`,
+            `Estimated guests: ${guestCountValue}`,
+            notes.trim() ? `Additional notes: ${notes.trim()}` : null,
+          ]
+            .filter(Boolean)
+            .join('\n') || undefined,
       });
 
       toast.success('Booking created successfully.');
@@ -165,6 +169,7 @@ export function BookingFlowPage() {
                     Preferred event date
                   </span>
                   <input
+                    ref={eventDateInputRef}
                     id={eventDateId}
                     name="eventDate"
                     type="date"
@@ -184,6 +189,7 @@ export function BookingFlowPage() {
                     Estimated guests
                   </span>
                   <input
+                    ref={guestCountInputRef}
                     id={guestCountId}
                     name="guestCount"
                     type="number"
@@ -206,6 +212,7 @@ export function BookingFlowPage() {
                   Event location
                 </span>
                 <input
+                  ref={eventLocationInputRef}
                   id={eventLocationId}
                   name="eventLocation"
                   type="text"
