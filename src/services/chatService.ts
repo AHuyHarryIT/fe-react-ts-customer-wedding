@@ -76,7 +76,7 @@ class ChatService {
       return response.data?.data || response.data;
     } catch (error) {
       console.error('Failed to send message:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -93,14 +93,17 @@ class ChatService {
     if (this.socket?.connected) {
       this.socket.emit('join_chat', { chatId });
       handlers?.onConnectionChange?.(true);
+      handlers?.onConnectionStatusChange?.('connected');
       return;
     }
+
+    let hasConnectedOnce = false;
 
     this.socket = io(`${WS_URL}/chat`, {
       auth: {
         userId: userId,
       },
-      withCredentials: true, // Include cookies with WebSocket
+      withCredentials: true,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
@@ -108,33 +111,33 @@ class ChatService {
     });
 
     this.socket.on('connect', () => {
-      console.log('WebSocket connected');
       handlers?.onConnectionChange?.(true);
+      handlers?.onConnectionStatusChange?.(hasConnectedOnce ? 'recovered' : 'connected');
+      hasConnectedOnce = true;
       this.socket?.emit('join_chat', { chatId });
+    });
+
+    this.socket.io.on('reconnect_attempt', () => {
+      handlers?.onConnectionStatusChange?.('reconnecting');
     });
 
     this.socket.on('message_received', (data: Message) => {
       handlers?.onMessageReceived?.(data);
     });
 
-    this.socket.on('typing', (data: { userId: string; isTyping: boolean }) => {
-      console.log('User typing:', data);
-    });
-
     this.socket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
       handlers?.onConnectionChange?.(false);
+      handlers?.onConnectionStatusChange?.('disconnected');
     });
 
     this.socket.on('error', (error: unknown) => {
-      console.error('WebSocket error:', error);
       handlers?.onConnectionChange?.(false);
       handlers?.onError?.(error);
     });
 
     this.socket.on('connect_error', (error: unknown) => {
-      console.error('WebSocket connect error:', error);
       handlers?.onConnectionChange?.(false);
+      handlers?.onConnectionStatusChange?.('reconnecting');
       handlers?.onError?.(error);
     });
   }

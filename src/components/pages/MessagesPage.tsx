@@ -1,10 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send, Paperclip, Image as ImageIcon, Smile, Check } from 'lucide-react';
+import { Send, Paperclip, Image as ImageIcon, Smile } from 'lucide-react';
 import { motion } from 'motion/react';
 import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 import { useChat } from '@/hooks/useChat';
-import type { Chat } from '@/types/chat';
+import type { ChatConnectionStatus, Chat } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
+
+const ATTACHMENTS_UNAVAILABLE_REASON = 'Attachments are not available in this release.';
+const FIRST_MESSAGE_SEND_FAILURE_COPY = 'Message not sent. Check your connection and try again.';
+
+const getConnectionCopy = (status: ChatConnectionStatus, reconnectNotice: string | null) => {
+  if (reconnectNotice) return reconnectNotice;
+  if (status === 'reconnecting') return 'Reconnecting… syncing latest messages';
+  if (status === 'disconnected') return 'Connection lost. Trying to reconnect…';
+  return 'Live updates on';
+};
+
+const formatUnreadCount = (count?: number) => {
+  if (!count || count <= 0) return null;
+  return count > 99 ? '99+' : String(count);
+};
 
 export function MessagesPage() {
   const {
@@ -16,33 +31,36 @@ export function MessagesPage() {
     loadChats,
     selectChat,
     sendMessage,
-    isConnected,
     createChat,
+    connectionStatus,
+    sendDisabledReason,
+    sendFailure,
+    reconnectNotice,
+    setComposerDraft,
+    clearSendFailure,
   } = useChat();
   const { user: currentUser } = useAuthStore();
   const [inputMessage, setInputMessage] = useState('');
   const [initialInputMessage, setInitialInputMessage] = useState('');
   const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [initialSendFailure, setInitialSendFailure] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load chats on mount
   useEffect(() => {
     loadChats();
   }, [loadChats]);
 
-  // Auto-select first chat when chats are loaded
   useEffect(() => {
     if (
       chats &&
       chats.length > 0 &&
       (!currentChat || !chats.some((chat) => chat.id === currentChat.id))
     ) {
-      selectChat(chats[0].id);
+      void selectChat(chats[0].id);
     }
   }, [chats, currentChat, selectChat]);
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -51,31 +69,53 @@ export function MessagesPage() {
 
   const handleSelectChat = async (chatId: string) => {
     await selectChat(chatId);
+    setInputMessage('');
+    setComposerDraft('');
+    setInitialSendFailure(null);
+    clearSendFailure();
   };
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || !currentChat) return;
+    if (!currentChat) return;
 
-    const messageText = inputMessage;
-    setInputMessage('');
+    const draft = inputMessage;
+    const success = await sendMessage(draft);
 
-    await sendMessage(messageText);
+    if (success) {
+      setInputMessage('');
+      setComposerDraft('');
+      clearSendFailure();
+      return;
+    }
+
+    setInputMessage(draft);
+    setComposerDraft(draft);
   };
 
   const handleSendInitialMessage = async () => {
     if (!initialInputMessage.trim()) return;
 
     const messageContent = initialInputMessage;
-    setInitialInputMessage('');
     setIsCreatingChat(true);
+    setInitialSendFailure(null);
 
     try {
       const newChat = await createChat();
 
       if (newChat) {
         await selectChat(newChat.id);
-        await sendMessage(messageContent, newChat.id);
+        const success = await sendMessage(messageContent, newChat.id);
+        if (success) {
+          setInitialInputMessage('');
+          setInitialSendFailure(null);
+        } else {
+          setInitialSendFailure(FIRST_MESSAGE_SEND_FAILURE_COPY);
+        }
+        return;
       }
+
+      setComposerDraft(messageContent);
+      setInitialSendFailure(FIRST_MESSAGE_SEND_FAILURE_COPY);
     } finally {
       setIsCreatingChat(false);
     }
@@ -88,7 +128,8 @@ export function MessagesPage() {
     return currentUser?.firstName || 'You';
   };
 
-  // Show chat list if no chat selected
+  const connectionCopy = getConnectionCopy(connectionStatus, reconnectNotice);
+
   if (!currentChat) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
@@ -98,13 +139,11 @@ export function MessagesPage() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl shadow-xl overflow-hidden"
           >
-            {/* Header */}
             <div className="bg-gradient-to-r from-rose-400 to-pink-500 p-6">
               <h1 className="text-2xl font-serif text-white mb-1">Messages</h1>
               <p className="text-rose-100 text-sm">Chat with the Studio HaMy team</p>
             </div>
 
-            {/* Chat List */}
             <div className="divide-y divide-gray-200">
               {loading ? (
                 <div className="p-6">
@@ -123,30 +162,34 @@ export function MessagesPage() {
                   />
                 </div>
               ) : chats && chats.length > 0 ? (
-                chats.map((chat, index) => (
-                  <motion.button
-                    key={chat.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    onClick={() => handleSelectChat(chat.id)}
-                    className="w-full p-4 hover:bg-gray-50 transition-colors text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{getCustomerName(chat)}</h3>
-                        <p className="text-sm text-gray-600 truncate">
-                          {chat.lastMessage || 'No messages yet'}
-                        </p>
-                      </div>
-                      {chat.unreadCount && chat.unreadCount > 0 && (
-                        <div className="ml-2 px-2 py-1 bg-rose-400 text-white text-xs rounded-full">
-                          {chat.unreadCount}
+                chats.map((chat, index) => {
+                  const unreadLabel = formatUnreadCount(chat.unreadCount);
+
+                  return (
+                    <motion.button
+                      key={chat.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      onClick={() => void handleSelectChat(chat.id)}
+                      className="w-full p-4 hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900">{getCustomerName(chat)}</h3>
+                          <p className="text-sm text-gray-600 truncate">
+                            {chat.lastMessage || 'No messages yet'}
+                          </p>
                         </div>
-                      )}
-                    </div>
-                  </motion.button>
-                ))
+                        {unreadLabel && (
+                          <div className="ml-2 px-2 py-1 bg-rose-400 text-white text-xs rounded-full">
+                            {unreadLabel}
+                          </div>
+                        )}
+                      </div>
+                    </motion.button>
+                  );
+                })
               ) : (
                 <div className="p-12 text-center">
                   <CustomerStatePanel
@@ -169,7 +212,7 @@ export function MessagesPage() {
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
-                                    handleSendInitialMessage();
+                                    void handleSendInitialMessage();
                                   }
                                 }}
                                 placeholder="Type your first message..."
@@ -181,7 +224,7 @@ export function MessagesPage() {
                             <button
                               type="button"
                               aria-label="Send first message"
-                              onClick={handleSendInitialMessage}
+                              onClick={() => void handleSendInitialMessage()}
                               disabled={!initialInputMessage.trim() || isCreatingChat || loading}
                               className="size-12 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
@@ -191,6 +234,9 @@ export function MessagesPage() {
                           <p className="text-xs text-gray-500 mt-2 px-2">
                             Press Enter to send, Shift + Enter for new line
                           </p>
+                          {initialSendFailure && (
+                            <p className="text-xs text-red-600 mt-2 px-2">{initialSendFailure}</p>
+                          )}
                         </div>
                       </div>
                     }
@@ -204,7 +250,6 @@ export function MessagesPage() {
     );
   }
 
-  // Show individual chat
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -214,95 +259,79 @@ export function MessagesPage() {
           className="bg-white rounded-2xl shadow-xl overflow-hidden"
           style={{ height: 'calc(100vh - 200px)', minHeight: '500px' }}
         >
-          {/* Header */}
           <div className="bg-gradient-to-r from-rose-400 to-pink-500 p-6 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-serif text-white mb-1">
                 {currentChat.staffName || 'Studio Team'}
               </h1>
-              <div className="flex items-center gap-2">
-                <div
-                  className={`size-2 rounded-full ${isConnected ? 'bg-green-300' : 'bg-gray-300'}`}
-                />
-                <p className="text-rose-100 text-sm">{isConnected ? 'Online' : 'Offline'}</p>
-              </div>
+              <p className="text-rose-100 text-sm">{connectionCopy}</p>
             </div>
           </div>
 
-          {/* Messages Container */}
           <div className="flex flex-col h-[calc(100%-140px)]">
-            {/* Messages List */}
             <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6">
-              {messages &&
-                messages.map((msg, index) => {
-                  // Prefer chat.customerId for ownership to avoid stale auth-store mismatches.
-                  const currentCustomerId = currentChat?.customerId || currentUser?.id;
-                  const isUserMessage =
-                    Boolean(currentCustomerId) && msg.senderId === currentCustomerId;
+              {messages.map((msg, index) => {
+                const currentCustomerId = currentChat.customerId || currentUser?.id;
+                const isUserMessage =
+                  Boolean(currentCustomerId) && msg.senderId === currentCustomerId;
 
-                  return (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div className={`max-w-[70%]`}>
-                        {/* Sender Name & Time */}
-                        <div
-                          className={`flex items-center gap-2 mb-2 ${isUserMessage ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 ${
-                                isUserMessage
-                                  ? 'bg-rose-100 text-rose-700'
-                                  : 'bg-blue-100 text-blue-700'
-                              }`}
-                            >
-                              {isUserMessage ? (
-                                <>
-                                  <Check className="w-3 h-3" />
-                                  You (Customer) - Sent
-                                </>
-                              ) : (
-                                <>Studio Team (Staff) - Received</>
-                              )}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {new Date(msg.createdAt).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Message Bubble */}
-                        <div
-                          className={`rounded-2xl px-4 py-3 ${
+                return (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className="max-w-[70%]">
+                      <div
+                        className={`flex items-center gap-2 mb-2 ${isUserMessage ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <span
+                          className={`text-xs font-semibold px-2 py-1 rounded-full ${
                             isUserMessage
-                              ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white'
-                              : 'bg-gray-100 text-gray-800'
+                              ? 'bg-rose-100 text-rose-700'
+                              : 'bg-blue-100 text-blue-700'
                           }`}
                         >
-                          <p className="text-sm leading-relaxed">{msg.content}</p>
-                        </div>
+                          {isUserMessage ? 'You' : 'Studio Team'}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
                       </div>
-                    </motion.div>
-                  );
-                })}
+
+                      <div
+                        className={`rounded-2xl px-4 py-3 ${
+                          isUserMessage
+                            ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed">{msg.content}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
             <div className="border-t border-gray-200 p-4">
               {error && (
                 <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
                   {error}
                 </div>
               )}
+              {sendFailure && (
+                <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+                  {sendFailure}
+                </div>
+              )}
+
               <div className="flex items-end gap-3">
                 <div className="flex-1 relative">
                   <label htmlFor="message-composer" className="sr-only">
@@ -312,47 +341,59 @@ export function MessagesPage() {
                     id="message-composer"
                     name="message"
                     value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
+                    onChange={(e) => {
+                      const nextValue = e.target.value;
+                      setInputMessage(nextValue);
+                      setComposerDraft(nextValue);
+                      if (sendFailure) clearSendFailure();
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        handleSendMessage();
+                        void handleSendMessage();
                       }
                     }}
                     placeholder="Type your message..."
                     rows={1}
-                    disabled={!isConnected}
-                    className="w-full px-4 py-3 pr-24 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-400 resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 pr-24 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-400 resize-none"
                   />
+
                   <div className="absolute right-2 bottom-2 flex items-center gap-1">
                     <button
                       type="button"
                       aria-label="Attach a file"
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                      disabled
+                      title={ATTACHMENTS_UNAVAILABLE_REASON}
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Paperclip className="size-4 text-gray-400" />
                     </button>
                     <button
                       type="button"
                       aria-label="Attach an image"
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                      disabled
+                      title={ATTACHMENTS_UNAVAILABLE_REASON}
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ImageIcon className="size-4 text-gray-400" />
                     </button>
                     <button
                       type="button"
                       aria-label="Insert an emoji"
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                      disabled
+                      title={ATTACHMENTS_UNAVAILABLE_REASON}
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Smile className="size-4 text-gray-400" />
                     </button>
                   </div>
                 </div>
+
                 <button
                   type="button"
                   aria-label="Send message"
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || !isConnected}
+                  onClick={() => void handleSendMessage()}
+                  disabled={Boolean(sendDisabledReason)}
                   className="size-12 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="size-5" />
@@ -361,6 +402,10 @@ export function MessagesPage() {
               <p className="text-xs text-gray-500 mt-2 px-2">
                 Press Enter to send, Shift + Enter for new line
               </p>
+              {sendDisabledReason && (
+                <p className="text-xs text-gray-500 mt-2 px-2">{sendDisabledReason}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1 px-2">{ATTACHMENTS_UNAVAILABLE_REASON}</p>
             </div>
           </div>
         </motion.div>

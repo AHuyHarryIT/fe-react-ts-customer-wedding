@@ -26,7 +26,13 @@ export type {
   CustomerMomoPayment,
   CustomerDepositCheckoutResponse,
 } from './order';
-export type { Chat, Message, SendMessageRequest } from './chat';
+export type {
+  Chat,
+  Message,
+  SendMessageRequest,
+  ChatConnectionStatus,
+  ChatComposerState,
+} from './chat';
 export type { NavigationProps } from './components';
 export type { UseChatState, UseChatActions } from './hooks';
 export type { Package, PackageListPayload, PackageParams } from './package';

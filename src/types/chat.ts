@@ -35,8 +35,13 @@ export interface SendMessageRequest {
   attachments?: string[];
 }
 
+export type ChatConnectionStatus = 'connected' | 'reconnecting' | 'disconnected' | 'recovered';
+
+export type ChatComposerState = 'idle' | 'typing' | 'sending' | 'blocked';
+
 export interface ConnectWebSocketHandlers {
   onMessageReceived?: (message: Message) => void;
   onConnectionChange?: (connected: boolean) => void;
+  onConnectionStatusChange?: (status: ChatConnectionStatus) => void;
   onError?: (error: unknown) => void;
 }
