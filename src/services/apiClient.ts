@@ -10,7 +10,38 @@ import {
 
 const DEFAULT_API_BASE_URL = 'http://localhost:3000';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL;
+const normalizeLoopbackBaseUrl = (rawBaseUrl: string): string => {
+  if (typeof window === 'undefined') {
+    return rawBaseUrl;
+  }
+
+  try {
+    const url = new URL(rawBaseUrl, window.location.origin);
+    const pageHost = window.location.hostname;
+    const isLoopbackHost = pageHost === '127.0.0.1' || pageHost === 'localhost';
+    const isLoopbackApiHost = url.hostname === '127.0.0.1' || url.hostname === 'localhost';
+
+    if (!isLoopbackHost || !isLoopbackApiHost) {
+      return rawBaseUrl;
+    }
+
+    url.hostname = pageHost;
+    return url.origin;
+  } catch {
+    return rawBaseUrl;
+  }
+};
+
+const resolveApiBaseUrl = (): string => {
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (configuredBaseUrl) {
+    return normalizeLoopbackBaseUrl(configuredBaseUrl);
+  }
+
+  return normalizeLoopbackBaseUrl(DEFAULT_API_BASE_URL);
+};
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 type ApiErrorWithForbiddenContext = AxiosError<ApiErrorData> & {
   forbiddenContext?: ForbiddenContext;

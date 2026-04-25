@@ -272,8 +272,28 @@ export function MessagesPage() {
             <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6">
               {messages.map((msg, index) => {
                 const currentCustomerId = currentChat.customerId || currentUser?.id;
-                const isUserMessage =
-                  Boolean(currentCustomerId) && msg.senderId === currentCustomerId;
+                const isUserMessage = msg.senderType
+                  ? msg.senderType === 'CUSTOMER'
+                  : Boolean(currentCustomerId) && msg.senderId === currentCustomerId;
+                const isAiMessage = msg.senderType === 'AI';
+
+                const senderLabel = isUserMessage
+                  ? 'You'
+                  : isAiMessage
+                    ? 'AI Assistant'
+                    : 'Studio Team';
+
+                const senderChipClassName = isUserMessage
+                  ? 'bg-rose-100 text-rose-700'
+                  : isAiMessage
+                    ? 'bg-slate-200 text-slate-700'
+                    : 'bg-blue-100 text-blue-700';
+
+                const messageBubbleClassName = isUserMessage
+                  ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white'
+                  : isAiMessage
+                    ? 'bg-slate-100 text-slate-800 border border-slate-200'
+                    : 'bg-gray-100 text-gray-800';
 
                 return (
                   <motion.div
@@ -288,13 +308,9 @@ export function MessagesPage() {
                         className={`flex items-center gap-2 mb-2 ${isUserMessage ? 'justify-end' : 'justify-start'}`}
                       >
                         <span
-                          className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                            isUserMessage
-                              ? 'bg-rose-100 text-rose-700'
-                              : 'bg-blue-100 text-blue-700'
-                          }`}
+                          className={`text-xs font-semibold px-2 py-1 rounded-full ${senderChipClassName}`}
                         >
-                          {isUserMessage ? 'You' : 'Studio Team'}
+                          {senderLabel}
                         </span>
                         <span className="text-xs text-gray-400">
                           {new Date(msg.createdAt).toLocaleTimeString([], {
@@ -304,13 +320,7 @@ export function MessagesPage() {
                         </span>
                       </div>
 
-                      <div
-                        className={`rounded-2xl px-4 py-3 ${
-                          isUserMessage
-                            ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
+                      <div className={`rounded-2xl px-4 py-3 ${messageBubbleClassName}`}>
                         <p className="text-sm leading-relaxed">{msg.content}</p>
                       </div>
                     </div>
