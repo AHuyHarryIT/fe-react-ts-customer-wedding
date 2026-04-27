@@ -78,7 +78,7 @@ describe('ProfilePage view states', () => {
     expect(screen.getByText(/we could not find your profile data/i)).toBeInTheDocument();
   });
 
-  it('renders loaded profile fields and save-profile action copy', () => {
+  it('renders section-card layout with loaded profile fields and read-only personal defaults', () => {
     useCustomerProfileMock.mockReturnValue({
       profile: {
         id: 'customer-1',
@@ -97,10 +97,28 @@ describe('ProfilePage view states', () => {
 
     render(<ProfilePage />);
 
+    expect(screen.getByRole('heading', { name: /personal information/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /security/i })).toBeInTheDocument();
+
     expect(screen.getByLabelText(/first name/i)).toHaveValue('Jane');
     expect(screen.getByLabelText(/last name/i)).toHaveValue('Doe');
     expect(screen.getByLabelText(/email address/i)).toHaveValue('jane@example.com');
-    expect(screen.getByLabelText(/phone number/i)).toHaveValue('0981234567');
-    expect(screen.getByRole('button', { name: /save profile changes/i })).toBeInTheDocument();
+    const firstNameInput = screen.getByLabelText(/first name/i);
+    const lastNameInput = screen.getByLabelText(/last name/i);
+    const emailInput = screen.getByLabelText(/email address/i);
+    const phoneInput = screen.getByLabelText(/phone number/i);
+
+    expect(firstNameInput).toHaveValue('Jane');
+    expect(lastNameInput).toHaveValue('Doe');
+    expect(emailInput).toHaveValue('jane@example.com');
+    expect(phoneInput).toHaveValue('0981234567');
+
+    expect(firstNameInput).toHaveAttribute('readonly');
+    expect(lastNameInput).toHaveAttribute('readonly');
+    expect(emailInput).toHaveAttribute('readonly');
+    expect(phoneInput).toHaveAttribute('readonly');
+
+    expect(screen.getByRole('button', { name: /^edit$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save profile changes/i })).not.toBeInTheDocument();
   });
 });

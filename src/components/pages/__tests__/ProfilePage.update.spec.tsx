@@ -68,6 +68,8 @@ describe('ProfilePage update behavior', () => {
     const user = userEvent.setup();
     render(<ProfilePage />);
 
+    await user.click(screen.getByRole('button', { name: /^edit$/i }));
+
     await user.clear(screen.getByLabelText(/email address/i));
     await user.type(screen.getByLabelText(/email address/i), 'invalid-email');
 
@@ -84,6 +86,8 @@ describe('ProfilePage update behavior', () => {
   it('submits trimmed payload with phoneNumber key for valid personal updates', async () => {
     const user = userEvent.setup();
     render(<ProfilePage />);
+
+    await user.click(screen.getByRole('button', { name: /^edit$/i }));
 
     await user.clear(screen.getByLabelText(/first name/i));
     await user.type(screen.getByLabelText(/first name/i), '  Jane  ');
@@ -130,6 +134,7 @@ describe('ProfilePage update behavior', () => {
     const user = userEvent.setup();
     render(<ProfilePage />);
 
+    await user.click(screen.getByRole('button', { name: /^edit$/i }));
     await user.click(screen.getByRole('button', { name: /save profile changes/i }));
 
     await waitFor(() => {
@@ -151,6 +156,8 @@ describe('ProfilePage update behavior', () => {
 
     const user = userEvent.setup();
     render(<ProfilePage />);
+
+    await user.click(screen.getByRole('button', { name: /^edit$/i }));
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     await user.clear(firstNameInput);
@@ -182,6 +189,7 @@ describe('ProfilePage update behavior', () => {
     const user = userEvent.setup();
     render(<ProfilePage />);
 
+    await user.click(screen.getByRole('button', { name: /^edit$/i }));
     await user.click(screen.getByRole('button', { name: /save profile changes/i }));
 
     await waitFor(() => {
@@ -201,11 +209,9 @@ describe('ProfilePage update behavior', () => {
     });
   });
 
-  it('keeps security tab password submit behavior unchanged', async () => {
+  it('keeps security password submit behavior unchanged', async () => {
     const user = userEvent.setup();
     render(<ProfilePage />);
-
-    await user.click(screen.getByRole('button', { name: /security/i }));
 
     await user.type(screen.getByLabelText(/current password/i), 'current-secret');
     await user.type(screen.getByLabelText(/^new password/i), 'new-secret');

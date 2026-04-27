@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FiLock, FiMail, FiPhone, FiSave, FiUser } from 'react-icons/fi';
+import { FiEdit2, FiLock, FiMail, FiPhone, FiSave, FiUser } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
@@ -10,8 +10,6 @@ import type { ApiErrorData } from '@/types/error';
 import { isVietnamesePhoneNumber } from '@/utils/phone';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-type ActiveTab = 'personal' | 'security';
 
 type PersonalField = 'firstName' | 'lastName' | 'email' | 'phone';
 type PersonalErrors = Partial<Record<PersonalField, string>>;
@@ -109,17 +107,19 @@ const toPersonalPayload = (formData: ProfileFormData): UpdateProfileRequest => {
 };
 
 const inputClassName = (error?: string): string =>
-  `w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-    error ? 'border-red-300 focus:ring-red-400' : 'border-gray-200 focus:ring-rose-400'
+  `w-full pl-11 pr-4 py-3.5 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
+    error
+      ? 'border-red-300 focus:ring-red-400 bg-red-50/30'
+      : 'border-rose-100 focus:ring-rose-300 bg-white'
   }`;
 
 export function ProfilePage() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('personal');
   const { profile, loading, error, refetch } = useCustomerProfile();
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<ProfileFormData>(INITIAL_FORM_DATA);
   const [fieldErrors, setFieldErrors] = useState<PersonalErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [isPersonalEditing, setIsPersonalEditing] = useState(false);
 
   useEffect(() => {
     if (!profile) {
@@ -135,6 +135,7 @@ export function ProfilePage() {
     }));
     setFieldErrors({});
     setFormError(null);
+    setIsPersonalEditing(false);
   }, [profile]);
 
   const updatePersonalField = (field: PersonalField, value: string) => {
@@ -160,6 +161,7 @@ export function ProfilePage() {
 
     await authApi.updateProfile(payload);
     await refetch();
+    setIsPersonalEditing(false);
     toast.success('Profile updated successfully');
   };
 
@@ -189,17 +191,17 @@ export function ProfilePage() {
     toast.success('Password changed successfully');
   };
 
-  const handleSave = async () => {
+  const handleSave = async (section: 'personal' | 'security') => {
     setIsSaving(true);
 
     try {
-      if (activeTab === 'personal') {
+      if (section === 'personal') {
         await handlePersonalSave();
       } else {
         await handleSecuritySave();
       }
     } catch (caughtError: unknown) {
-      if (activeTab === 'personal') {
+      if (section === 'personal') {
         const errorData = getApiErrorData(caughtError);
         const backendFieldErrors = mapBackendFieldErrors(errorData);
 
@@ -224,15 +226,10 @@ export function ProfilePage() {
     }
   };
 
-  const tabs: Array<{ id: ActiveTab; label: string; icon: typeof FiUser }> = [
-    { id: 'personal', label: 'Personal Info', icon: FiUser },
-    { id: 'security', label: 'Security', icon: FiLock },
-  ];
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-b from-white via-rose-50 to-pink-100/40 py-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <CustomerStatePanel
             tone="loading"
             title="Loading account details"
@@ -245,8 +242,8 @@ export function ProfilePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-b from-white via-rose-50 to-pink-100/40 py-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <CustomerStatePanel
             tone="error"
             title="Could not load profile"
@@ -254,8 +251,8 @@ export function ProfilePage() {
             actions={
               <button
                 type="button"
-                onClick={() => {
-                  void refetch();
+                onClick={async () => {
+                  await refetch();
                 }}
                 className="px-5 py-2 rounded-full bg-rose-500 text-white hover:bg-rose-600 transition-colors"
               >
@@ -270,8 +267,8 @@ export function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-b from-white via-rose-50 to-pink-100/40 py-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <CustomerStatePanel
             tone="empty"
             title="Profile unavailable"
@@ -283,246 +280,264 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-rose-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-white via-rose-50 to-pink-100/40 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl md:text-4xl font-serif text-gray-800 mb-2">Account Settings</h1>
-          <p className="text-gray-600">Manage your profile and preferences</p>
+          <p className="text-gray-600">Manage your profile and security preferences in one place</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-xl shadow-md p-2"
-            >
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white'
-                      : 'text-gray-600 hover:bg-rose-50'
-                  }`}
+        <div className="space-y-6">
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-rose-100 bg-white/95 p-6 md:p-8 shadow-[0_16px_50px_-24px_rgba(244,63,94,0.45)]"
+          >
+            <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+                  Personal Information
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Keep your customer identity and contact data up to date.
+                </p>
+              </div>
+              <span className="inline-flex w-fit items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-medium text-rose-600">
+                Profile
+              </span>
+            </div>
+
+            {formError ? (
+              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {formError}
+              </div>
+            ) : null}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label
+                  htmlFor="profile-first-name"
+                  className="block text-sm font-medium text-gray-700"
                 >
-                  <tab.icon className="size-5" />
-                  <span className="text-sm font-medium">{tab.label}</span>
-                </button>
-              ))}
-            </motion.div>
-          </div>
-
-          <div className="lg:col-span-3">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-xl shadow-md p-6"
-            >
-              {activeTab === 'personal' && (
-                <div className="space-y-6">
-                  <h2 className="text-xl font-medium text-gray-800 mb-4">Personal Information</h2>
-
-                  {formError ? (
-                    <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                      {formError}
-                    </div>
-                  ) : null}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        htmlFor="profile-first-name"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        First Name
-                      </label>
-                      <div className="relative">
-                        <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-                        <input
-                          id="profile-first-name"
-                          name="firstName"
-                          type="text"
-                          autoComplete="given-name"
-                          value={formData.firstName}
-                          onChange={(event) => updatePersonalField('firstName', event.target.value)}
-                          className={inputClassName(fieldErrors.firstName)}
-                        />
-                      </div>
-                      {fieldErrors.firstName ? (
-                        <p className="mt-2 text-sm text-red-600">{fieldErrors.firstName}</p>
-                      ) : null}
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="profile-last-name"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Last Name
-                      </label>
-                      <div className="relative">
-                        <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-                        <input
-                          id="profile-last-name"
-                          name="lastName"
-                          type="text"
-                          autoComplete="family-name"
-                          value={formData.lastName}
-                          onChange={(event) => updatePersonalField('lastName', event.target.value)}
-                          className={inputClassName(fieldErrors.lastName)}
-                        />
-                      </div>
-                      {fieldErrors.lastName ? (
-                        <p className="mt-2 text-sm text-red-600">{fieldErrors.lastName}</p>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="profile-email"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-                      <input
-                        id="profile-email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
-                        value={formData.email}
-                        onChange={(event) => updatePersonalField('email', event.target.value)}
-                        className={inputClassName(fieldErrors.email)}
-                      />
-                    </div>
-                    {fieldErrors.email ? (
-                      <p className="mt-2 text-sm text-red-600">{fieldErrors.email}</p>
-                    ) : null}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="profile-phone"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-                      <input
-                        id="profile-phone"
-                        name="phone"
-                        type="tel"
-                        autoComplete="tel"
-                        value={formData.phone}
-                        onChange={(event) => updatePersonalField('phone', event.target.value)}
-                        className={inputClassName(fieldErrors.phone)}
-                      />
-                    </div>
-                    {fieldErrors.phone ? (
-                      <p className="mt-2 text-sm text-red-600">{fieldErrors.phone}</p>
-                    ) : null}
-                  </div>
+                  First Name
+                </label>
+                <div className="relative">
+                  <FiUser className="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-rose-300" />
+                  <input
+                    id="profile-first-name"
+                    name="firstName"
+                    type="text"
+                    autoComplete="given-name"
+                    value={formData.firstName}
+                    onChange={(event) => updatePersonalField('firstName', event.target.value)}
+                    readOnly={!isPersonalEditing}
+                    className={inputClassName(fieldErrors.firstName)}
+                  />
                 </div>
-              )}
+                {fieldErrors.firstName ? (
+                  <p className="text-sm text-red-600">{fieldErrors.firstName}</p>
+                ) : null}
+              </div>
 
-              {activeTab === 'security' && (
-                <div className="space-y-6">
-                  <h2 className="text-xl font-medium text-gray-800 mb-4">Change Password</h2>
-
-                  <div>
-                    <label
-                      htmlFor="profile-current-password"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Current Password
-                    </label>
-                    <div className="relative">
-                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-                      <input
-                        id="profile-current-password"
-                        name="currentPassword"
-                        type="password"
-                        autoComplete="current-password"
-                        value={formData.currentPassword}
-                        onChange={(event) =>
-                          setFormData((prev) => ({ ...prev, currentPassword: event.target.value }))
-                        }
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="profile-new-password"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      New Password
-                    </label>
-                    <div className="relative">
-                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-                      <input
-                        id="profile-new-password"
-                        name="newPassword"
-                        type="password"
-                        autoComplete="new-password"
-                        value={formData.newPassword}
-                        onChange={(event) =>
-                          setFormData((prev) => ({ ...prev, newPassword: event.target.value }))
-                        }
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="profile-confirm-password"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Confirm New Password
-                    </label>
-                    <div className="relative">
-                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-                      <input
-                        id="profile-confirm-password"
-                        name="confirmPassword"
-                        type="password"
-                        autoComplete="new-password"
-                        value={formData.confirmPassword}
-                        onChange={(event) =>
-                          setFormData((prev) => ({ ...prev, confirmPassword: event.target.value }))
-                        }
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
-                      />
-                    </div>
-                  </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="profile-last-name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Last Name
+                </label>
+                <div className="relative">
+                  <FiUser className="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-rose-300" />
+                  <input
+                    id="profile-last-name"
+                    name="lastName"
+                    type="text"
+                    autoComplete="family-name"
+                    value={formData.lastName}
+                    onChange={(event) => updatePersonalField('lastName', event.target.value)}
+                    readOnly={!isPersonalEditing}
+                    className={inputClassName(fieldErrors.lastName)}
+                  />
                 </div>
-              )}
+                {fieldErrors.lastName ? (
+                  <p className="text-sm text-red-600">{fieldErrors.lastName}</p>
+                ) : null}
+              </div>
+            </div>
 
-              <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="mt-4 space-y-2">
+              <label htmlFor="profile-email" className="block text-sm font-medium text-gray-700">
+                Email Address
+              </label>
+              <div className="relative">
+                <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-rose-300" />
+                <input
+                  id="profile-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  value={formData.email}
+                  onChange={(event) => updatePersonalField('email', event.target.value)}
+                  readOnly={!isPersonalEditing}
+                  className={inputClassName(fieldErrors.email)}
+                />
+              </div>
+              {fieldErrors.email ? (
+                <p className="text-sm text-red-600">{fieldErrors.email}</p>
+              ) : null}
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700">
+                Phone Number
+              </label>
+              <div className="relative">
+                <FiPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-rose-300" />
+                <input
+                  id="profile-phone"
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  value={formData.phone}
+                  onChange={(event) => updatePersonalField('phone', event.target.value)}
+                  readOnly={!isPersonalEditing}
+                  className={inputClassName(fieldErrors.phone)}
+                />
+              </div>
+              {fieldErrors.phone ? (
+                <p className="text-sm text-red-600">{fieldErrors.phone}</p>
+              ) : null}
+            </div>
+
+            <div className="mt-8 border-t border-rose-100 pt-6">
+              {!isPersonalEditing ? (
                 <button
                   type="button"
-                  onClick={handleSave}
+                  onClick={() => setIsPersonalEditing(true)}
+                  className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2"
+                >
+                  <FiEdit2 className="size-5" />
+                  Edit
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await handleSave('personal');
+                  }}
                   disabled={isSaving}
-                  className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-70"
+                  className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-70"
                 >
                   <FiSave className="size-5" />
-                  {isSaving
-                    ? 'Saving...'
-                    : activeTab === 'personal'
-                      ? 'Save Profile Changes'
-                      : 'Save Changes'}
+                  {isSaving ? 'Saving...' : 'Save Profile Changes'}
                 </button>
+              )}
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.04 }}
+            className="rounded-2xl border border-rose-100 bg-white/95 p-6 md:p-8 shadow-[0_16px_50px_-24px_rgba(244,63,94,0.45)]"
+          >
+            <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Security</h2>
+                <p className="text-sm text-gray-500">
+                  Update your password to keep your account secure.
+                </p>
               </div>
-            </motion.div>
-          </div>
+              <span className="inline-flex w-fit items-center rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-medium text-purple-600">
+                Password
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="profile-current-password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Current Password
+                </label>
+                <div className="relative">
+                  <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-purple-300" />
+                  <input
+                    id="profile-current-password"
+                    name="currentPassword"
+                    type="password"
+                    autoComplete="current-password"
+                    value={formData.currentPassword}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, currentPassword: event.target.value }))
+                    }
+                    className="w-full pl-11 pr-4 py-3.5 border border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="profile-new-password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  New Password
+                </label>
+                <div className="relative">
+                  <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-purple-300" />
+                  <input
+                    id="profile-new-password"
+                    name="newPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    value={formData.newPassword}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, newPassword: event.target.value }))
+                    }
+                    className="w-full pl-11 pr-4 py-3.5 border border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="profile-confirm-password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-purple-300" />
+                  <input
+                    id="profile-confirm-password"
+                    name="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    value={formData.confirmPassword}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, confirmPassword: event.target.value }))
+                    }
+                    className="w-full pl-11 pr-4 py-3.5 border border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 border-t border-purple-100 pt-6">
+              <button
+                type="button"
+                onClick={async () => {
+                  await handleSave('security');
+                }}
+                disabled={isSaving}
+                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                <FiSave className="size-5" />
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </motion.section>
         </div>
       </div>
     </div>
