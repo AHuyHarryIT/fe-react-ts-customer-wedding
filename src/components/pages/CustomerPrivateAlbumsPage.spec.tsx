@@ -36,14 +36,16 @@ vi.mock('@/components/pages/CustomerStatePanel', () => ({
   }) => (
     <section data-testid={`state-${tone}`}>
       <h2>{title}</h2>
-      {description ? <p>{description}</p> : null}
+      {description && <p>{description}</p>}
       {children}
       {actions}
     </section>
   ),
 }));
 
-const makeAlbumCard = (overrides: Partial<CustomerPrivateAlbumCard> = {}): CustomerPrivateAlbumCard => ({
+const makeAlbumCard = (
+  overrides: Partial<CustomerPrivateAlbumCard> = {}
+): CustomerPrivateAlbumCard => ({
   id: 'album-1',
   title: 'Private Wedding Album',
   bookingId: 'booking-1',
@@ -111,7 +113,10 @@ describe('CustomerPrivateAlbumsPage', () => {
     expect(screen.getByTestId('state-error')).toBeInTheDocument();
     expect(screen.getByText(/we could not load your private albums/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /open messages/i })).toHaveAttribute('href', '/messages');
+    expect(screen.getByRole('link', { name: /open messages/i })).toHaveAttribute(
+      'href',
+      '/messages'
+    );
   });
 
   it('renders empty state copy with required heading and messages follow-up guidance', () => {
@@ -131,7 +136,10 @@ describe('CustomerPrivateAlbumsPage', () => {
         /your delivered photos and videos will appear here once the studio publishes your private album/i
       )
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /open messages/i })).toHaveAttribute('href', '/messages');
+    expect(screen.getByRole('link', { name: /open messages/i })).toHaveAttribute(
+      'href',
+      '/messages'
+    );
   });
 
   it('opens inline preview modal from private album cards with no new-tab preview links', () => {
@@ -205,7 +213,9 @@ describe('CustomerPrivateAlbumsPage', () => {
     render(<CustomerPrivateAlbumsPage />);
 
     const card = screen.getAllByRole('article')[0];
-    expect(within(card).getByText(/album not found or you do not have access/i)).toBeInTheDocument();
+    expect(
+      within(card).getByText(/album not found or you do not have access/i)
+    ).toBeInTheDocument();
     expect(within(card).getByRole('link', { name: /open messages/i })).toHaveAttribute(
       'href',
       '/messages'

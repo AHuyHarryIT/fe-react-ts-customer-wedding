@@ -54,7 +54,7 @@ vi.mock('@/components/pages/CustomerStatePanel', () => ({
   }) => (
     <section data-testid={`state-${tone}`}>
       <h2>{title}</h2>
-      {description ? <p>{description}</p> : null}
+      {description && <p>{description}</p>}
       {children}
       {actions}
     </section>

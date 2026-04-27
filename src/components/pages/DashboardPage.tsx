@@ -247,11 +247,11 @@ export function DashboardPage() {
                         {chat.lastMessage || 'Open the conversation to continue chatting.'}
                       </p>
                     </div>
-                    {chat.unreadCount ? (
+                    {chat.unreadCount && (
                       <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-medium text-rose-600">
                         {chat.unreadCount}
                       </span>
-                    ) : null}
+                    )}
                   </Link>
                 ))}
               </div>

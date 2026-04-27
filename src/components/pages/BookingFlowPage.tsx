@@ -154,9 +154,7 @@ export function BookingFlowPage() {
                     </option>
                   ))}
                 </select>
-                {packagesLoading ? (
-                  <p className="mt-2 text-sm text-gray-500">Loading packages…</p>
-                ) : null}
+                {packagesLoading && <p className="mt-2 text-sm text-gray-500">Loading packages…</p>}
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">

@@ -66,19 +66,17 @@ export function CustomerStatePanel({
       <div className="flex items-start gap-4">
         <div className={`rounded-2xl p-3 ${styles.badge}`}>{styles.icon}</div>
         <div className="min-w-0 flex-1">
-          {eyebrow ? (
+          {eyebrow && (
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-rose-500">
               {eyebrow}
             </p>
-          ) : null}
+          )}
           <h2 className="mt-1 text-xl font-medium text-gray-900">{title}</h2>
-          {description ? (
-            <div className="mt-2 text-sm leading-6 text-gray-600">{description}</div>
-          ) : null}
+          {description && <div className="mt-2 text-sm leading-6 text-gray-600">{description}</div>}
         </div>
       </div>
-      {children ? <div className="mt-5">{children}</div> : null}
-      {actions ? <div className="mt-6 flex flex-col gap-3 sm:flex-row">{actions}</div> : null}
+      {children && <div className="mt-5">{children}</div>}
+      {actions && <div className="mt-6 flex flex-col gap-3 sm:flex-row">{actions}</div>}
     </div>
   );
 }

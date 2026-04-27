@@ -66,7 +66,6 @@ function CustomerPaymentResultPage() {
 
   useEffect(() => {
     if (!bookingId) {
-      setState('payment-reference-missing');
       return;
     }
 
@@ -114,9 +113,7 @@ function CustomerPaymentResultPage() {
 
         if (attempts >= POLLING_ATTEMPTS_CAP) {
           setState(
-            gatewaySuccessHint
-              ? 'gateway-confirmed-syncing'
-              : 'terminal-failure-needs-action'
+            gatewaySuccessHint ? 'gateway-confirmed-syncing' : 'terminal-failure-needs-action'
           );
           return;
         }
@@ -174,6 +171,7 @@ function CustomerPaymentResultPage() {
   ) : (
     <Link
       to="/bookings"
+      search={{ packageId: undefined }}
       className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 font-medium text-white transition-all hover:shadow-lg"
     >
       Back to booking
@@ -200,16 +198,16 @@ function CustomerPaymentResultPage() {
             </>
           }
         >
-          {state === 'gateway-confirmed-syncing' ? (
+          {state === 'gateway-confirmed-syncing' && (
             <div className="space-y-4">
               <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
                 MoMo has confirmed the payment request. We are waiting for the studio system to
                 finish syncing the final booking payment status.
               </div>
             </div>
-          ) : null}
+          )}
 
-          {state === 'success' ? (
+          {state === 'success' && (
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-2xl bg-white/80 p-4">
@@ -218,11 +216,13 @@ function CustomerPaymentResultPage() {
                 </div>
                 <div className="rounded-2xl bg-white/80 p-4">
                   <p className="text-sm text-gray-500">Remaining</p>
-                  <p className="mt-1 text-lg font-medium text-gray-900">{formatMoneyVND(remaining)}</p>
+                  <p className="mt-1 text-lg font-medium text-gray-900">
+                    {formatMoneyVND(remaining)}
+                  </p>
                 </div>
               </div>
             </div>
-          ) : null}
+          )}
         </CustomerStatePanel>
       </div>
     </div>

@@ -32,7 +32,7 @@ vi.mock('@/components/pages/CustomerStatePanel', () => ({
   }) => (
     <div>
       <h2>{title}</h2>
-      {description ? <p>{description}</p> : null}
+      {description && <p>{description}</p>}
       {actions}
     </div>
   ),

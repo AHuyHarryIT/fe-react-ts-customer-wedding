@@ -307,11 +307,11 @@ export function ProfilePage() {
               </span>
             </div>
 
-            {formError ? (
+            {formError && (
               <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {formError}
               </div>
-            ) : null}
+            )}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -334,9 +334,9 @@ export function ProfilePage() {
                     className={inputClassName(fieldErrors.firstName)}
                   />
                 </div>
-                {fieldErrors.firstName ? (
+                {fieldErrors.firstName && (
                   <p className="text-sm text-red-600">{fieldErrors.firstName}</p>
-                ) : null}
+                )}
               </div>
 
               <div className="space-y-2">
@@ -359,9 +359,9 @@ export function ProfilePage() {
                     className={inputClassName(fieldErrors.lastName)}
                   />
                 </div>
-                {fieldErrors.lastName ? (
+                {fieldErrors.lastName && (
                   <p className="text-sm text-red-600">{fieldErrors.lastName}</p>
-                ) : null}
+                )}
               </div>
             </div>
 
@@ -382,9 +382,7 @@ export function ProfilePage() {
                   className={inputClassName(fieldErrors.email)}
                 />
               </div>
-              {fieldErrors.email ? (
-                <p className="text-sm text-red-600">{fieldErrors.email}</p>
-              ) : null}
+              {fieldErrors.email && <p className="text-sm text-red-600">{fieldErrors.email}</p>}
             </div>
 
             <div className="mt-4 space-y-2">
@@ -404,9 +402,7 @@ export function ProfilePage() {
                   className={inputClassName(fieldErrors.phone)}
                 />
               </div>
-              {fieldErrors.phone ? (
-                <p className="text-sm text-red-600">{fieldErrors.phone}</p>
-              ) : null}
+              {fieldErrors.phone && <p className="text-sm text-red-600">{fieldErrors.phone}</p>}
             </div>
 
             <div className="mt-8 border-t border-rose-100 pt-6">

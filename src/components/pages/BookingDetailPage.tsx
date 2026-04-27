@@ -370,7 +370,7 @@ export function BookingDetailPage() {
                     </p>
                   </div>
                 </div>
-                {booking.customer ? (
+                {booking.customer && (
                   <div className="flex gap-4 rounded-2xl bg-rose-50 p-4">
                     <User className="mt-1 size-5 text-rose-500" />
                     <div>
@@ -382,7 +382,7 @@ export function BookingDetailPage() {
                       </p>
                     </div>
                   </div>
-                ) : null}
+                )}
               </div>
             </motion.section>
 
@@ -394,14 +394,14 @@ export function BookingDetailPage() {
             >
               <h2 className="mb-5 text-xl font-medium text-gray-900">Booking progress</h2>
 
-              {isFallbackTimeline ? (
+              {isFallbackTimeline && (
                 <div
                   data-testid="timeline-fallback-state"
                   className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700"
                 >
                   Neutral
                 </div>
-              ) : null}
+              )}
 
               <ol className="space-y-3" aria-label="Booking milestone timeline">
                 {bookingMilestones.map((milestone) => (
@@ -433,17 +433,17 @@ export function BookingDetailPage() {
                   >
                     {highlightedSession.title}
                   </p>
-                  {sessionContextLine ? (
+                  {sessionContextLine && (
                     <p className="mt-1 text-sm text-gray-600">{sessionContextLine}</p>
-                  ) : null}
-                  {highlightedSession.locationName ? (
+                  )}
+                  {highlightedSession.locationName && (
                     <p
                       data-testid="timeline-session-location"
                       className="mt-1 text-sm text-gray-600"
                     >
                       {highlightedSession.locationName}
                     </p>
-                  ) : null}
+                  )}
                 </div>
               ) : (
                 <p className="mt-4 text-sm text-gray-600">
@@ -475,15 +475,15 @@ export function BookingDetailPage() {
                           <div className="flex items-start justify-between gap-4">
                             <div>
                               <p className="font-medium text-gray-900">{pkg.name}</p>
-                              {pkg.description ? (
+                              {pkg.description && (
                                 <p className="mt-1 text-sm text-gray-500">{pkg.description}</p>
-                              ) : null}
+                              )}
                             </div>
-                            {typeof pkg.price === 'number' ? (
+                            {typeof pkg.price === 'number' && (
                               <span className="text-sm font-medium text-rose-600">
                                 {formatMoneyVND(pkg.price)}
                               </span>
-                            ) : null}
+                            )}
                           </div>
                         </div>
                       ))}
@@ -504,15 +504,15 @@ export function BookingDetailPage() {
                           <div className="flex items-start justify-between gap-4">
                             <div>
                               <p className="font-medium text-gray-900">{service.name}</p>
-                              {service.description ? (
+                              {service.description && (
                                 <p className="mt-1 text-sm text-gray-500">{service.description}</p>
-                              ) : null}
+                              )}
                             </div>
-                            {typeof service.price === 'number' ? (
+                            {typeof service.price === 'number' && (
                               <span className="text-sm font-medium text-rose-600">
                                 {formatMoneyVND(service.price)}
                               </span>
-                            ) : null}
+                            )}
                           </div>
                         </div>
                       ))}
@@ -577,7 +577,7 @@ export function BookingDetailPage() {
                       balance, adjustments, and payment management stay with the studio team.
                     </p>
                   </div>
-                  {depositAmount > 0 ? (
+                  {depositAmount > 0 && (
                     <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">
                       <p className="text-xs uppercase tracking-[0.16em] text-gray-500">
                         Deposit Due
@@ -586,7 +586,7 @@ export function BookingDetailPage() {
                         {formatMoneyVND(depositAmount)}
                       </p>
                     </div>
-                  ) : null}
+                  )}
                 </div>
 
                 {depositPaid ? (
@@ -611,14 +611,14 @@ export function BookingDetailPage() {
                       {depositLoading ? 'Starting MoMo deposit...' : 'Pay 30% deposit with MoMo'}
                     </button>
 
-                    {depositError ? (
+                    {depositError && (
                       <CustomerStatePanel
                         tone="error"
                         title="Payment request could not start"
                         description={depositError}
                         className="mt-2"
                       />
-                    ) : null}
+                    )}
                     <p className="text-xs text-gray-500">
                       MoMo opens right after the payment request is created. When payment finishes,
                       MoMo redirects back to your customer payment result page automatically.

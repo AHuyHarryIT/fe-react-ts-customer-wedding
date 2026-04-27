@@ -95,7 +95,7 @@ export function PrivateAlbumPreviewModal({
               className="h-[60vh] w-full object-contain"
             />
 
-            {canNavigate ? (
+            {canNavigate && (
               <>
                 <button
                   type="button"
@@ -114,7 +114,7 @@ export function PrivateAlbumPreviewModal({
                   <ChevronRight className="size-5" />
                 </button>
               </>
-            ) : null}
+            )}
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
