@@ -79,12 +79,16 @@ export function MessagesPage() {
     if (!currentChat) return;
 
     const draft = inputMessage;
-    const success = await sendMessage(draft);
+    const outgoingMessage = draft.trim();
+    if (!outgoingMessage) return;
+
+    setInputMessage('');
+    setComposerDraft('');
+    clearSendFailure();
+
+    const success = await sendMessage(outgoingMessage);
 
     if (success) {
-      setInputMessage('');
-      setComposerDraft('');
-      clearSendFailure();
       return;
     }
 
