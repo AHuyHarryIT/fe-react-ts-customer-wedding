@@ -234,11 +234,11 @@ export function BookingDetailPage() {
   const depositAmount = bookingTotalPrice > 0 ? Math.ceil((bookingTotalPrice * 30) / 100) : 0;
   const totalPaid = orderSummary?.totalPaid ?? 0;
   const remainingAmount = orderSummary?.balanceRemaining ?? bookingTotalPrice;
-  const depositPaid = totalPaid > 0;
+  const depositCompleted = depositAmount > 0 && totalPaid >= depositAmount;
   const canPayDeposit =
     Boolean(booking) &&
     bookingTotalPrice > 0 &&
-    !depositPaid &&
+    !depositCompleted &&
     booking?.status !== 'CANCELLED' &&
     booking?.status !== 'COMPLETED';
 
@@ -589,7 +589,7 @@ export function BookingDetailPage() {
                   )}
                 </div>
 
-                {depositPaid ? (
+                {depositCompleted ? (
                   <div className="mt-5 rounded-2xl border border-green-100 bg-white p-4">
                     <p className="text-sm font-medium text-green-700">Deposit received</p>
                     <p className="mt-1 text-sm text-gray-600">
