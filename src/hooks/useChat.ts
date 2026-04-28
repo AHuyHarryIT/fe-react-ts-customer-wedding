@@ -340,89 +340,134 @@ export const useChat = (): UseChatState & UseChatActions => {
     [clearReconnectNoticeTimer, loadChats, loadMessages]
   );
 
-  const sendMessage = useCallback(async (text: string, chatId?: string) => {
-    const targetChatId = chatId || currentChatRef.current?.id;
+  const sendMessage = useCallback(
+    async (text: string, chatId?: string) => {
+      const targetChatId = chatId || currentChatRef.current?.id;
 
-    draftRef.current = text;
+      draftRef.current = text;
 
-    const currentComposer = resolveComposerState(
-      text,
-      targetChatId || null,
-      blockedReasonRef.current,
-      false
-    );
+      const currentComposer = resolveComposerState(
+        text,
+        targetChatId || null,
+        blockedReasonRef.current,
+        false
+      );
 
-    if (currentComposer.sendDisabledReason) {
-      setState((prev) => ({
-        ...prev,
-        ...currentComposer,
-      }));
-      return false;
-    }
-
-    setState((prev) => ({
-      ...prev,
-      ...resolveComposerState(text, targetChatId || null, blockedReasonRef.current, true),
-      sendFailure: null,
-      error: null,
-    }));
-
-    try {
-      const sentMessage = await chatService.sendMessage(targetChatId!, text);
-
-      if (!sentMessage) {
-        throw new Error('Failed to send message');
-      }
-
-      blockedReasonRef.current = null;
-      draftRef.current = '';
-
-      setState((prev) => {
-        const messageExists = prev.messages.some((msg) => msg.id === sentMessage.id);
-        const nextMessages = messageExists
-          ? prev.messages
-          : sortMessagesByCreatedAt([...prev.messages, sentMessage]);
-
-        return {
-          ...prev,
-          messages: nextMessages,
-          ...resolveComposerState(
-            '',
-            prev.currentChat?.id || null,
-            blockedReasonRef.current,
-            false
-          ),
-          sendFailure: null,
-          error: null,
-        };
-      });
-
-      return true;
-    } catch (err) {
-      const statusCode = getStatusCode(err);
-      const backendMessage = getErrorMessage(err);
-
-      if (statusCode === 403) {
-        blockedReasonRef.current = backendMessage;
+      if (currentComposer.sendDisabledReason) {
         setState((prev) => ({
           ...prev,
-          ...resolveComposerState(text, targetChatId || null, blockedReasonRef.current, false),
-          sendFailure: SEND_FAILURE_COPY,
+          ...currentComposer,
         }));
         return false;
       }
 
-      blockedReasonRef.current = null;
+      const optimisticMessageId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const optimisticCreatedAt = new Date().toISOString();
+      const optimisticMessage: Message = {
+        id: optimisticMessageId,
+        chatId: targetChatId || currentChatRef.current?.id || '',
+        senderId: useAuthStore.getState().user?.id,
+        senderType: 'CUSTOMER',
+        content: text,
+        createdAt: optimisticCreatedAt,
+        updatedAt: optimisticCreatedAt,
+        isRead: true,
+      };
+
       setState((prev) => ({
         ...prev,
-        ...resolveComposerState(text, targetChatId || null, blockedReasonRef.current, false),
-        sendFailure: SEND_FAILURE_COPY,
-        error: backendMessage,
+        ...resolveComposerState(text, targetChatId || null, blockedReasonRef.current, true),
+        messages: mergeMessages(prev.messages, [optimisticMessage]),
+        sendFailure: null,
+        error: null,
       }));
 
-      return false;
-    }
-  }, []);
+      try {
+        const apiResponse = await chatService.sendApiChat({
+          chatId: targetChatId,
+          content: text,
+        });
+
+        if (!apiResponse?.customerMessage) {
+          throw new Error('Failed to send message');
+        }
+
+        blockedReasonRef.current = null;
+        draftRef.current = '';
+
+        const resolvedChatId = targetChatId || apiResponse.chat?.id || null;
+
+        setState((prev) => {
+          const incoming = apiResponse.aiMessage
+            ? [apiResponse.customerMessage, apiResponse.aiMessage]
+            : [apiResponse.customerMessage];
+
+          const withoutOptimistic = prev.messages.filter(
+            (message) => message.id !== optimisticMessageId
+          );
+
+          return {
+            ...prev,
+            currentChat: apiResponse.chat || prev.currentChat,
+            messages: mergeMessages(withoutOptimistic, incoming),
+            ...resolveComposerState(
+              '',
+              apiResponse.chat?.id || prev.currentChat?.id || null,
+              blockedReasonRef.current,
+              false
+            ),
+            sendFailure: null,
+            error: null,
+          };
+        });
+
+        if (!apiResponse.aiMessage && resolvedChatId) {
+          [500, 1500, 3500].forEach((delayMs) => {
+            window.setTimeout(() => {
+              if (currentChatRef.current?.id !== resolvedChatId) {
+                return;
+              }
+
+              loadMessages(resolvedChatId).catch((refreshError) => {
+                console.error('Failed to refresh messages after send:', refreshError);
+              });
+            }, delayMs);
+          });
+        }
+
+        return true;
+      } catch (err) {
+        setState((prev) => ({
+          ...prev,
+          messages: prev.messages.filter((message) => message.id !== optimisticMessageId),
+        }));
+
+        const statusCode = getStatusCode(err);
+        const backendMessage = getErrorMessage(err);
+
+        if (statusCode === 403) {
+          blockedReasonRef.current = backendMessage;
+          setState((prev) => ({
+            ...prev,
+            ...resolveComposerState(text, targetChatId || null, blockedReasonRef.current, false),
+            sendFailure: SEND_FAILURE_COPY,
+          }));
+          return false;
+        }
+
+        blockedReasonRef.current = null;
+        setState((prev) => ({
+          ...prev,
+          ...resolveComposerState(text, targetChatId || null, blockedReasonRef.current, false),
+          sendFailure: SEND_FAILURE_COPY,
+          error: backendMessage,
+        }));
+
+        return false;
+      }
+    },
+    [loadMessages]
+  );
 
   const markAsRead = useCallback(async (chatId: string) => {
     try {
