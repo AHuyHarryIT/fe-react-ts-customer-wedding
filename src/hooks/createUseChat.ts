@@ -11,6 +11,8 @@ const SEND_IN_PROGRESS_REASON = 'Sending message…';
 const SEND_FAILURE_COPY = 'Message not sent. Check your connection and try again.';
 const CREATE_CHAT_FAILED_REASON = 'Failed to start a conversation';
 const RECONNECT_SUCCESS_COPY = 'Back online. Refreshing latest messages…';
+const INITIAL_MESSAGES_TAKE = 20;
+const OLDER_MESSAGES_TAKE = 10;
 
 const toEpoch = (value: string) => {
   const epoch = new Date(value).getTime();
@@ -75,6 +77,8 @@ export const createUseChat = (chatService: ChatServiceContract) => {
       currentChat: null,
       messages: [],
       loading: false,
+      loadingOlderMessages: false,
+      hasMoreMessages: false,
       error: null,
       isConnected: false,
       connectionStatus: 'disconnected',
@@ -92,6 +96,7 @@ export const createUseChat = (chatService: ChatServiceContract) => {
       new Map()
     );
     const pendingMessageTimeoutsRef = useRef<Map<string, number>>(new Map());
+    const loadedMessageCountRef = useRef(0);
 
     const clearReconnectNoticeTimer = useCallback(() => {
       if (reconnectNoticeTimeoutRef.current !== null) {
@@ -208,25 +213,64 @@ export const createUseChat = (chatService: ChatServiceContract) => {
     }, [chatService]);
 
     const loadMessages = useCallback(
-      async (chatId: string) => {
+      async (chatId: string, options?: { appendOlder?: boolean }) => {
         try {
-          const messages = await chatService.getMessages(chatId);
-          setState((prev) => ({
-            ...prev,
-            messages: mergeMessages(prev.messages, messages || []),
-          }));
+          const appendOlder = Boolean(options?.appendOlder);
+          const skip = appendOlder ? loadedMessageCountRef.current : 0;
+          const take = appendOlder ? OLDER_MESSAGES_TAKE : INITIAL_MESSAGES_TAKE;
 
-          await chatService.markAsRead(chatId);
-          setState((prev) => ({
-            ...prev,
-            chats: prev.chats.map((chat) =>
-              chat.id === chatId ? { ...chat, unreadCount: 0 } : chat
-            ),
-          }));
+          const messages = await chatService.getMessages(chatId, skip, take);
+          const nextMessages = messages || [];
+
+          setState((prev) => {
+            if (!appendOlder) {
+              return {
+                ...prev,
+                loadingOlderMessages: false,
+                hasMoreMessages: nextMessages.length === INITIAL_MESSAGES_TAKE,
+                messages: sortMessagesByCreatedAt(nextMessages),
+              };
+            }
+
+            if (nextMessages.length === 0) {
+              return {
+                ...prev,
+                loadingOlderMessages: false,
+                hasMoreMessages: false,
+              };
+            }
+
+            const seen = new Set(prev.messages.map((message) => message.id));
+            const dedupedOlder = sortMessagesByCreatedAt(nextMessages).filter(
+              (message) => !seen.has(message.id)
+            );
+
+            return {
+              ...prev,
+              loadingOlderMessages: false,
+              hasMoreMessages: nextMessages.length === OLDER_MESSAGES_TAKE,
+              messages: [...dedupedOlder, ...prev.messages],
+            };
+          });
+
+          loadedMessageCountRef.current = appendOlder
+            ? loadedMessageCountRef.current + nextMessages.length
+            : nextMessages.length;
+
+          if (!appendOlder) {
+            await chatService.markAsRead(chatId);
+            setState((prev) => ({
+              ...prev,
+              chats: prev.chats.map((chat) =>
+                chat.id === chatId ? { ...chat, unreadCount: 0 } : chat
+              ),
+            }));
+          }
         } catch (err) {
           console.error('Failed to load messages:', err);
           setState((prev) => ({
             ...prev,
+            loadingOlderMessages: false,
             error: (err as Error).message || 'Failed to load messages',
           }));
         }
@@ -252,6 +296,20 @@ export const createUseChat = (chatService: ChatServiceContract) => {
       setState((prev) => ({ ...prev, sendFailure: null }));
     }, []);
 
+    const loadOlderMessages = useCallback(
+      async (chatId?: string) => {
+        const activeChatId = chatId || currentChatRef.current?.id;
+
+        if (!activeChatId || state.loadingOlderMessages || !state.hasMoreMessages) {
+          return;
+        }
+
+        setState((prev) => ({ ...prev, loadingOlderMessages: true }));
+        await loadMessages(activeChatId, { appendOlder: true });
+      },
+      [loadMessages, state.hasMoreMessages, state.loadingOlderMessages]
+    );
+
     const selectChat = useCallback(
       async (chatId: string) => {
         setState((prev) => ({ ...prev, loading: true, error: null }));
@@ -272,10 +330,14 @@ export const createUseChat = (chatService: ChatServiceContract) => {
           blockedReasonRef.current = null;
           currentChatRef.current = chat;
 
+          loadedMessageCountRef.current = 0;
+
           setState((prev) => ({
             ...prev,
             currentChat: chat,
             messages: [],
+            loadingOlderMessages: false,
+            hasMoreMessages: false,
             reconnectNotice: null,
             ...resolveComposerState(draftRef.current, chat.id, blockedReasonRef.current, false),
           }));
@@ -334,6 +396,8 @@ export const createUseChat = (chatService: ChatServiceContract) => {
                   return prev;
                 }
 
+                loadedMessageCountRef.current += 1;
+
                 return {
                   ...prev,
                   messages: sortMessagesByCreatedAt([...withoutMatchedOptimistic, message]),
@@ -361,6 +425,12 @@ export const createUseChat = (chatService: ChatServiceContract) => {
                   await loadChats();
                   const activeChatId = currentChatRef.current?.id;
                   if (activeChatId) {
+                    loadedMessageCountRef.current = 0;
+                    setState((prev) => ({
+                      ...prev,
+                      loadingOlderMessages: false,
+                      hasMoreMessages: false,
+                    }));
                     await loadMessages(activeChatId);
                   }
 
@@ -562,10 +632,14 @@ export const createUseChat = (chatService: ChatServiceContract) => {
       draftRef.current = '';
       chatService.disconnectWebSocket();
 
+      loadedMessageCountRef.current = 0;
+
       setState((prev) => ({
         ...prev,
         currentChat: null,
         messages: [],
+        loadingOlderMessages: false,
+        hasMoreMessages: false,
         isConnected: false,
         connectionStatus: 'disconnected',
         reconnectNotice: null,
@@ -579,6 +653,7 @@ export const createUseChat = (chatService: ChatServiceContract) => {
       loadChats,
       selectChat,
       loadMessages,
+      loadOlderMessages,
       sendMessage,
       markAsRead,
       createChat,

@@ -66,9 +66,12 @@ export function ChatMessagesPage({ mode, useChatHook }: ChatMessagesPageProps) {
     currentChat,
     messages,
     loading,
+    loadingOlderMessages,
+    hasMoreMessages,
     error,
     loadChats,
     selectChat,
+    loadOlderMessages,
     sendMessage,
     createChat,
     connectionStatus,
@@ -85,6 +88,10 @@ export function ChatMessagesPage({ mode, useChatHook }: ChatMessagesPageProps) {
   const [initialSendFailure, setInitialSendFailure] = useState<string | null>(null);
   const [aiWaitingStopped, setAiWaitingStopped] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const previousChatIdRef = useRef<string | null>(null);
+  const previousFirstMessageIdRef = useRef<string | null>(null);
+  const previousMessageCountRef = useRef(0);
+  const loadingOlderRef = useRef(false);
   const modeConfig = getModeConfig(mode);
 
   const waitingForAiRaw = useMemo(() => {
@@ -141,10 +148,91 @@ export function ChatMessagesPage({ mode, useChatHook }: ChatMessagesPageProps) {
   }, [chats, currentChat, selectChat]);
 
   useEffect(() => {
-    if (messagesContainerRef.current) {
+    if (!currentChat) {
+      return;
+    }
+
+    const nextChatId = currentChat.id;
+    const chatChanged = previousChatIdRef.current !== nextChatId;
+
+    if (chatChanged && messagesContainerRef.current) {
+      const frameOne = requestAnimationFrame(() => {
+        if (!messagesContainerRef.current) {
+          return;
+        }
+
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+
+        const frameTwo = requestAnimationFrame(() => {
+          if (!messagesContainerRef.current) {
+            return;
+          }
+
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        });
+
+        return () => cancelAnimationFrame(frameTwo);
+      });
+
+      previousChatIdRef.current = nextChatId;
+      previousFirstMessageIdRef.current = messages[0]?.id || null;
+      previousMessageCountRef.current = messages.length;
+
+      return () => cancelAnimationFrame(frameOne);
+    }
+
+    const nextFirstMessageId = messages[0]?.id || null;
+    const prependedOlderMessages =
+      previousMessageCountRef.current > 0 &&
+      messages.length > previousMessageCountRef.current &&
+      previousFirstMessageIdRef.current !== null &&
+      nextFirstMessageId !== null &&
+      previousFirstMessageIdRef.current !== nextFirstMessageId;
+
+    if (!prependedOlderMessages && messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+
+    previousFirstMessageIdRef.current = nextFirstMessageId;
+    previousMessageCountRef.current = messages.length;
+  }, [currentChat, messages]);
+
+  const handleThreadScroll = async () => {
+    const container = messagesContainerRef.current;
+
+    if (!container || !currentChat || loadingOlderRef.current) {
+      return;
+    }
+
+    if (!hasMoreMessages || loadingOlderMessages) {
+      return;
+    }
+
+    if (container.scrollTop > 40) {
+      return;
+    }
+
+    const previousScrollHeight = container.scrollHeight;
+    const previousScrollTop = container.scrollTop;
+
+    loadingOlderRef.current = true;
+
+    try {
+      await loadOlderMessages(currentChat.id);
+
+      requestAnimationFrame(() => {
+        if (!messagesContainerRef.current) {
+          return;
+        }
+
+        const newScrollHeight = messagesContainerRef.current.scrollHeight;
+        messagesContainerRef.current.scrollTop =
+          newScrollHeight - previousScrollHeight + previousScrollTop;
+      });
+    } finally {
+      loadingOlderRef.current = false;
+    }
+  };
 
   useEffect(() => {
     if (!waitingForAiRaw && aiWaitingStopped) {
@@ -419,7 +507,27 @@ export function ChatMessagesPage({ mode, useChatHook }: ChatMessagesPageProps) {
           </div>
 
           <div className="flex flex-col h-[calc(100%-140px)]">
-            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div
+              ref={messagesContainerRef}
+              onScroll={() => {
+                handleThreadScroll().catch((scrollError) => {
+                  console.error('Failed to load older messages on scroll:', scrollError);
+                });
+              }}
+              className="flex-1 overflow-y-auto p-6 space-y-6"
+            >
+              {loadingOlderMessages && (
+                <div className="flex justify-center">
+                  <div className="text-xs text-gray-500">Loading older messages…</div>
+                </div>
+              )}
+
+              {!loadingOlderMessages && !hasMoreMessages && messages.length > 0 && (
+                <div className="text-center">
+                  <div className="text-xs text-gray-400">Beginning of conversation</div>
+                </div>
+              )}
+
               {messages.map((msg, index) => {
                 const currentCustomerId = currentChat.customerId || currentUser?.id;
                 const isUserMessage = msg.senderType
