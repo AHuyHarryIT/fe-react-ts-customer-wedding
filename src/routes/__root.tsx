@@ -9,6 +9,7 @@ import {
 import { Toaster } from 'sonner';
 import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
+import { FloatingChatButton } from '@/components/layout/FloatingChatButton';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi, initializeAuth } from '@/services/authService';
 import { savePostLoginRedirect } from '@/shared/routeConfig';
@@ -17,6 +18,7 @@ function RootLayout() {
   const navigate = useNavigate();
   const location = useRouterState({ select: (s) => s.location });
   const pathname = location.pathname;
+  const isMessagesRoute = pathname === '/messages' || pathname.startsWith('/messages/');
   const { isAuthenticated, isInitialized, user } = useAuthStore();
 
   useEffect(() => {
@@ -64,6 +66,8 @@ function RootLayout() {
       </main>
 
       <Footer />
+
+      {isAuthenticated && !!user && !isMessagesRoute && <FloatingChatButton />}
 
       <Toaster
         position="top-right"

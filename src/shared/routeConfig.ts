@@ -84,7 +84,7 @@ export const mapPathToPage = (pathname: string): AppPage => {
   if (pathname === '/booking') return 'booking';
   if (pathname === '/dashboard') return 'dashboard';
   if (pathname === '/gallery') return 'gallery';
-  if (pathname === '/messages') return 'messages';
+  if (pathname === '/messages' || pathname.startsWith('/messages/')) return 'messages';
   if (pathname === '/profile') return 'profile';
   if (pathname === '/contact') return 'contact';
   return 'home';

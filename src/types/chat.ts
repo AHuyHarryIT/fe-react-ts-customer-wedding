@@ -5,6 +5,7 @@ export interface Chat {
   bookingId?: string;
   createdAt: string;
   updatedAt: string;
+  aiEnabled?: boolean;
   staffName?: string;
   staffAvatar?: string;
   lastMessage?: string;
@@ -28,6 +29,8 @@ export interface Message {
   createdAt: string;
   updatedAt: string;
   isRead: boolean;
+  clientMessageId?: string;
+  sendStatus?: 'sending' | 'sent' | 'failed';
 }
 
 export interface SendMessageRequest {

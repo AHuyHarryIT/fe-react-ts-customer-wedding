@@ -7,5 +7,8 @@ export { BookingDetailPage } from './BookingDetailPage';
 export { DashboardPage } from './DashboardPage';
 export { GalleryPage } from './GalleryPage';
 export { MessagesPage } from './MessagesPage';
+export { MessagesModePage } from './MessagesModePage';
+export { StaffMessagesPage } from './StaffMessagesPage';
+export { AiMessagesPage } from './AiMessagesPage';
 export { ProfilePage } from './ProfilePage';
 export { ContactPage } from './ContactPage';

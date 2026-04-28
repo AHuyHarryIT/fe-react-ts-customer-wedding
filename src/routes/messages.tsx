@@ -1,9 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { MessagesPage } from '@components/pages/MessagesPage';
+import { Outlet, createFileRoute, useLocation } from '@tanstack/react-router';
+import { MessagesModePage } from '@components/pages/MessagesModePage';
 import { requireAuth } from '@/shared/routeConfig';
 
 function MessagesComponent() {
-  return <MessagesPage />;
+  const location = useLocation();
+  const isModePage = location.pathname === '/messages' || location.pathname === '/messages/';
+
+  if (isModePage) {
+    return <MessagesModePage />;
+  }
+
+  return <Outlet />;
 }
 
 export const Route = createFileRoute('/messages')({

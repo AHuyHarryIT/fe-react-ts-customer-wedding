@@ -21,6 +21,13 @@ const formatUnreadCount = (count?: number) => {
   return count > 99 ? '99+' : String(count);
 };
 
+const getSendStatusCopy = (status?: 'sending' | 'sent' | 'failed') => {
+  if (status === 'sending') return 'Sending…';
+  if (status === 'failed') return 'Failed to send';
+  if (status === 'sent') return 'Sent';
+  return null;
+};
+
 export function MessagesPage() {
   const {
     chats,
@@ -299,6 +306,8 @@ export function MessagesPage() {
                     ? 'bg-slate-100 text-slate-800 border border-slate-200'
                     : 'bg-gray-100 text-gray-800';
 
+                const sendStatusCopy = isUserMessage ? getSendStatusCopy(msg.sendStatus) : null;
+
                 return (
                   <motion.div
                     key={msg.id}
@@ -327,6 +336,10 @@ export function MessagesPage() {
                       <div className={`rounded-2xl px-4 py-3 ${messageBubbleClassName}`}>
                         <p className="text-sm leading-relaxed">{msg.content}</p>
                       </div>
+
+                      {sendStatusCopy && (
+                        <p className="mt-1 text-xs text-gray-400 text-right">{sendStatusCopy}</p>
+                      )}
                     </div>
                   </motion.div>
                 );
