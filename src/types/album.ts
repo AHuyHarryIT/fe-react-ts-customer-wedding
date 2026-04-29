@@ -16,9 +16,32 @@ export interface PublicAlbum {
   title: string;
   description?: string | null;
   isPublic: boolean;
+  share_token?: string | null;
   createdAt: string;
   owner?: PublicAlbumOwner;
   coverFile?: PublicAlbumCoverFile | null;
+}
+
+export interface PublicAlbumFile {
+  fileId: string;
+  albumId: string;
+  sortOrder: number;
+  caption?: string | null;
+  file: {
+    id: string;
+    name?: string | null;
+    mimeType?: string | null;
+    byteSize?: number | null;
+    storageUrl?: string | null;
+  };
+}
+
+export interface PublicAlbumDetail {
+  id: string;
+  title: string;
+  description?: string | null;
+  createdAt: string;
+  files: PublicAlbumFile[];
 }
 
 export interface CustomerPrivateAlbumCoverFile {
@@ -26,6 +49,7 @@ export interface CustomerPrivateAlbumCoverFile {
   name?: string | null;
   mimeType?: string | null;
   byteSize?: number | null;
+  storageUrl?: string | null;
 }
 
 export interface CustomerPrivateAlbum {
@@ -36,6 +60,42 @@ export interface CustomerPrivateAlbum {
   eventDate: string | null;
   deliveredAssetCount: number;
   coverFile: CustomerPrivateAlbumCoverFile | null;
+}
+
+export type CustomerAlbumSortBy = 'createdAt' | 'updatedAt' | 'title' | 'eventDate';
+export type CustomerAlbumSortOrder = 'asc' | 'desc';
+
+export interface CustomerPrivateAlbumQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  bookingId?: string;
+  sortBy?: CustomerAlbumSortBy;
+  sortOrder?: CustomerAlbumSortOrder;
+}
+
+export interface CustomerPrivateAlbumPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface CustomerPrivateAlbumListResult {
+  data: CustomerPrivateAlbum[];
+  pagination: CustomerPrivateAlbumPagination | null;
+}
+
+interface CustomerPrivateAlbumNestedPayload {
+  data?: CustomerPrivateAlbum[];
+  pagination?: CustomerPrivateAlbumPagination;
+}
+
+export interface CustomerPrivateAlbumListEnvelope {
+  data?: CustomerPrivateAlbum[] | CustomerPrivateAlbumNestedPayload;
+  pagination?: CustomerPrivateAlbumPagination;
 }
 
 export interface CustomerPrivateAlbumMediaLinks {
@@ -54,14 +114,6 @@ export interface CustomerPrivateAlbumAsset {
 export interface CustomerPrivateAlbumCard extends CustomerPrivateAlbum {
   zipDownloadUrl: string;
   assets: CustomerPrivateAlbumAsset[];
-}
-
-export interface CustomerPrivateAlbumListEnvelope {
-  data?:
-    | CustomerPrivateAlbum[]
-    | {
-        data?: CustomerPrivateAlbum[];
-      };
 }
 
 export const PRIVATE_ALBUM_EMPTY_STATE_TITLE = 'No private albums available yet';

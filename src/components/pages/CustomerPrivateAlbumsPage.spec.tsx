@@ -160,10 +160,12 @@ describe('CustomerPrivateAlbumsPage', () => {
     const modal = screen.getByRole('dialog');
     expect(modal).toBeInTheDocument();
     expect(within(modal).getByText(/ceremony highlights/i)).toBeInTheDocument();
-    expect(within(modal).getByRole('img', { name: /asset preview/i })).toHaveAttribute(
-      'src',
-      'http://localhost:3000/customer/albums/file/asset-1/thumbnail'
-    );
+    const firstThumbnailButton = within(modal).getByRole('button', {
+      name: /preview image 1/i,
+    });
+    expect(
+      within(firstThumbnailButton).getByRole('img', { name: /highlight.jpg/i })
+    ).toHaveAttribute('src', 'http://localhost:3000/customer/albums/file/asset-1/thumbnail');
 
     const allAnchors = within(card).queryAllByRole('link');
     expect(allAnchors.every((anchor) => anchor.getAttribute('target') !== '_blank')).toBe(true);

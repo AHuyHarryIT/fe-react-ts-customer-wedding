@@ -1,15 +1,50 @@
-import { useState } from 'react';
+import { useState, type SyntheticEvent } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Calendar, Download, FolderHeart, Image as ImageIcon, Eye } from 'lucide-react';
+import { Calendar, Download, Eye, FolderHeart, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 import { PrivateAlbumPreviewModal } from '@/components/pages/PrivateAlbumPreviewModal';
 import { useCustomerPrivateAlbums } from '@/hooks/useCustomerPrivateAlbums';
+import { albumService } from '@/services/albumService';
 import {
   PRIVATE_ALBUM_DENIED_MESSAGE,
   PRIVATE_ALBUM_EMPTY_STATE_TITLE,
   type CustomerPrivateAlbumCard,
 } from '@/types/album';
+
+const DEFAULT_COVER_IMAGE =
+  'https://images.unsplash.com/photo-1765350226723-a96ab0705403?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080';
+
+const getPrivateAlbumCoverSrc = (album: CustomerPrivateAlbumCard) => {
+  if (album.coverFile?.id) {
+    return albumService.getCustomerPrivateAlbumMediaLinks(album.coverFile.id).thumbnailUrl;
+  }
+
+  if (album.assets.length > 0) {
+    return album.assets[0]?.protectedMedia.thumbnailUrl || DEFAULT_COVER_IMAGE;
+  }
+
+  return DEFAULT_COVER_IMAGE;
+};
+
+const getPrivateAlbumCoverAlt = (album: CustomerPrivateAlbumCard) => {
+  if (album.coverFile?.name) {
+    return album.coverFile.name;
+  }
+
+  if (album.assets.length > 0 && album.assets[0]?.name) {
+    return album.assets[0].name;
+  }
+
+  return `${album.title} cover`;
+};
+
+const handleCoverImageError = (event: SyntheticEvent<HTMLImageElement>) => {
+  const target = event.currentTarget;
+  if (target.src !== DEFAULT_COVER_IMAGE) {
+    target.src = DEFAULT_COVER_IMAGE;
+  }
+};
 
 const EMPTY_STATE_BODY =
   'Your delivered photos and videos will appear here once the studio publishes your private album. Open Messages if you need a delivery status update.';
@@ -138,6 +173,14 @@ export function CustomerPrivateAlbumsPage() {
                         Private Delivery
                       </div>
                       <h2 className="text-lg font-medium text-gray-900">{album.title}</h2>
+                      <div className="mt-3 overflow-hidden rounded-2xl border border-rose-100 bg-rose-50">
+                        <img
+                          src={getPrivateAlbumCoverSrc(album)}
+                          alt={getPrivateAlbumCoverAlt(album)}
+                          className="h-44 w-full object-cover"
+                          onError={handleCoverImageError}
+                        />
+                      </div>
                       <p className="mt-3 text-sm font-medium text-gray-700">
                         Booking: {album.bookingReference ?? album.bookingId ?? 'Pending assignment'}
                       </p>
@@ -172,7 +215,9 @@ export function CustomerPrivateAlbumsPage() {
                         </div>
                       ) : (
                         <div className="mt-4 flex flex-wrap items-center gap-2">
-                          <span className="text-sm text-gray-600">{PRIVATE_ALBUM_DENIED_MESSAGE}</span>
+                          <span className="text-sm text-gray-600">
+                            {PRIVATE_ALBUM_DENIED_MESSAGE}
+                          </span>
                           <Link
                             to="/messages"
                             className="inline-flex items-center justify-center rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"

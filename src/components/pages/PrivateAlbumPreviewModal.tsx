@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useState } from 'react';
+import { Image, Modal } from 'antd';
 import type { CustomerPrivateAlbumAsset } from '@/types/album';
 
 interface PrivateAlbumPreviewModalProps {
@@ -28,6 +27,23 @@ const getSafeIndex = (index: number, length: number) => {
   return index;
 };
 
+const formatByteSize = (value?: number | null) => {
+  if (!value || value <= 0) {
+    return 'Unknown size';
+  }
+
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let size = value;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
+};
+
 export function PrivateAlbumPreviewModal({
   open,
   albumTitle,
@@ -36,98 +52,89 @@ export function PrivateAlbumPreviewModal({
   onClose,
   onSelectIndex,
 }: PrivateAlbumPreviewModalProps) {
+  const [previewOpen, setPreviewOpen] = useState(false);
   const safeIndex = getSafeIndex(activeIndex, assets.length);
   const activeAsset = assets[safeIndex] ?? null;
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowRight' && assets.length > 1) {
-        event.preventDefault();
-        onSelectIndex((safeIndex + 1) % assets.length);
-      }
-
-      if (event.key === 'ArrowLeft' && assets.length > 1) {
-        event.preventDefault();
-        onSelectIndex((safeIndex - 1 + assets.length) % assets.length);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open, onSelectIndex, safeIndex, assets.length]);
 
   if (!activeAsset) {
     return null;
   }
 
-  const canNavigate = assets.length > 1;
+  const handleOpenPreview = (index: number) => {
+    onSelectIndex(index);
+    setPreviewOpen(true);
+  };
 
   return (
-    <Dialog.Root open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-2xl focus:outline-none">
-          <Dialog.Title className="text-xl font-medium text-gray-900">{albumTitle}</Dialog.Title>
-          <Dialog.Description className="mt-1 text-sm text-gray-600">
-            Asset {safeIndex + 1} of {assets.length}
-          </Dialog.Description>
+    <Modal
+      title={albumTitle}
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={1000}
+      destroyOnHidden
+    >
+      <p className="mb-2 text-sm text-gray-600">{assets.length} images</p>
+      <p className="mb-4 text-xs text-gray-500">Click an image to open AntD preview.</p>
 
-          <Dialog.Close asChild>
+      <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-3">
+        <p className="mb-3 text-sm font-medium text-gray-700">Image list</p>
+        <div className="grid max-h-[60vh] grid-cols-2 gap-2 overflow-auto pr-1 sm:grid-cols-3 lg:grid-cols-4">
+          {assets.map((asset, index) => (
             <button
+              key={asset.id}
               type="button"
-              className="absolute right-4 top-4 inline-flex size-11 items-center justify-center rounded-full border border-rose-200 text-rose-600 transition hover:bg-rose-50"
-              aria-label="Close preview"
+              onClick={() => handleOpenPreview(index)}
+              className={`overflow-hidden rounded-lg border transition ${
+                index === safeIndex
+                  ? 'border-rose-400 ring-2 ring-rose-200'
+                  : 'border-rose-100 hover:border-rose-300'
+              }`}
+              aria-label={`Preview image ${index + 1}`}
             >
-              <X className="size-5" />
+              <Image
+                src={asset.protectedMedia.thumbnailUrl}
+                alt={asset.name ?? `Image ${index + 1}`}
+                preview={false}
+                className="h-24 w-full object-cover"
+              />
             </button>
-          </Dialog.Close>
+          ))}
+        </div>
+      </div>
 
-          <div className="relative mt-4 overflow-hidden rounded-xl border border-rose-100 bg-rose-50/40">
-            <img
-              src={activeAsset.protectedMedia.thumbnailUrl}
-              alt="Asset preview"
-              className="h-[60vh] w-full object-contain"
+      <div className="mt-4 rounded-xl border border-rose-100 bg-white p-4">
+        <p className="text-sm font-medium text-gray-800">
+          {activeAsset.name ?? `Image ${safeIndex + 1}`}
+        </p>
+        <p className="mt-1 text-xs text-gray-600">
+          {activeAsset.mimeType ?? 'Unknown type'} • {formatByteSize(activeAsset.byteSize)} • #
+          {safeIndex + 1}
+        </p>
+      </div>
+
+      <Image.PreviewGroup
+        preview={{
+          open: open && previewOpen,
+          current: safeIndex,
+          onOpenChange: (visible) => {
+            setPreviewOpen(visible);
+          },
+          onChange: (current) => {
+            onSelectIndex(current);
+          },
+        }}
+      >
+        <div className="hidden" aria-hidden>
+          {assets.map((asset, index) => (
+            <Image
+              key={`preview-${asset.id}`}
+              src={asset.protectedMedia.contentUrl}
+              alt={asset.name ?? `Image ${index + 1}`}
             />
-
-            {canNavigate && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onSelectIndex((safeIndex - 1 + assets.length) % assets.length)}
-                  className="absolute left-3 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-rose-200 bg-white/90 text-rose-600 transition hover:bg-white"
-                  aria-label="Previous asset"
-                >
-                  <ChevronLeft className="size-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSelectIndex((safeIndex + 1) % assets.length)}
-                  className="absolute right-3 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-rose-200 bg-white/90 text-rose-600 transition hover:bg-white"
-                  aria-label="Next asset"
-                >
-                  <ChevronRight className="size-5" />
-                </button>
-              </>
-            )}
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-gray-600">{activeAsset.name ?? 'Private album asset'}</p>
-            <a
-              href={activeAsset.protectedMedia.contentUrl}
-              className="inline-flex items-center justify-center rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
-            >
-              Open full asset
-            </a>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          ))}
+        </div>
+      </Image.PreviewGroup>
+    </Modal>
   );
 }
