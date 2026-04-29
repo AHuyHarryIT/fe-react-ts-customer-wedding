@@ -627,7 +627,7 @@ export function BookingDetailPage() {
                 ) : (
                   <div className="mt-5 rounded-2xl border border-dashed border-rose-200 bg-white p-4 text-sm text-gray-600">
                     Deposit payment is not available yet. The studio may still be preparing the
-                    final quote, or this booking is already closed.
+                    final payment summary, or this booking is already closed.
                   </div>
                 )}
               </div>
