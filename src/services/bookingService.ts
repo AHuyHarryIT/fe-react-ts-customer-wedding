@@ -27,8 +27,12 @@ const normalizeBookingDetail = (booking: Booking | null | undefined): Booking | 
     return null;
   }
 
+  const primaryOrder = booking.order ?? booking.orders?.[0];
+
   return {
     ...booking,
+    order: primaryOrder,
+    orders: booking.orders,
     status: booking.status,
     sessions: Array.isArray(booking.sessions)
       ? booking.sessions.map((session) => normalizeBookingSession(session))
@@ -62,16 +66,23 @@ export const bookingService = {
     const response = await api.get<StandardResponse<BookingListPayload>>('/bookings', {
       params: {
         includePackages: true,
+        includeOrders: true,
         sortBy: 'updatedAt',
         sortOrder: 'desc',
       },
     });
 
-    return unwrapBookingList(response.data.data);
+    return unwrapBookingList(response.data.data)
+      .map((booking) => normalizeBookingDetail(booking))
+      .filter((booking): booking is Booking => booking !== null);
   },
 
   getBookingDetails: async (bookingId: string): Promise<Booking | null> => {
-    const response = await api.get<StandardResponse<Booking>>(`/bookings/${bookingId}`);
+    const response = await api.get<StandardResponse<Booking>>(`/bookings/${bookingId}`, {
+      params: {
+        includeOrders: true,
+      },
+    });
     return normalizeBookingDetail(response.data.data);
   },
 };

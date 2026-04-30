@@ -1,6 +1,7 @@
 import { Calendar, Camera, CreditCard, MessageSquare, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Steps } from 'antd';
 import { Link, useParams } from '@tanstack/react-router';
 import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 import { bookingService } from '@/services/bookingService';
@@ -8,7 +9,7 @@ import { customerOrderService } from '@/services/customerOrderService';
 import type { Booking, BookingSession } from '@/types';
 import { formatMoneyVND } from '@/utils/money';
 
-const KNOWN_STATUS_ORDER = ['PENDING', 'DEPOSIT_PAID', 'CONFIRMED', 'COMPLETED'] as const;
+const KNOWN_STATUS_ORDER = ['PENDING', 'CONFIRMED', 'DEPOSIT_PAID', 'COMPLETED'] as const;
 
 type KnownTimelineStatus = (typeof KNOWN_STATUS_ORDER)[number] | 'CANCELLED';
 
@@ -17,7 +18,14 @@ type MilestoneState = 'Completed' | 'Current' | 'Upcoming' | 'Neutral';
 interface BookingMilestone {
   key: string;
   label: string;
+  content?: string;
   state: MilestoneState;
+}
+
+interface BookingProgressModel {
+  milestones: BookingMilestone[];
+  currentIndex: number;
+  isFallback: boolean;
 }
 
 const formatTimelineDate = (value?: string): string | null => {
@@ -45,37 +53,53 @@ const toKnownStatus = (status: Booking['status']): KnownTimelineStatus | null =>
   return null;
 };
 
-const projectBookingMilestones = (status: Booking['status']): BookingMilestone[] => {
+const projectBookingMilestones = (
+  status: Booking['status'],
+  orderSummary?: Booking['order'] extends infer O
+    ? O extends { summary: infer S }
+      ? S
+      : never
+    : never
+): BookingProgressModel => {
   const knownStatus = toKnownStatus(status);
 
   if (!knownStatus) {
-    return [
-      {
-        key: 'fallback',
-        label: 'Status update pending',
-        state: 'Neutral',
-      },
-    ];
+    return {
+      milestones: [
+        {
+          key: 'fallback',
+          label: 'Status update pending',
+          state: 'Neutral',
+        },
+      ],
+      currentIndex: 0,
+      isFallback: true,
+    };
   }
 
-  const currentIndex =
-    knownStatus === 'CANCELLED'
-      ? KNOWN_STATUS_ORDER.indexOf('CONFIRMED')
-      : KNOWN_STATUS_ORDER.indexOf(knownStatus);
+  const bookingStatusLabel = status.replace(/_/g, ' ');
+  const totalPaid = orderSummary?.totalPaid ?? 0;
+  const balanceRemaining = orderSummary?.balanceRemaining ?? 0;
+  const hasAnyPayment = totalPaid > 0;
+  const isFullyPaid = balanceRemaining <= 0 && hasAnyPayment;
+
+  const paymentContent = isFullyPaid ? 'Complete' : hasAnyPayment ? 'Deposit' : 'Pending';
+
+  const statusValueByStep = {
+    PENDING: 'Completed',
+    CONFIRMED: knownStatus === 'PENDING' ? 'Current' : 'Completed',
+    DEPOSIT_PAID: isFullyPaid ? 'Completed' : knownStatus === 'PENDING' ? 'Upcoming' : 'Current',
+    COMPLETED: isFullyPaid || knownStatus === 'COMPLETED' ? 'Current' : 'Upcoming',
+  } as const;
 
   const milestones = [
-    { key: 'PENDING', label: 'Booking requested' },
-    { key: 'DEPOSIT_PAID', label: 'Deposit paid' },
-    { key: 'CONFIRMED', label: 'Booking confirmed' },
-    { key: 'COMPLETED', label: 'Completed' },
-  ].map((milestone, index) => ({
+    { key: 'PENDING', label: 'Booking request' },
+    { key: 'CONFIRMED', label: 'Verify', content: bookingStatusLabel },
+    { key: 'DEPOSIT_PAID', label: 'Payment', content: paymentContent },
+    { key: 'COMPLETED', label: 'Complete' },
+  ].map((milestone) => ({
     ...milestone,
-    state:
-      index < currentIndex
-        ? ('Completed' as const)
-        : index === currentIndex
-          ? ('Current' as const)
-          : ('Upcoming' as const),
+    state: statusValueByStep[milestone.key as keyof typeof statusValueByStep],
   }));
 
   if (knownStatus === 'CANCELLED') {
@@ -86,7 +110,13 @@ const projectBookingMilestones = (status: Booking['status']): BookingMilestone[]
     });
   }
 
-  return milestones;
+  const currentIndex = milestones.findIndex((milestone) => milestone.state === 'Current');
+
+  return {
+    milestones,
+    currentIndex: currentIndex >= 0 ? currentIndex : 0,
+    isFallback: false,
+  };
 };
 
 const selectTimelineSession = (sessions: Booking['sessions']): BookingSession | null => {
@@ -139,13 +169,6 @@ const buildSessionContextLine = (session: BookingSession | null): string | null 
   }
 
   return startDate;
-};
-
-const stateTone: Record<MilestoneState, string> = {
-  Completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Current: 'bg-rose-50 text-rose-700 border-rose-200',
-  Upcoming: 'bg-slate-50 text-slate-600 border-slate-200',
-  Neutral: 'bg-amber-50 text-amber-700 border-amber-200',
 };
 
 const CUSTOMER_APP_BASE_URL = import.meta.env.DEV
@@ -214,12 +237,15 @@ export function BookingDetailPage() {
     [booking?.services]
   );
 
-  const bookingMilestones = useMemo(
-    () => projectBookingMilestones(booking?.status ?? 'PENDING'),
-    [booking?.status]
+  const orderSummary = booking?.order?.summary;
+
+  const bookingProgress = useMemo(
+    () => projectBookingMilestones(booking?.status ?? 'PENDING', orderSummary),
+    [booking?.status, orderSummary]
   );
-  const isFallbackTimeline =
-    bookingMilestones.length === 1 && bookingMilestones[0]?.state === 'Neutral';
+  const bookingMilestones = bookingProgress.milestones;
+  const isFallbackTimeline = bookingProgress.isFallback;
+  const stepsCurrentIndex = bookingProgress.currentIndex >= 0 ? bookingProgress.currentIndex : 0;
   const highlightedSession = useMemo(
     () => selectTimelineSession(booking?.sessions),
     [booking?.sessions]
@@ -229,7 +255,6 @@ export function BookingDetailPage() {
     [highlightedSession]
   );
 
-  const orderSummary = booking?.order?.summary;
   const bookingTotalPrice = booking?.totalPrice ?? orderSummary?.totalPrice ?? 0;
   const depositAmount = bookingTotalPrice > 0 ? Math.ceil((bookingTotalPrice * 30) / 100) : 0;
   const totalPaid = orderSummary?.totalPaid ?? 0;
@@ -239,8 +264,7 @@ export function BookingDetailPage() {
     Boolean(booking) &&
     bookingTotalPrice > 0 &&
     !depositCompleted &&
-    booking?.status !== 'CANCELLED' &&
-    booking?.status !== 'COMPLETED';
+    booking?.status === 'CONFIRMED';
 
   const handleDepositCheckout = async () => {
     if (!booking?.id) {
@@ -403,24 +427,27 @@ export function BookingDetailPage() {
                 </div>
               )}
 
-              <ol className="space-y-3" aria-label="Booking milestone timeline">
-                {bookingMilestones.map((milestone) => (
-                  <li
-                    key={milestone.key}
-                    className="rounded-2xl border border-gray-100 bg-white px-4 py-3"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-medium text-gray-900">{milestone.label}</span>
-                      <span
-                        data-testid="milestone-state"
-                        className={`rounded-full border px-3 py-1 text-xs font-medium ${stateTone[milestone.state]}`}
-                      >
-                        {milestone.state}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ol>
+              <Steps
+                current={stepsCurrentIndex}
+                orientation="vertical"
+                className="booking-progress-steps"
+                items={bookingMilestones.map((milestone) => ({
+                  title: milestone.label,
+                  content:
+                    milestone.key === 'COMPLETED'
+                      ? undefined
+                      : (milestone.content ?? milestone.state),
+                  status:
+                    milestone.state === 'Completed' ||
+                    (milestone.key === 'COMPLETED' && milestone.state === 'Current')
+                      ? 'finish'
+                      : milestone.state === 'Current'
+                        ? 'process'
+                        : milestone.state === 'Neutral'
+                          ? 'wait'
+                          : 'wait',
+                }))}
+              />
 
               {highlightedSession ? (
                 <div className="mt-4 rounded-2xl bg-rose-50 p-4">
@@ -573,8 +600,9 @@ export function BookingDetailPage() {
                     </p>
                     <h3 className="mt-2 text-lg font-medium text-gray-900">Pay 30% deposit</h3>
                     <p className="mt-2 text-sm text-gray-600">
-                      The customer portal only supports the first deposit payment. Remaining
-                      balance, adjustments, and payment management stay with the studio team.
+                      Deposit payment is available only after the studio confirms the booking.
+                      Remaining balance, adjustments, and payment management stay with the studio
+                      team.
                     </p>
                   </div>
                   {depositAmount > 0 && (

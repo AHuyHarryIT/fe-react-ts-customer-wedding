@@ -52,6 +52,22 @@ export type KnownBookingStatus =
 
 export type BookingStatus = KnownBookingStatus | (string & {});
 
+export type BookingOrderStatus = 'UNPAID' | 'PARTIAL' | 'PAID';
+
+export interface BookingOrderSummary {
+  totalPrice: number;
+  totalPaid: number;
+  balanceRemaining: number;
+  isPaid: boolean;
+  isPartiallyPaid: boolean;
+}
+
+export interface BookingOrder {
+  id: string;
+  status?: BookingOrderStatus;
+  summary: BookingOrderSummary;
+}
+
 export interface Booking {
   id: string;
   customerId: string;
@@ -73,16 +89,8 @@ export interface Booking {
     email?: string;
     phoneNumber: string;
   };
-  order?: {
-    id: string;
-    summary: {
-      totalPrice: number;
-      totalPaid: number;
-      balanceRemaining: number;
-      isPaid: boolean;
-      isPartiallyPaid: boolean;
-    };
-  };
+  order?: BookingOrder;
+  orders?: BookingOrder[];
 }
 
 export interface CreateBookingRequest {

@@ -4,9 +4,36 @@ import { motion } from 'motion/react';
 import { useMemo } from 'react';
 import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 import { useCustomerBookings } from '@/hooks/useCustomerBookings';
-import type { Booking } from '@/types/booking';
+import type { Booking, BookingOrderStatus } from '@/types/booking';
 
-const formatBookingStatus = (status: Booking['status']) => status.replace(/_/g, ' ');
+type BookingDisplayStatus = 'PENDING' | 'CONFIRM' | 'CANCEL' | 'COMPLETE';
+type PaymentDisplayStatus = 'PENDING' | 'REMAINING' | 'COMPLETE';
+
+const getBookingDisplayStatus = (status: Booking['status']): BookingDisplayStatus => {
+  if (status === 'CONFIRMED' || status === 'DEPOSIT_PAID') {
+    return 'CONFIRM';
+  }
+  if (status === 'COMPLETED') {
+    return 'COMPLETE';
+  }
+  if (status === 'CANCELLED') {
+    return 'CANCEL';
+  }
+  return 'PENDING';
+};
+
+const getPaymentDisplayStatus = (
+  orderStatus?: BookingOrderStatus,
+  bookingStatus?: Booking['status']
+): PaymentDisplayStatus => {
+  if (orderStatus === 'PAID' || bookingStatus === 'COMPLETED') {
+    return 'COMPLETE';
+  }
+  if (orderStatus === 'PARTIAL' || bookingStatus === 'DEPOSIT_PAID') {
+    return 'REMAINING';
+  }
+  return 'PENDING';
+};
 
 const formatEventDate = (eventDate: string) => {
   const parsedDate = new Date(eventDate);
@@ -97,13 +124,26 @@ export function BookingsPage() {
                     className="rounded-2xl border border-rose-100 bg-white/90 p-5 shadow-sm"
                   >
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">
-                          Booking Status
-                        </p>
-                        <p className="mt-1 text-lg font-medium text-gray-900">
-                          {formatBookingStatus(booking.status)}
-                        </p>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">
+                            Booking Status
+                          </p>
+                          <p className="mt-1 text-lg font-medium text-gray-900">
+                            {getBookingDisplayStatus(booking.status)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">
+                            Payment Status
+                          </p>
+                          <p className="mt-1 text-lg font-medium text-gray-900">
+                            {getPaymentDisplayStatus(
+                              booking.order?.status ?? booking.orders?.[0]?.status,
+                              booking.status
+                            )}
+                          </p>
+                        </div>
                       </div>
 
                       <div className="inline-flex items-center gap-2 text-sm text-gray-600">
