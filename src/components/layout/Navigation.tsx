@@ -17,6 +17,7 @@ export function Navigation({ isLoggedIn, onLogout }: NavigationProps) {
 
   const menuItemsLoggedIn: { id: LinkComponentProps['to']; label: string }[] = [
     { id: '/dashboard', label: 'Home' },
+    { id: '/bookings', label: 'Bookings' },
     { id: '/packages', label: 'Packages' },
     { id: '/gallery', label: 'Gallery' },
     { id: '/albums/private', label: 'Private Albums' },
