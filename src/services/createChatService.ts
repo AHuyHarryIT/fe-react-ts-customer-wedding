@@ -16,6 +16,7 @@ export interface ChatServiceContract {
   getChats: (skip?: number, take?: number) => Promise<Chat[]>;
   getChat: (chatId: string) => Promise<Chat | null>;
   getMessages: (chatId: string, skip?: number, take?: number) => Promise<Message[]>;
+  sendMessage: (chatId: string, content: string) => Promise<Message | null>;
   markAsRead: (chatId: string) => Promise<void>;
   connectWebSocket: (chatId: string, userId: string, handlers?: ConnectWebSocketHandlers) => void;
   sendWebSocketMessage: (chatId: string, content: string, clientMessageId?: string) => boolean;
@@ -165,6 +166,25 @@ export class ApiChatService implements ChatServiceContract {
     } catch (error) {
       console.error('Failed to fetch messages:', error);
       return [];
+    }
+  }
+
+  async sendMessage(chatId: string, content: string): Promise<Message | null> {
+    try {
+      const response = await api.post(`${this.apiResourcePath}/${chatId}/messages`, {
+        content,
+      });
+
+      const data = response.data?.data || response.data;
+
+      if (data?.customerMessage) {
+        return this.toMessage(data.customerMessage);
+      }
+
+      return this.toMessage(data);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      return null;
     }
   }
 

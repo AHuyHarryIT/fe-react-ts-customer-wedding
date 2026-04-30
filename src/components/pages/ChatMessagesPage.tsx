@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Send, Paperclip, Image as ImageIcon, Smile, Square } from 'lucide-react';
+import { Typography } from 'antd';
 import { motion } from 'motion/react';
 import { CustomerStatePanel } from '@/components/pages/CustomerStatePanel';
 import { useAuthStore } from '@/stores/authStore';
@@ -36,6 +37,8 @@ const getSendStatusCopy = (status?: 'sending' | 'sent' | 'failed') => {
   return null;
 };
 
+const { Paragraph } = Typography;
+
 const getModeConfig = (mode: ChatMode) => {
   if (mode === 'ai') {
     return {
@@ -44,8 +47,8 @@ const getModeConfig = (mode: ChatMode) => {
       incomingLabel: 'AI Assistant',
       emptyDescription: 'Send a message to start chatting with the AI assistant.',
       activeThreadTitle: 'AI Assistant',
-      incomingChipClassName: 'bg-slate-200 text-slate-700',
-      incomingBubbleClassName: 'bg-slate-100 text-slate-800 border border-slate-200',
+      incomingChipClassName: 'bg-violet-100 text-violet-700 border border-violet-200 shadow-sm',
+      incomingBubbleClassName: 'bg-violet-50 text-slate-800 border border-violet-200 shadow-sm',
     };
   }
 
@@ -572,7 +575,9 @@ export function ChatMessagesPage({ mode, useChatHook }: ChatMessagesPageProps) {
                       </div>
 
                       <div className={`rounded-2xl px-4 py-3 ${messageBubbleClassName}`}>
-                        <p className="text-sm leading-relaxed">{msg.content}</p>
+                        <Paragraph className="!m-0 !text-sm !leading-relaxed !text-inherit whitespace-pre-wrap break-words">
+                          {msg.content}
+                        </Paragraph>
                       </div>
 
                       {sendStatusCopy && (

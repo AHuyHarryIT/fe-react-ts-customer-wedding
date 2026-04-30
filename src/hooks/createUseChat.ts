@@ -526,15 +526,41 @@ export const createUseChat = (chatService: ChatServiceContract) => {
         const didEmit = chatService.sendWebSocketMessage(targetChatId, content, clientMessageId);
 
         if (!didEmit) {
+          const sentMessage = await chatService.sendMessage(targetChatId, content);
+
+          if (!sentMessage) {
+            setState((prev) => ({
+              ...prev,
+              messages: prev.messages.map((message) =>
+                message.id === optimisticMessageId ? { ...message, sendStatus: 'failed' } : message
+              ),
+              ...resolveComposerState(text, targetChatId, blockedReasonRef.current, false),
+              sendFailure: SEND_FAILURE_COPY,
+            }));
+            return false;
+          }
+
+          blockedReasonRef.current = null;
+          draftRef.current = '';
+
           setState((prev) => ({
             ...prev,
-            messages: prev.messages.map((message) =>
-              message.id === optimisticMessageId ? { ...message, sendStatus: 'failed' } : message
+            ...resolveComposerState('', targetChatId, blockedReasonRef.current, false),
+            messages: mergeMessages(
+              prev.messages.filter((message) => message.id !== optimisticMessageId),
+              [
+                {
+                  ...sentMessage,
+                  chatId: sentMessage.chatId || targetChatId,
+                  sendStatus: 'sent',
+                },
+              ]
             ),
-            ...resolveComposerState(text, targetChatId, blockedReasonRef.current, false),
-            sendFailure: SEND_FAILURE_COPY,
+            sendFailure: null,
+            error: null,
           }));
-          return false;
+
+          return true;
         }
 
         pendingMessagesRef.current.set(clientMessageId, {
