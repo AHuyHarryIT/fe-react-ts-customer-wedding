@@ -125,8 +125,7 @@ export function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-800 mb-1">Studio</h3>
-                  <p className="text-gray-600">123 Wedding Lane</p>
-                  <p className="text-gray-600">Love City, CA 90210</p>
+                  <p className="text-gray-600">20 Cong Hoa, HCM City</p>
                 </div>
               </div>
 
