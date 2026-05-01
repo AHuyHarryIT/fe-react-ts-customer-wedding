@@ -65,8 +65,7 @@ export function PackageDetailPage() {
     .filter(Boolean);
 
   const galleryImages = [
-    apiGalleryImages[0] || defaultImage,
-    packageData.coverImageUrl || packageData.image || apiGalleryImages[0],
+    packageData.coverImageUrl || packageData.image || apiGalleryImages[0] || defaultImage,
     ...apiGalleryImages,
   ]
     .filter((img, idx, arr): img is string => Boolean(img) && arr.indexOf(img) === idx)
