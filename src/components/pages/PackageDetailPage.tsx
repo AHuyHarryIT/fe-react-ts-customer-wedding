@@ -184,7 +184,8 @@ export function PackageDetailPage() {
             {/* CTA Buttons */}
             <div className="flex flex-col gap-3 sm:items-start">
               <Link
-                to="/contact"
+                to="/booking"
+                search={{ packageId: packageData.id }}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-8 py-4 font-medium text-white transition-all hover:shadow-xl sm:w-auto"
               >
                 Book Now
